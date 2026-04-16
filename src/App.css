@@ -1,0 +1,371 @@
+@import "tailwindcss";
+
+@layer utilities {
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+}
+
+@font-face {
+  font-family: "Louis George Cafe";
+  src: url("./assets/fonts/louis_george_cafe/Louis George Cafe Light.ttf")
+    format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Louis George Cafe";
+  src: url("./assets/fonts/louis_george_cafe/Louis George Cafe Light Italic.ttf")
+    format("truetype");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Louis George Cafe";
+  src: url("./assets/fonts/louis_george_cafe/Louis George Cafe.ttf")
+    format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Louis George Cafe";
+  src: url("./assets/fonts/louis_george_cafe/Louis George Cafe Italic.ttf")
+    format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+/*
+ * Discrete weights (not ranges): WebKit/WKWebView used by Tauri often ignores
+ * font-weight ranges in @font-face; with font-synthesis: none, bold utilities
+ * would otherwise match no face and stay visually regular.
+ */
+@font-face {
+  font-family: "Louis George Cafe";
+  src: url("./assets/fonts/louis_george_cafe/Louis George Cafe Bold.ttf")
+    format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Louis George Cafe";
+  src: url("./assets/fonts/louis_george_cafe/Louis George Cafe Bold.ttf")
+    format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Louis George Cafe";
+  src: url("./assets/fonts/louis_george_cafe/Louis George Cafe Bold.ttf")
+    format("truetype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Louis George Cafe";
+  src: url("./assets/fonts/louis_george_cafe/Louis George Cafe Bold.ttf")
+    format("truetype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Louis George Cafe";
+  src: url("./assets/fonts/louis_george_cafe/Louis George Cafe Bold Italic.ttf")
+    format("truetype");
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Louis George Cafe";
+  src: url("./assets/fonts/louis_george_cafe/Louis George Cafe Bold Italic.ttf")
+    format("truetype");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Louis George Cafe";
+  src: url("./assets/fonts/louis_george_cafe/Louis George Cafe Bold Italic.ttf")
+    format("truetype");
+  font-weight: 800;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Louis George Cafe";
+  src: url("./assets/fonts/louis_george_cafe/Louis George Cafe Bold Italic.ttf")
+    format("truetype");
+  font-weight: 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Soopafresh";
+  src: url("./assets/fonts/soopafresh/soopafre.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Soopafresh";
+  src: url("./assets/fonts/soopafresh/soopafre.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Soopafresh";
+  src: url("./assets/fonts/soopafresh/soopafre.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Soopafresh";
+  src: url("./assets/fonts/soopafresh/soopafre.ttf") format("truetype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Soopafresh";
+  src: url("./assets/fonts/soopafresh/soopafre.ttf") format("truetype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Baron Neue — discrete weights for WKWebView */
+@font-face {
+  font-family: "Baron Neue";
+  src: url("./assets/fonts/baron_neue/Baron Neue.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Baron Neue";
+  src: url("./assets/fonts/baron_neue/Baron Neue Italic.otf") format("opentype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Baron Neue";
+  src: url("./assets/fonts/baron_neue/Baron Neue Bold.otf") format("opentype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Baron Neue";
+  src: url("./assets/fonts/baron_neue/Baron Neue Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Baron Neue";
+  src: url("./assets/fonts/baron_neue/Baron Neue Black.otf") format("opentype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Baron Neue";
+  src: url("./assets/fonts/baron_neue/Baron Neue Black.otf") format("opentype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Baron Neue";
+  src: url("./assets/fonts/baron_neue/Baron Neue Bold Italic.otf")
+    format("opentype");
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Baron Neue";
+  src: url("./assets/fonts/baron_neue/Baron Neue Bold Italic.otf")
+    format("opentype");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Baron Neue";
+  src: url("./assets/fonts/baron_neue/Baron Neue Black Italic.otf")
+    format("opentype");
+  font-weight: 800;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Baron Neue";
+  src: url("./assets/fonts/baron_neue/Baron Neue Black Italic.otf")
+    format("opentype");
+  font-weight: 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Quantify";
+  src: url("./assets/fonts/quantify/Quantify.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Quantify";
+  src: url("./assets/fonts/quantify/Quantify.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Quantify";
+  src: url("./assets/fonts/quantify/Quantify.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Quantify";
+  src: url("./assets/fonts/quantify/Quantify.ttf") format("truetype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Quantify";
+  src: url("./assets/fonts/quantify/Quantify.ttf") format("truetype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Fava";
+  src: url("./assets/fonts/Fava-black.ttf") format("truetype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme {
+  --font-sans: "Louis George Cafe", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Soopafresh", "Louis George Cafe", ui-sans-serif, sans-serif;
+  --font-baron: "Baron Neue", ui-sans-serif, system-ui, sans-serif;
+  --font-quantify: "Quantify", ui-sans-serif, sans-serif;
+  --font-fava: "Fava", ui-sans-serif, sans-serif;
+}
+
+.logo.vite:hover {
+  filter: drop-shadow(0 0 2em #747bff);
+}
+
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafb);
+}
+:root {
+  font-family: "Louis George Cafe", ui-sans-serif, system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+
+  color: #0f0f0f;
+  background-color: #f6f6f6;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: 0.75s;
+}
+
+.logo.tauri:hover {
+  filter: drop-shadow(0 0 2em #24c8db);
+}
+
+.row {
+  display: flex;
+  justify-content: center;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+
+a:hover {
+  color: #535bf2;
+}
+
+h1 {
+  text-align: center;
+}
+
+
+button {
+  cursor: pointer;
+}
+
+#greet-input {
+  margin-right: 5px;
+}
