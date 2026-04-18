@@ -49,7 +49,7 @@ export function WeatherBadge({
   if (weather.status === "loading") {
     return (
       <div
-        className={`flex items-center gap-1 opacity-70 ${className}`}
+        className={`flex items-baseline gap-1 opacity-70 ${className}`}
         aria-live="polite"
         aria-busy="true"
       >
@@ -62,7 +62,7 @@ export function WeatherBadge({
   if (weather.status === "error") {
     return (
       <div
-        className={`flex items-center gap-1 opacity-50 ${className}`}
+        className={`flex items-baseline gap-1 opacity-50 ${className}`}
         title="Weather unavailable"
       >
         <WiCloudy
@@ -75,7 +75,7 @@ export function WeatherBadge({
 
   return (
     <div
-      className={`flex items-center gap-1.5 text-zinc-900 ${className}`}
+      className={`flex items-baseline gap-1.5 text-zinc-900 ${className}`}
       title="Current weather (Open-Meteo)"
     >
       <span className={`shrink-0 ${iconClassName}`}>

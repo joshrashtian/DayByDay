@@ -7,6 +7,7 @@ import { HomeScreen } from "./screens/HomeScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
 import TasksScreen from "./screens/TasksScreen";
 import CalendarScreen from "./screens/CalendarScreen";
+import HelpScreen from "./screens/HelpScreen";
 
 export default function App() {
   const location = useLocation();
@@ -46,6 +47,14 @@ export default function App() {
               element={
                 <AnimatedPage>
                   <SettingsScreen />
+                </AnimatedPage>
+              }
+            />
+            <Route
+              path="/help"
+              element={
+                <AnimatedPage>
+                  <HelpScreen />
                 </AnimatedPage>
               }
             />

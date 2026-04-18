@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 import { DateTime } from "luxon";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import type { Task } from "../../types/task";
 import {
   buildMonthGrid,
@@ -9,6 +9,8 @@ import {
   weekdayLabelsShort,
 } from "../../lib/calendarUtils";
 import { formatTaskDue } from "../../lib/taskDates";
+import BottomSheet from "../../ui/BottomSheet";
+import { IoCheckmarkDone } from "react-icons/io5";
 
 const cellEase = [0.25, 0.1, 0.25, 1] as const;
 
@@ -44,6 +46,20 @@ type TaskListProps = {
 };
 
 function TaskDueList({ items, onToggle, compact }: TaskListProps) {
+  const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+
+  const openTask = (task: Task, e: MouseEvent) => {
+    e.stopPropagation();
+    setSelectedTask(task);
+    setBottomSheetOpen(true);
+  };
+
+  const closeSheet = () => {
+    setBottomSheetOpen(false);
+    setSelectedTask(null);
+  };
+
   if (items.length === 0) {
     return (
       <p className="text-xs text-zinc-400 dark:text-zinc-500">
@@ -52,76 +68,137 @@ function TaskDueList({ items, onToggle, compact }: TaskListProps) {
     );
   }
 
-  if (compact) {
-    return (
-      <ul className="flex flex-col gap-1">
-        {items.map(({ task, displayDueDate, rowKey }) => (
-          <li key={rowKey}>
+  return (
+    <>
+      {compact ? (
+        <ul className="flex min-h-0 flex-col gap-1">
+          {items.map(({ task, displayDueDate, rowKey }) => (
+            <li key={rowKey}>
+              <button
+                type="button"
+                onClick={(e) => openTask(task, e)}
+                className={`w-full rounded-lg border px-2 py-1 text-left text-xs font-medium transition-colors hover:bg-white/60 dark:hover:bg-white/10 ${
+                  task.critical
+                    ? "border-red-500/80"
+                    : "border-white/20 dark:border-white/15"
+                }`}
+              >
+                <p>{task.done ? "✅" : "❌"}</p>
+                {task.critical ? (
+                  <span className="text-xs font-display italic text-red-500">
+                    CRITICAL
+                  </span>
+                ) : null}
+                {task.category ? (
+                  <span className="mb-0.5 block truncate text-[10px] font-semibold uppercase tracking-wide text-sky-700 dark:text-sky-300">
+                    {task.category}
+                  </span>
+                ) : null}
+                <span className="line-clamp-2 font-black leading-snug">
+                  {task.title}
+                </span>
+                <time
+                  dateTime={displayDueDate.toISOString()}
+                  className="mt-0.5 block truncate text-[10px] text-zinc-500 dark:text-zinc-400"
+                >
+                  {formatTaskDue(displayDueDate)}
+                </time>
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <ul className="flex flex-col gap-1">
+          {items.map(({ task, displayDueDate, rowKey }) => (
+            <li key={rowKey} className="flex flex-row items-center gap-2">
+              {task.done ? (
+                <span
+                  className="relative inline-grid h-14 w-14 shrink-0 place-items-center before:absolute before:z-0 before:h-10 before:w-10 before:rotate-45 before:rounded-sm before:bg-red-500 before:content-['']"
+                  aria-hidden
+                >
+                  <IoCheckmarkDone className="relative z-10 text-3xl text-white" />
+                </span>
+              ) : null}
+              <button
+                type="button"
+                onClick={(e) => openTask(task, e)}
+                className={`w-full rounded-lg  px-2 py-2 text-left  font-medium transition-colors hover:bg-white/60 dark:hover:bg-white/10 `}
+              >
+                {task.priority && !task.critical ? (
+                  <span className="block text-xl font-display italic text-zinc-500">
+                    {task.priority.toUpperCase()} PRIORITY
+                  </span>
+                ) : null}
+                {task.critical ? (
+                  <span className="block text-xl font-display italic text-red-500">
+                    CRITICAL — {formatTaskDue(displayDueDate)}
+                  </span>
+                ) : (
+                  <time
+                    dateTime={displayDueDate.toISOString()}
+                    className="mb-0.5 block text-xl text-zinc-500 dark:text-zinc-400"
+                  >
+                    {formatTaskDue(displayDueDate)}
+                  </time>
+                )}
+                {task.category ? (
+                  <span className="mb-1 block text-xl font-semibold uppercase tracking-wide text-sky-700 dark:text-sky-300">
+                    {task.category}
+                  </span>
+                ) : null}
+                <span
+                  className={`line-clamp-2 text-4xl font-black leading-tight ${task.done ? "line-through" : ""}`}
+                >
+                  {task.title}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <BottomSheet
+        open={bottomSheetOpen}
+        onClose={closeSheet}
+        title={selectedTask?.title ?? "Task"}
+      >
+        {selectedTask ? (
+          <div className="flex flex-col gap-3">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              {selectedTask.done ? "Completed" : "Open"} · Due{" "}
+              {selectedTask.dueDate
+                ? formatTaskDue(selectedTask.dueDate)
+                : "not set"}
+            </p>
+            {selectedTask.description ? (
+              <p className="text-sm leading-relaxed">
+                {selectedTask.description}
+              </p>
+            ) : null}
+            <div className="flex flex-col gap-1 text-sm text-zinc-600 dark:text-zinc-400">
+              {selectedTask.priority ? (
+                <p>Priority: {selectedTask.priority}</p>
+              ) : null}
+              {selectedTask.category ? (
+                <p>Category: {selectedTask.category}</p>
+              ) : null}
+              {selectedTask.tags?.length ? (
+                <p>Tags: {selectedTask.tags.join(", ")}</p>
+              ) : null}
+            </div>
             <button
               type="button"
-              onClick={() => onToggle(task.id)}
-              className={`w-full h-32 rounded-lg px-2 py-1 text-left text-xs font-medium border transition-colors hover:bg-white/60 dark:hover:bg-white/10 ${task.critical ? "border-red-500" : "border-white/20"}`}
+              onClick={() => {
+                onToggle(selectedTask.id);
+                closeSheet();
+              }}
+              className="mt-1 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm font-semibold text-zinc-900 hover:bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
             >
-              {task.critical ? (
-                <span className={`text-xs font-display italic text-red-500`}>
-                  CRITICAL
-                </span>
-              ) : null}
-              {task.category ? (
-                <span className="mb-0.5 block truncate text-[10px] font-semibold uppercase tracking-wide text-sky-700 dark:text-sky-300">
-                  {task.category}
-                </span>
-              ) : null}
-              <span className="line-clamp-2 text-md font-black">
-                {task.title}
-              </span>
-              <time
-                dateTime={displayDueDate.toISOString()}
-                className="mt-0.5 block truncate text-[10px] text-zinc-500 dark:text-zinc-400"
-              >
-                {formatTaskDue(displayDueDate)}
-              </time>
+              Toggle done
             </button>
-          </li>
-        ))}
-      </ul>
-    );
-  }
-
-  return (
-    <ul className={`flex flex-col gap-1 ${compact ? "min-h-0" : ""}`}>
-      {items.map(({ task, displayDueDate, rowKey }) => (
-        <li key={rowKey}>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggle(task.id);
-            }}
-            className={`w-full h-32 rounded-lg px-2 py-1 text-left text-2xl font-medium  transition-colors hover:bg-white/60 dark:hover:bg-white/10 `}
-          >
-            {task.priority && !task.critical ? (
-              <span className={`text-2xl font-display italic text-zinc-500`}>
-                {task.priority.toUpperCase()} PRIORITY
-              </span>
-            ) : null}
-            {task.critical ? (
-              <span className={`text-2xl font-display italic text-red-500`}>
-                CRITICAL - {formatTaskDue(displayDueDate)}
-              </span>
-            ) : null}
-            {task.category ? (
-              <span className="mb-1 block text-sm font-semibold uppercase tracking-wide text-sky-700 dark:text-sky-300">
-                {task.category}
-              </span>
-            ) : null}
-            <span className="line-clamp-2 text-4xl font-black">
-              {task.title}
-            </span>
-          </button>
-        </li>
-      ))}
-    </ul>
+          </div>
+        ) : null}
+      </BottomSheet>
+    </>
   );
 }
 
@@ -337,7 +414,7 @@ export function ThreeDayView({
                 isToday
                   ? "ring-2 ring-sky-400/60 dark:ring-sky-500/45"
                   : "ring-white/30 dark:ring-white/10"
-              } ${mdUp ? "md:z-[1] md:shadow-[0_12px_40px_rgba(15,15,15,0.12)] dark:md:shadow-[0_16px_48px_rgba(0,0,0,0.35)]" : ""}`}
+              } ${mdUp ? "md:z-1 md:shadow-[0_12px_40px_rgba(15,15,15,0.12)] dark:md:shadow-[0_16px_48px_rgba(0,0,0,0.35)]" : ""}`}
             >
               <button
                 type="button"

@@ -6,10 +6,11 @@ import {
   IoWarning,
 } from "react-icons/io5";
 import { parseDueLocalInput } from "../../lib/taskDates";
-import type {
-  AddTaskPayload,
-  RecurrenceFrequency,
-  TaskPriority,
+import {
+  type AddTaskPayload,
+  parseTagsInput,
+  type RecurrenceFrequency,
+  type TaskPriority,
 } from "../../types/task";
 import { motion } from "motion/react";
 
@@ -47,6 +48,7 @@ export function TaskCreatorPopupForm({
   onDismiss,
 }: Props) {
   const [title, setTitle] = useState("");
+  const [tagsInput, setTagsInput] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
   const [notes, setNotes] = useState("");
@@ -69,6 +71,7 @@ export function TaskCreatorPopupForm({
     if (!trimmed) return null;
     const dueDate = parseDueLocalInput(dueLocal);
     const cat = category.trim();
+    const tags = parseTagsInput(tagsInput);
     const desc = description.trim();
     const n = notes.trim();
     const recurrence =
@@ -84,6 +87,7 @@ export function TaskCreatorPopupForm({
       ...(priority ? { priority } : {}),
       ...(critical ? { critical: true } : {}),
       ...(cat ? { category: cat } : {}),
+      ...(tags ? { tags } : {}),
       ...(desc ? { description: desc } : {}),
       ...(n ? { notes: n } : {}),
       ...(recurrence ? { recurrence } : {}),
@@ -92,6 +96,7 @@ export function TaskCreatorPopupForm({
 
   const resetForm = () => {
     setTitle("");
+    setTagsInput("");
     setCategory("");
     setDescription("");
     setNotes("");
@@ -209,6 +214,21 @@ export function TaskCreatorPopupForm({
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   placeholder="Searchable label (optional)"
+                  autoComplete="off"
+                  className={inputClass}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="popup-task-tags" className={fieldLabel}>
+                  Tags
+                </label>
+                <input
+                  id="popup-task-tags"
+                  type="text"
+                  value={tagsInput}
+                  onChange={(e) => setTagsInput(e.target.value)}
+                  placeholder="Comma-separated (optional)"
                   autoComplete="off"
                   className={inputClass}
                 />

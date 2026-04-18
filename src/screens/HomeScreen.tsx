@@ -1,15 +1,21 @@
 import { DateCorner } from "../components/dateCorner";
 import { Header } from "../components/DBDheader";
+import { CriticalHeaderRibbon } from "../components/home/CriticalDayRibbon";
 import { TasksFrontPage } from "../components/tasks/TasksFrontPage";
 
 export const HomeScreen = () => (
-  <div>
+  <div className="min-h-dvh">
     <Header />
-    <div className="fixed right-4 top-20 z-30 flex max-w-[calc(100vw-4.5rem)] flex-col items-end gap-3 sm:right-8 sm:max-w-none sm:flex-row-reverse sm:items-start sm:gap-5">
-      <DateCorner rootClassName="relative shrink-0 select-none" />
-    </div>
-    <div className="grid mt-20 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <TasksFrontPage />
-    </div>
+    <main className="mx-auto max-w-6xl px-4 pb-12 pt-24 sm:px-6 lg:px-8">
+      <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-10">
+        <div className="flex min-w-0 flex-col items-stretch gap-5">
+          <CriticalHeaderRibbon />
+          <TasksFrontPage />
+        </div>
+        <aside className="flex justify-end lg:shrink-0 lg:justify-end">
+          <DateCorner rootClassName="relative shrink-0 select-none" />
+        </aside>
+      </div>
+    </main>
   </div>
 );

@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
+import {
+  getManualWeatherCoords,
+  WEATHER_COORDS_CHANGED,
+  WEATHER_MANUAL_COORDS_STORAGE_KEY,
+} from "../lib/weatherCoords";
 
-//los angeles
+// los angeles
 const FALLBACK_LAT = 34.0549;
 const FALLBACK_LON = -118.2452;
 
@@ -37,9 +42,9 @@ export function useWeather(): WeatherState {
       if (!cancelled) setState({ status: "ok", tempF: Math.round(t), code });
     };
 
-    const run = async () => {
-      let lat = FALLBACK_LAT;
-      let lon = FALLBACK_LON;
+    const resolveCoords = async (): Promise<{ lat: number; lon: number }> => {
+      const manual = getManualWeatherCoords();
+      if (manual) return manual;
       if (typeof navigator !== "undefined" && navigator.geolocation) {
         try {
           const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
@@ -48,13 +53,18 @@ export function useWeather(): WeatherState {
               timeout: 10_000,
             });
           });
-          lat = pos.coords.latitude;
-          lon = pos.coords.longitude;
+          return { lat: pos.coords.latitude, lon: pos.coords.longitude };
         } catch {
           /* use fallback */
         }
       }
+      return { lat: FALLBACK_LAT, lon: FALLBACK_LON };
+    };
+
+    const run = async () => {
+      if (!cancelled) setState({ status: "loading" });
       try {
+        const { lat, lon } = await resolveCoords();
         await fetchForCoords(lat, lon);
       } catch {
         if (!cancelled) setState({ status: "error" });
@@ -62,8 +72,20 @@ export function useWeather(): WeatherState {
     };
 
     void run();
+
+    const onCoordsChanged = () => {
+      void run();
+    };
+    window.addEventListener(WEATHER_COORDS_CHANGED, onCoordsChanged);
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === WEATHER_MANUAL_COORDS_STORAGE_KEY) void run();
+    };
+    window.addEventListener("storage", onStorage);
+
     return () => {
       cancelled = true;
+      window.removeEventListener(WEATHER_COORDS_CHANGED, onCoordsChanged);
+      window.removeEventListener("storage", onStorage);
     };
   }, []);
 

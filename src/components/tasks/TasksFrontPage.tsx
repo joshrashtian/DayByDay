@@ -2,19 +2,23 @@ import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useTasksStore } from "../../stores/tasksStore";
 import { formatTaskDue } from "../../lib/taskDates";
+import { IoCheckmarkCircleOutline } from "react-icons/io5";
 
 const STACK_MAX = 4;
 
 export const TasksFrontPage = () => {
   const { tasks } = useTasksStore(useShallow((s) => ({ tasks: s.tasks })));
+  const { toggleTask } = useTasksStore(
+    useShallow((s) => ({ toggleTask: s.toggleTask })),
+  );
 
   const stack = useMemo(
     () =>
       [...tasks]
         .sort(
-          (a, b) =>
-            (b.dueDate?.getTime() ?? 0) - (a.dueDate?.getTime() ?? 0),
+          (a, b) => (b.dueDate?.getTime() ?? 0) - (a.dueDate?.getTime() ?? 0),
         )
+        .filter((task) => !task.done)
         .slice(0, STACK_MAX),
     [tasks],
   );
@@ -22,18 +26,18 @@ export const TasksFrontPage = () => {
   const stackHeightPx = 52 + (Math.max(stack.length, 1) - 1) * 14;
 
   return (
-    <div className="rounded-2xl border border-white/70 bg-white/45 p-6 shadow-[0_1px_0_rgba(255,255,255,0.9)_inset,0_12px_40px_-18px_rgba(15,23,42,0.25)] ring-1 ring-white/30 backdrop-blur-xl dark:border-white/10 dark:bg-zinc-900/45 dark:shadow-[0_1px_0_rgba(255,255,255,0.06)_inset,0_12px_40px_-18px_rgba(0,0,0,0.5)] dark:ring-white/5">
-      <div className="flex flex-col items-start gap-1">
-        <h1 className="text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-5xl">
-          Tasks
+    <div className="rounded-2xl ">
+      <div className="flex flex-col items-start gap-1.5">
+        <h1 className="text-4xl font-bold font-quantify tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-5xl">
+          Task Stack
         </h1>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          You have {tasks.length} task{tasks.length === 1 ? "" : "s"}
+        <p className="text-md font-display text-zinc-500 dark:text-zinc-400">
+          Tasks in this Block: {stack.length}
         </p>
       </div>
 
       <div
-        className="relative mx-auto mt-6 w-full max-w-sm"
+        className="relative mt-7 w-full max-w-md"
         style={{ height: stackHeightPx }}
         role="list"
         aria-label="Upcoming tasks preview"
@@ -55,7 +59,7 @@ export const TasksFrontPage = () => {
               <div
                 key={task.id}
                 role="listitem"
-                className="absolute left-1/2 top-0 w-[94%] origin-top rounded-xl border border-zinc-200/90 bg-white/95 px-4 py-3 shadow-[0_10px_30px_-12px_rgba(15,23,42,0.35)] dark:border-zinc-600/90 dark:bg-zinc-800/95 dark:shadow-[0_12px_32px_-14px_rgba(0,0,0,0.65)]"
+                className="absolute left-1/2 top-0 w-[94%] h-32 origin-top rounded-xl border border-zinc-200/90 bg-white/95 px-4 py-3 shadow-[0_10px_30px_-12px_rgba(15,23,42,0.35)] dark:border-zinc-600/90 dark:bg-zinc-800/95 dark:shadow-[0_12px_32px_-14px_rgba(0,0,0,0.65)]"
                 style={{
                   transform: `translate(-50%, ${y}px) rotate(${rotate}deg) scale(${scale})`,
                   zIndex: stack.length - depth,
@@ -69,6 +73,26 @@ export const TasksFrontPage = () => {
                     {task.description}
                   </p>
                 ) : null}
+                <div className="flex flex-row items-center justify-between">
+                  <span className="text-xs font-medium text-zinc-400 dark:text-zinc-500">
+                    Priority:{" "}
+                    {task.critical
+                      ? "Critical"
+                      : task.priority
+                        ? task.priority.charAt(0).toUpperCase() +
+                          task.priority.slice(1)
+                        : "No priority"}
+                  </span>
+                </div>
+                <div className="flex flex-row items-center justify-between">
+                  <button
+                    onClick={() => toggleTask(task.id)}
+                    type="button"
+                    className="text-xs font-medium text-zinc-400 dark:text-zinc-500"
+                  >
+                    <IoCheckmarkCircleOutline />
+                  </button>
+                </div>
                 <p className="mt-1 text-xs font-medium text-zinc-400 dark:text-zinc-500">
                   {task.dueDate ? formatTaskDue(task.dueDate) : "No due date"}
                 </p>

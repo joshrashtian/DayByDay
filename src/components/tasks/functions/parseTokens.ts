@@ -1,6 +1,6 @@
 import { DateTime } from "luxon";
 import { parseDueLocalInput } from "../../../lib/taskDates";
-import type { TaskPriority } from "../../../types/task";
+import { normalizeTaskTags, type TaskPriority } from "../../../types/task";
 
 export type TaskChatHint = {
   key: string;
@@ -13,6 +13,7 @@ export type TaskChatParse = {
   priority?: TaskPriority;
   critical?: boolean;
   category?: string;
+  tags?: string[];
   dueDate?: Date;
   hints: TaskChatHint[];
 };
@@ -93,6 +94,7 @@ export function parseTaskChatInput(raw: string): TaskChatParse {
   let priority: TaskPriority | undefined;
   let critical: boolean | undefined;
   let category: string | undefined;
+  const tagAcc: string[] = [];
   let dueDate: Date | undefined;
 
   const trimmed = raw.replace(/^\s+/, "");
@@ -150,6 +152,18 @@ export function parseTaskChatInput(raw: string): TaskChatParse {
       return false;
     }
 
+    // Tags: #label (repeatable; letters, digits, _ . -)
+    if (work.startsWith("#")) {
+      const m = work.match(/^#([\w.-]+)(\s|$)/);
+      if (m) {
+        tagAcc.push(m[1]);
+        work = work.slice(m[0].length);
+        hints.push({ key: "tag", label: `Tag: ${m[1]}` });
+        return true;
+      }
+      return false;
+    }
+
     // Due / time: @token (non-space chunk)
     if (work.startsWith("@")) {
       const m = work.match(/^@(\S+)/);
@@ -189,6 +203,13 @@ export function parseTaskChatInput(raw: string): TaskChatParse {
         label: rest ? `Category: ${rest}…` : "Category…",
         partial: true,
       });
+    } else if (work.startsWith("#")) {
+      const rest = work.slice(1);
+      hints.push({
+        key: "tag",
+        label: rest ? `Tag: ${rest}…` : "Tag…",
+        partial: true,
+      });
     } else if (work.startsWith("@")) {
       const arg = work.slice(1);
       hints.push({
@@ -199,11 +220,14 @@ export function parseTaskChatInput(raw: string): TaskChatParse {
     }
   }
 
+  const tags = normalizeTaskTags(tagAcc);
+
   return {
     title: titleCore,
     ...(priority ? { priority } : {}),
     ...(critical ? { critical } : {}),
     ...(category ? { category } : {}),
+    ...(tags ? { tags } : {}),
     ...(dueDate ? { dueDate } : {}),
     hints,
   };

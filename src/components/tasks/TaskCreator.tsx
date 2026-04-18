@@ -8,7 +8,11 @@ import {
 } from "react";
 import { IoArrowUp, IoChevronDown, IoPencil, IoWarning } from "react-icons/io5";
 import { parseDueLocalInput } from "../../lib/taskDates";
-import type { AddTaskPayload, TaskPriority } from "../../types/task";
+import {
+  type AddTaskPayload,
+  parseTagsInput,
+  type TaskPriority,
+} from "../../types/task";
 import { parseTaskChatInput } from "./functions/parseTokens";
 import { motion } from "motion/react";
 
@@ -36,6 +40,7 @@ export function TaskCreator({
   const [priority, setPriority] = useState<TaskPriority | "">("");
   const [critical, setCritical] = useState(false);
   const [category, setCategory] = useState("");
+  const [tagsInput, setTagsInput] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -69,17 +74,20 @@ export function TaskCreator({
         ...(parsed.priority ? { priority: parsed.priority } : {}),
         ...(parsed.critical ? { critical: true } : {}),
         ...(parsed.category ? { category: parsed.category } : {}),
+        ...(parsed.tags?.length ? { tags: parsed.tags } : {}),
         ...(parsed.dueDate ? { dueDate: parsed.dueDate } : {}),
       });
     } else {
       const dueDate = parseDueLocalInput(dueLocal);
       const cat = category.trim();
+      const tags = parseTagsInput(tagsInput);
       onAdd({
         title: trimmed,
         ...(dueDate ? { dueDate } : {}),
         ...(priority ? { priority } : {}),
         ...(critical ? { critical } : {}),
         ...(cat ? { category: cat } : {}),
+        ...(tags ? { tags } : {}),
       });
     }
     setTitle("");
@@ -87,6 +95,7 @@ export function TaskCreator({
     setPriority("");
     setCritical(false);
     setCategory("");
+    setTagsInput("");
     if (isChatDock) {
       textareaRef.current?.focus();
       requestAnimationFrame(() => adjustTextareaHeight());
@@ -232,19 +241,35 @@ export function TaskCreator({
 
         {!isChatDock ? (
           <>
-            <div className="mt-2">
-              <label htmlFor="task-category" className="sr-only">
-                Category — used when you search the list
-              </label>
-              <input
-                id="task-category"
-                type="text"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                placeholder="Category (optional — matched by task search)"
-                autoComplete="off"
-                className="w-full rounded-xl border border-zinc-300/50 bg-white/40 px-3 py-2 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400/40 dark:border-zinc-600/60 dark:bg-zinc-950/30 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-500"
-              />
+            <div className="mt-2 space-y-2">
+              <div>
+                <label htmlFor="task-category" className="sr-only">
+                  Category — used when you search the list
+                </label>
+                <input
+                  id="task-category"
+                  type="text"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  placeholder="Category (optional — matched by task search)"
+                  autoComplete="off"
+                  className="w-full rounded-xl border border-zinc-300/50 bg-white/40 px-3 py-2 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400/40 dark:border-zinc-600/60 dark:bg-zinc-950/30 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-500"
+                />
+              </div>
+              <div>
+                <label htmlFor="task-tags" className="sr-only">
+                  Tags — comma-separated, searchable
+                </label>
+                <input
+                  id="task-tags"
+                  type="text"
+                  value={tagsInput}
+                  onChange={(e) => setTagsInput(e.target.value)}
+                  placeholder="Tags (optional — e.g. school, urgent)"
+                  autoComplete="off"
+                  className="w-full rounded-xl border border-zinc-300/50 bg-white/40 px-3 py-2 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400/40 dark:border-zinc-600/60 dark:bg-zinc-950/30 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-500"
+                />
+              </div>
             </div>
 
             <button

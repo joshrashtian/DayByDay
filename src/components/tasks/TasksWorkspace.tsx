@@ -1,13 +1,15 @@
-import { useCallback, useMemo, useState } from "react";
-import { IoSearch } from "react-icons/io5";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
+import { isTaskDueToday } from "../../lib/taskDates";
 import { TaskCreator } from "./TaskCreator";
 import { TaskCreatorPopupForm } from "./TaskCreatorPopupForm";
 import { TaskItem } from "./TaskItem";
+import { TasksHeader } from "./TasksHeader";
 import { useContextMenu } from "../../providers/ContextMenuProvider";
 import { usePopup } from "../../providers/PopupProvider";
 import { useTasksStore } from "../../stores/tasksStore";
 import type { Task } from "../../types/task";
+import { IoGrid } from "react-icons/io5";
 
 type Props = {
   topPadding?: "header" | "comfortable" | "none";
@@ -20,7 +22,26 @@ function taskMatchesSearch(task: Task, query: string): boolean {
   if (!q) return true;
   if (task.title.toLowerCase().includes(q)) return true;
   if (task.category?.toLowerCase().includes(q)) return true;
+  if (task.tags?.some((tag) => tag.toLowerCase().includes(q))) return true;
   return false;
+}
+
+function taskMatchesCategory(task: Task, filter: "all" | string): boolean {
+  if (filter === "all") return true;
+  const c = task.category?.trim();
+  if (!c) return false;
+  return c.toLowerCase() === filter.toLowerCase();
+}
+
+function collectCategories(tasks: Task[]): string[] {
+  const byLower = new Map<string, string>();
+  for (const t of tasks) {
+    const c = t.category?.trim();
+    if (c && !byLower.has(c.toLowerCase())) byLower.set(c.toLowerCase(), c);
+  }
+  return [...byLower.values()].sort((a, b) =>
+    a.localeCompare(b, undefined, { sensitivity: "base" }),
+  );
 }
 
 export function TasksWorkspace({
@@ -28,12 +49,13 @@ export function TasksWorkspace({
   contentWidth = "wide",
   composerLayout = "inline",
 }: Props) {
-  const { tasks, addTask, toggleTask, removeTask } = useTasksStore(
+  const { tasks, addTask, toggleTask, removeTask, setTaskTags } = useTasksStore(
     useShallow((s) => ({
       tasks: s.tasks,
       addTask: s.addTask,
       toggleTask: s.toggleTask,
       removeTask: s.removeTask,
+      setTaskTags: s.setTaskTags,
     })),
   );
 
@@ -58,10 +80,28 @@ export function TasksWorkspace({
   }, [openPopup, closePopup, addTask]);
 
   const [taskSearch, setTaskSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<"all" | string>("all");
+  const [dueTodayOnly, setDueTodayOnly] = useState(false);
+
+  const categories = useMemo(() => collectCategories(tasks), [tasks]);
+
+  useEffect(() => {
+    if (categoryFilter === "all") return;
+    const stillThere = categories.some(
+      (c) => c.toLowerCase() === categoryFilter.toLowerCase(),
+    );
+    if (!stillThere) setCategoryFilter("all");
+  }, [categories, categoryFilter]);
 
   const visibleTasks = useMemo(
-    () => tasks.filter((t) => taskMatchesSearch(t, taskSearch)),
-    [tasks, taskSearch],
+    () =>
+      tasks.filter((t) => {
+        if (!taskMatchesSearch(t, taskSearch)) return false;
+        if (!taskMatchesCategory(t, categoryFilter)) return false;
+        if (dueTodayOnly && !isTaskDueToday(t.dueDate)) return false;
+        return true;
+      }),
+    [tasks, taskSearch, categoryFilter, dueTodayOnly],
   );
 
   const topClass =
@@ -94,9 +134,16 @@ export function TasksWorkspace({
         aria-hidden
       />
 
-      <div
-        className={`relative z-10 flex min-h-0 flex-1 ${composerLayout === "bottomChat" ? "flex-col" : "flex-col-reverse"} ${topClass}`}
-      >
+      <div className={`relative z-10 flex min-h-0 flex-1 flex-col ${topClass}`}>
+        <TasksHeader
+          taskSearch={taskSearch}
+          onTaskSearchChange={setTaskSearch}
+          categoryFilter={categoryFilter}
+          onCategoryFilterChange={setCategoryFilter}
+          dueTodayOnly={dueTodayOnly}
+          onDueTodayOnlyChange={setDueTodayOnly}
+          categories={categories}
+        />
         <div
           onContextMenu={(e) => {
             e.preventDefault();
@@ -108,28 +155,15 @@ export function TasksWorkspace({
               },
             ]);
           }}
-          className={`min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-5 sm:px-8 ${composerLayout === "bottomChat" ? "pb-4 pt-2" : "pb-10"}`}
+          className={`min-h-0 flex-1 overflow-y-scroll overflow-x-hidden overscroll-contain px-5 sm:px-8 ${composerLayout === "bottomChat" ? "pb-4 pt-2" : "pb-10"}`}
         >
-          <div className={`mx-auto flex w-full flex-col gap-6 ${maxW}`}>
+          <div
+            className={`mx-auto flex min-h-0 w-full min-w-0 flex-col gap-6 ${maxW}`}
+          >
             {composerLayout === "inline" ? (
               <TaskCreator onAdd={addTask} onOpenFullForm={openTaskFormPopup} />
             ) : null}
             <div className="flex flex-col gap-3">
-              <label className="relative block">
-                <IoSearch
-                  className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-zinc-400 dark:text-zinc-500"
-                  aria-hidden
-                />
-                <input
-                  type="search"
-                  value={taskSearch}
-                  onChange={(e) => setTaskSearch(e.target.value)}
-                  placeholder="Search tasks or category…"
-                  autoComplete="off"
-                  className="w-full rounded-2xl border border-white/70 bg-white/50 py-2.5 pl-10 pr-3 text-sm text-zinc-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] ring-1 ring-white/30 backdrop-blur-xl placeholder:text-zinc-400 outline-none focus:border-zinc-400/80 focus:ring-2 focus:ring-zinc-400/30 dark:border-white/15 dark:bg-zinc-900/40 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-500 dark:focus:ring-zinc-500/25"
-                  aria-label="Search tasks by title or category"
-                />
-              </label>
               <ul className="flex w-full flex-col gap-3 pb-8">
                 {visibleTasks.map((task) => (
                   <TaskItem
@@ -137,6 +171,7 @@ export function TasksWorkspace({
                     task={task}
                     onToggle={() => toggleTask(task.id)}
                     onDelete={() => removeTask(task.id)}
+                    onSetTags={(tags) => setTaskTags(task.id, tags)}
                   />
                 ))}
               </ul>
@@ -156,6 +191,11 @@ export function TasksWorkspace({
           </div>
         ) : null}
       </div>
+      <nav className="fixed bottom-0 right-0 z-20">
+        <button className="bg-white/80 backdrop-blur-sm rounded-full p-2">
+          <IoGrid />
+        </button>
+      </nav>
     </main>
   );
 }

@@ -5,11 +5,14 @@ import {
   IoListOutline,
   IoSettingsOutline,
   IoCalendarOutline,
-  IoHelpOutline,
+  IoHelpCircleOutline,
+  IoGrid,
 } from "react-icons/io5";
+import BottomSheet from "../../ui/BottomSheet";
 
 const SideBar = () => {
   const [activeItem, setActiveItem] = useState<string | null>(null);
+  const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
   const handleClick = (item: string) => {
     setActiveItem(item);
   };
@@ -37,8 +40,13 @@ const SideBar = () => {
         link: "/settings",
       },
       {
+        label: "Blocks",
+        icon: <IoGrid />,
+        link: "/blocks",
+      },
+      {
         label: "Help",
-        icon: <IoHelpOutline />,
+        icon: <IoHelpCircleOutline />,
         link: "/help",
       },
     ],
@@ -61,6 +69,20 @@ const SideBar = () => {
         ),
         [],
       )}
+      <button
+        onClick={() => setBottomSheetOpen(true)}
+        type="button"
+        className="flex items-center justify-center text-2xl h-16 w-16 transition-all duration-200"
+      >
+        <IoHelpCircleOutline />
+      </button>
+      <BottomSheet
+        open={bottomSheetOpen}
+        onClose={() => setBottomSheetOpen(false)}
+        title="Help"
+      >
+        <p>Hello to All of you!</p>
+      </BottomSheet>
     </div>
   );
 };

@@ -20,6 +20,31 @@ export function parseTaskRecurrence(raw: unknown): TaskRecurrence | undefined {
   return { frequency: f, interval };
 }
 
+/** Trim, drop empties, dedupe case-insensitively (keeps first casing). */
+export function normalizeTaskTags(input: unknown): string[] | undefined {
+  if (input == null) return undefined;
+  const raw = Array.isArray(input) ? input : [];
+  const list = raw
+    .filter((t): t is string => typeof t === "string")
+    .map((t) => t.trim())
+    .filter(Boolean);
+  if (list.length === 0) return undefined;
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const t of list) {
+    const k = t.toLowerCase();
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push(t);
+  }
+  return out.length ? out : undefined;
+}
+
+/** Comma-separated tags from a single form field. */
+export function parseTagsInput(s: string): string[] | undefined {
+  return normalizeTaskTags(s.split(/,/));
+}
+
 export type Task = {
   id: string;
   title: string;
@@ -45,5 +70,6 @@ export type AddTaskPayload = {
   category?: string;
   description?: string;
   notes?: string;
+  tags?: string[];
   recurrence?: TaskRecurrence;
 };

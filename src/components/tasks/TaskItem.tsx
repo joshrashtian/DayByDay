@@ -1,13 +1,18 @@
 import { motion } from "motion/react";
-import { IoRepeatOutline } from "react-icons/io5";
+import { IoClose, IoRepeatOutline } from "react-icons/io5";
 import { formatTaskDue, taskDueToIso } from "../../lib/taskDates";
 import { useContextMenu } from "../../providers/ContextMenuProvider";
-import type { Task, TaskPriority } from "../../types/task";
+import {
+  normalizeTaskTags,
+  type Task,
+  type TaskPriority,
+} from "../../types/task";
 
 type Props = {
   task: Task;
   onToggle: () => void;
   onDelete?: () => void;
+  onSetTags?: (tags: string[] | undefined) => void;
 };
 
 function priorityLabel(p: TaskPriority) {
@@ -22,8 +27,17 @@ function priorityChipClass(p: TaskPriority) {
   return "bg-slate-500/12 text-slate-800 ring-slate-500/20 dark:text-slate-200";
 }
 
-export function TaskItem({ task, onToggle, onDelete }: Props) {
+export function TaskItem({ task, onToggle, onDelete, onSetTags }: Props) {
   const { openMenu } = useContextMenu();
+  const tags = task.tags ?? [];
+
+  const removeTag = (label: string) => {
+    if (!onSetTags) return;
+    const remaining = tags.filter(
+      (x) => x.toLowerCase() !== label.toLowerCase(),
+    );
+    onSetTags(normalizeTaskTags(remaining));
+  };
 
   return (
     <li
@@ -87,10 +101,10 @@ export function TaskItem({ task, onToggle, onDelete }: Props) {
           aria-hidden
         />
         <div
-          className="relative flex flex-col gap-2"
+          className="relative flex min-w-0 flex-col gap-2"
           style={{ transform: "translateZ(20px)" }}
         >
-          <div className="flex items-center gap-3.5">
+          <div className="flex min-w-0 items-center gap-3.5">
             <span
               className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors ${
                 task.done
@@ -117,7 +131,7 @@ export function TaskItem({ task, onToggle, onDelete }: Props) {
               ) : null}
             </span>
             <span
-              className={`min-w-0 flex-1 text-lg font-medium tracking-tight text-zinc-900 transition-[color,opacity] dark:text-zinc-100 ${
+              className={`min-w-0 flex-1 wrap-break-word text-lg font-medium tracking-tight text-zinc-900 transition-[color,opacity] dark:text-zinc-100 ${
                 task.done
                   ? "text-zinc-500 line-through opacity-70 dark:text-zinc-400"
                   : ""
@@ -127,13 +141,14 @@ export function TaskItem({ task, onToggle, onDelete }: Props) {
             </span>
           </div>
           <div
-            className="flex flex-wrap items-center gap-2 pl-8 text-xs font-medium text-zinc-600 dark:text-zinc-400"
+            className="flex min-w-0 flex-wrap items-center gap-2 pl-8 text-xs font-medium text-zinc-600 dark:text-zinc-400"
             onClick={(e) => e.stopPropagation()}
           >
-            <label className="sr-only" htmlFor={`task-cat-${task.id}`}>
-              Category
-            </label>
-            <p>{task.category}</p>
+            {task.category ? (
+              <span className="min-w-0 max-w-full wrap-break-word text-zinc-600 dark:text-zinc-400">
+                {task.category}
+              </span>
+            ) : null}
             {task.dueDate ? (
               <time
                 dateTime={taskDueToIso(task.dueDate)}
@@ -154,10 +169,31 @@ export function TaskItem({ task, onToggle, onDelete }: Props) {
                 className="inline-flex items-center gap-0.5 rounded-md bg-white/50 px-2 py-0.5 ring-1 ring-zinc-200/80 dark:bg-zinc-950/40 dark:ring-zinc-600/50"
                 title={`Repeats every ${task.recurrence.interval} ${task.recurrence.frequency === "daily" ? (task.recurrence.interval === 1 ? "day" : "days") : task.recurrence.frequency === "weekly" ? (task.recurrence.interval === 1 ? "week" : "weeks") : task.recurrence.interval === 1 ? "month" : "months"}`}
               >
-                <IoRepeatOutline className="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden />
+                <IoRepeatOutline
+                  className="h-3.5 w-3.5 shrink-0 opacity-80"
+                  aria-hidden
+                />
                 <span className="sr-only">Repeating task</span>
               </span>
             ) : null}
+            {tags.map((tag) => (
+              <span
+                key={tag}
+                className="inline-flex max-w-40 items-center gap-0.5 rounded-md bg-violet-500/12 px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-violet-900 ring-1 ring-violet-500/25 dark:text-violet-200"
+              >
+                <span className="min-w-0 truncate">{tag}</span>
+                {onSetTags ? (
+                  <button
+                    type="button"
+                    className="shrink-0 rounded p-0.5 text-violet-700/80 transition-colors hover:bg-violet-500/20 hover:text-violet-950 dark:text-violet-300 dark:hover:text-white"
+                    aria-label={`Remove tag ${tag}`}
+                    onClick={() => removeTag(tag)}
+                  >
+                    <IoClose className="h-3 w-3" aria-hidden />
+                  </button>
+                ) : null}
+              </span>
+            ))}
           </div>
         </div>
       </motion.div>

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
+  normalizeTaskTags,
   parseTaskRecurrence,
   type AddTaskPayload,
   type Task,
@@ -16,6 +17,7 @@ type TasksState = {
   toggleTask: (id: string) => void;
   removeTask: (id: string) => void;
   setTaskCategory: (taskId: string, category: string | undefined) => void;
+  setTaskTags: (taskId: string, tags: string[] | undefined) => void;
 };
 
 function reviveTask(raw: Record<string, unknown>): Task {
@@ -25,6 +27,7 @@ function reviveTask(raw: Record<string, unknown>): Task {
     updatedAt,
     dueDate,
     category,
+    tags: rawTags,
     ...rest
   } = raw as Record<string, unknown>;
 
@@ -32,10 +35,17 @@ function reviveTask(raw: Record<string, unknown>): Task {
     (raw as Record<string, unknown>).recurrence,
   );
 
+  const tags = normalizeTaskTags(rawTags);
+
   const task: Task = {
     ...(rest as Omit<
       Task,
-      "createdAt" | "updatedAt" | "dueDate" | "category" | "recurrence"
+      | "createdAt"
+      | "updatedAt"
+      | "dueDate"
+      | "category"
+      | "recurrence"
+      | "tags"
     >),
     createdAt: new Date(String(createdAt)),
     updatedAt: new Date(String(updatedAt)),
@@ -45,6 +55,7 @@ function reviveTask(raw: Record<string, unknown>): Task {
     ...(typeof category === "string" && category.trim()
       ? { category: category.trim() }
       : {}),
+    ...(tags ? { tags } : {}),
     ...(recurrence ? { recurrence } : {}),
   };
   return task;
@@ -89,6 +100,19 @@ export const useTasksStore = create<TasksState>()(
           ),
         })),
 
+      setTaskTags: (taskId, tags) =>
+        set((s) => ({
+          tasks: s.tasks.map((t) =>
+            t.id === taskId
+              ? {
+                  ...t,
+                  tags: normalizeTaskTags(tags ?? []),
+                  updatedAt: new Date(),
+                }
+              : t,
+          ),
+        })),
+
       addTask: (payload) => {
         const trimmed = payload.title.trim();
         if (!trimmed) return;
@@ -103,6 +127,7 @@ export const useTasksStore = create<TasksState>()(
                 interval: Math.max(1, payload.recurrence.interval ?? 1),
               }
             : undefined;
+        const tags = normalizeTaskTags(payload.tags ?? null);
         set((s) => ({
           tasks: [
             ...s.tasks,
@@ -118,6 +143,7 @@ export const useTasksStore = create<TasksState>()(
               ...(cat ? { category: cat } : {}),
               ...(description ? { description } : {}),
               ...(notes ? { notes } : {}),
+              ...(tags ? { tags } : {}),
               ...(recurrence ? { recurrence } : {}),
             },
           ],

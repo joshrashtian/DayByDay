@@ -114,14 +114,14 @@ export const DateCorner = ({ variant, rootClassName }: Props) => {
             <span className="font-display text-6xl font-bold">{day}</span>
           </span>
         </div>
-        <div className="flex w-full flex-nowrap items-center justify-end gap-3 pr-0.5">
-          <h3 className="shrink-0 text-right font-quantify text-2xl font-black tracking-wide text-zinc-900 sm:text-3xl">
+        <div className="flex w-full flex-nowrap items-baseline justify-end gap-3 pr-0.5">
+          <h3 className="shrink-0 text-right font-quantify text-2xl font-black leading-none tracking-wide text-zinc-900 sm:text-3xl">
             {weekday}
           </h3>
           <WeatherBadge
             weather={weather}
             compact
-            className="shrink-0 -skew-x-12 bg-zinc-200/70 px-3 p-1 items-center text-zinc-900"
+            className="shrink-0 -skew-x-12 bg-zinc-200/70 px-3 p-1 items-baseline text-zinc-900"
             iconClassName="text-zinc-900"
             temperatureClassName="font-quantify skew-x-12 text-2xl font-black tabular-nums tracking-wide text-zinc-900 sm:text-3xl"
           />
