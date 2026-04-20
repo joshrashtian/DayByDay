@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { DateTime } from "luxon";
 import { useShallow } from "zustand/react/shallow";
@@ -6,29 +6,74 @@ import {
   DayAgendaView,
   MonthGridView,
   ThreeDayView,
+  WeekView,
 } from "../components/calendar/calendarViews";
+import { taskCreatorPopupContent } from "../components/tasks/taskCreatorPopupContent";
+import {
+  dueLocalInputForCalendarDayEnd,
+  localInputForDateTime,
+} from "../lib/taskDates";
+import { usePopup } from "../providers/PopupProvider";
 import { useTasksStore } from "../stores/tasksStore";
 
-type CalendarMode = "month" | "day" | "three";
+type CalendarMode = "month" | "week" | "day" | "three";
 
 const modes: { id: CalendarMode; label: string }[] = [
   { id: "month", label: "Grid" },
+  { id: "week", label: "Week" },
   { id: "day", label: "Day" },
   { id: "three", label: "3 days" },
 ];
 
 export default function CalendarScreen() {
-  const { tasks, toggleTask } = useTasksStore(
-    useShallow((s) => ({ tasks: s.tasks, toggleTask: s.toggleTask })),
+  const { open: openPopup, close: closePopup } = usePopup();
+  const { tasks, toggleTask, addTask } = useTasksStore(
+    useShallow((s) => ({
+      tasks: s.tasks,
+      toggleTask: s.toggleTask,
+      addTask: s.addTask,
+    })),
   );
 
   const [mode, setMode] = useState<CalendarMode>("month");
   const [focus, setFocus] = useState(() => DateTime.local().startOf("day"));
 
+  const openAddTaskForDay = useCallback(
+    (day: DateTime) => {
+      openPopup(
+        taskCreatorPopupContent({
+          addTask,
+          closePopup,
+          initialDueLocal: dueLocalInputForCalendarDayEnd(day),
+        }),
+      );
+    },
+    [openPopup, closePopup, addTask],
+  );
+
+  const openAddTaskForRange = useCallback(
+    (start: DateTime, end: DateTime) => {
+      openPopup(
+        taskCreatorPopupContent({
+          addTask,
+          closePopup,
+          initialDueLocal: localInputForDateTime(start),
+          initialEndLocal: localInputForDateTime(end),
+        }),
+      );
+    },
+    [openPopup, closePopup, addTask],
+  );
+
   const monthRef = useMemo(() => focus.startOf("month"), [focus]);
 
   const title = useMemo(() => {
     if (mode === "month") return monthRef.toFormat("MMMM yyyy");
+    if (mode === "week") {
+      const weekStart = focus.startOf("week");
+      const weekEnd = weekStart.plus({ days: 6 });
+      return `Week ${weekStart.weekNumber} · ${weekStart.toFormat("d MMM")}–${weekEnd.toFormat("d MMM yyyy")}`;
+    }
     if (mode === "day") return focus.toFormat("cccc, d MMMM yyyy");
     const end = focus.plus({ days: 2 });
     if (focus.month !== end.month) {
@@ -41,6 +86,7 @@ export default function CalendarScreen() {
     setFocus((f) => {
       const d = f.startOf("day");
       if (mode === "month") return d.startOf("month").minus({ months: 1 });
+      if (mode === "week") return d.minus({ weeks: 1 });
       if (mode === "day") return d.minus({ days: 1 });
       return d.minus({ days: 3 });
     });
@@ -50,6 +96,7 @@ export default function CalendarScreen() {
     setFocus((f) => {
       const d = f.startOf("day");
       if (mode === "month") return d.startOf("month").plus({ months: 1 });
+      if (mode === "week") return d.plus({ weeks: 1 });
       if (mode === "day") return d.plus({ days: 1 });
       return d.plus({ days: 3 });
     });
@@ -75,7 +122,7 @@ export default function CalendarScreen() {
 
       <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col gap-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="font-fava text-4xl font-black tracking-wide text-zinc-900 sm:text-5xl dark:text-zinc-50">
+          <h1 className="font-quantify text-4xl font-black tracking-wide text-zinc-900 sm:text-5xl dark:text-zinc-50">
             Calendar
           </h1>
 
@@ -85,7 +132,7 @@ export default function CalendarScreen() {
                 key={id}
                 type="button"
                 onClick={() => setMode(id)}
-                className={`rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${
+                className={` px-4 py-2 text-sm font-semibold skew-x-6 transition-colors ${
                   mode === id
                     ? "bg-zinc-900 text-white shadow-sm dark:bg-white dark:text-zinc-900"
                     : "text-zinc-600 hover:bg-white/50 dark:text-zinc-400 dark:hover:bg-white/10"
@@ -157,6 +204,16 @@ export default function CalendarScreen() {
                 day={focus}
                 tasks={tasks}
                 onToggleTask={toggleTask}
+                onAddTaskForDay={openAddTaskForDay}
+              />
+            ) : null}
+            {mode === "week" ? (
+              <WeekView
+                startDay={focus}
+                tasks={tasks}
+                onPickDay={handlePickDay}
+                onAddTaskForDay={openAddTaskForDay}
+                onCreateTimedTask={openAddTaskForRange}
               />
             ) : null}
             {mode === "three" ? (
@@ -165,6 +222,7 @@ export default function CalendarScreen() {
                 tasks={tasks}
                 onToggleTask={toggleTask}
                 onPickDay={handlePickDay}
+                onAddTaskForDay={openAddTaskForDay}
               />
             ) : null}
           </motion.div>

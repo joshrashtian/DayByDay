@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { isTaskDueToday } from "../../lib/taskDates";
 import { TaskCreator } from "./TaskCreator";
-import { TaskCreatorPopupForm } from "./TaskCreatorPopupForm";
+import { taskCreatorPopupContent } from "./taskCreatorPopupContent";
 import { TaskItem } from "./TaskItem";
 import { TasksHeader } from "./TasksHeader";
 import { useContextMenu } from "../../providers/ContextMenuProvider";
@@ -63,20 +63,7 @@ export function TasksWorkspace({
   const { open: openPopup, close: closePopup } = usePopup();
 
   const openTaskFormPopup = useCallback(() => {
-    openPopup(
-      <div className="p-5 sm:p-6">
-        <TaskCreatorPopupForm
-          onAdd={(payload) => {
-            addTask(payload);
-            closePopup();
-          }}
-          onAddAnother={(payload) => {
-            addTask(payload);
-          }}
-          onDismiss={closePopup}
-        />
-      </div>,
-    );
+    openPopup(taskCreatorPopupContent({ addTask, closePopup }));
   }, [openPopup, closePopup, addTask]);
 
   const [taskSearch, setTaskSearch] = useState("");

@@ -75,8 +75,29 @@ export function parseDueLocalInput(value: string): Date | undefined {
   return parseCompactMdLocalDateTime(trimmed);
 }
 
+/**
+ * Value for `<input type="datetime-local" />` when picking a calendar day without
+ * a specific time: local end of that day (11:59 PM). Must be `yyyy-MM-ddTHH:mm`
+ * with no offset — ISO strings from `toISO()` are invalid for datetime-local and
+ * show up empty in the browser.
+ */
+export function dueLocalInputForCalendarDayEnd(day: DateTime): string {
+  const end = day.startOf("day").endOf("day");
+  return end.toFormat("yyyy-MM-dd'T'HH:mm");
+}
+
+/** Format local DateTime for `<input type="datetime-local" />`. */
+export function localInputForDateTime(dt: DateTime): string {
+  return dt.toFormat("yyyy-MM-dd'T'HH:mm");
+}
+
 export function formatTaskDue(d: Date): string {
-  return DateTime.fromJSDate(d).toLocaleString(DateTime.DATETIME_MED);
+  const dt = DateTime.fromJSDate(d);
+  // Calendar "date-only" dues are stored as local 11:59 PM (end of day).
+  if (dt.hour === 23 && dt.minute === 59) {
+    return dt.toLocaleString(DateTime.DATE_MED);
+  }
+  return dt.toLocaleString(DateTime.DATETIME_MED);
 }
 
 export function taskDueToIso(d: Date): string {

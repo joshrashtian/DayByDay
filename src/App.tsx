@@ -8,6 +8,7 @@ import { SettingsScreen } from "./screens/SettingsScreen";
 import TasksScreen from "./screens/TasksScreen";
 import CalendarScreen from "./screens/CalendarScreen";
 import HelpScreen from "./screens/HelpScreen";
+import BlockScreen from "./screens/BlockScreen";
 
 export default function App() {
   const location = useLocation();
@@ -55,6 +56,14 @@ export default function App() {
               element={
                 <AnimatedPage>
                   <HelpScreen />
+                </AnimatedPage>
+              }
+            />
+            <Route
+              path="/blocks"
+              element={
+                <AnimatedPage>
+                  <BlockScreen />
                 </AnimatedPage>
               }
             />

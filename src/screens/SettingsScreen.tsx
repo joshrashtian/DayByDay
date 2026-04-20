@@ -2,6 +2,11 @@ import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { IoSettings } from "react-icons/io5";
 import {
+  clearBlocksUserCss,
+  getBlocksUserCss,
+  setBlocksUserCss,
+} from "../lib/blocksUserCss";
+import {
   clearManualWeatherCoords,
   getManualWeatherCoords,
   setManualWeatherCoords,
@@ -12,6 +17,8 @@ export const SettingsScreen = () => {
   const [lonInput, setLonInput] = useState("");
   const [saveError, setSaveError] = useState<string | null>(null);
   const [savedFlash, setSavedFlash] = useState(false);
+  const [blocksCssInput, setBlocksCssInput] = useState("");
+  const [blocksCssSavedFlash, setBlocksCssSavedFlash] = useState(false);
 
   useEffect(() => {
     const m = getManualWeatherCoords();
@@ -19,6 +26,7 @@ export const SettingsScreen = () => {
       setLatInput(String(m.lat));
       setLonInput(String(m.lon));
     }
+    setBlocksCssInput(getBlocksUserCss());
   }, []);
 
   const onSaveWeatherLocation = () => {
@@ -47,6 +55,19 @@ export const SettingsScreen = () => {
     clearManualWeatherCoords();
     setLatInput("");
     setLonInput("");
+  };
+
+  const onSaveBlocksCss = () => {
+    setBlocksUserCss(blocksCssInput);
+    setBlocksCssSavedFlash(true);
+    window.setTimeout(() => setBlocksCssSavedFlash(false), 2000);
+  };
+
+  const onClearBlocksCss = () => {
+    clearBlocksUserCss();
+    setBlocksCssInput("");
+    setBlocksCssSavedFlash(true);
+    window.setTimeout(() => setBlocksCssSavedFlash(false), 2000);
   };
 
   return (
@@ -153,6 +174,70 @@ export const SettingsScreen = () => {
               className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-50"
             >
               Use device location
+            </button>
+          </div>
+        </section>
+
+        <section className="max-w-3xl rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm md:col-span-2">
+          <h2 className="font-display text-lg font-semibold text-zinc-900">
+            Blocks custom CSS
+          </h2>
+          <p className="mt-1 text-sm text-zinc-500">
+            Optional rules for the Blocks screen. Stored on this device. Targets
+            include{" "}
+            <code className="rounded bg-zinc-100 px-1 py-0.5 text-xs text-zinc-800">
+              #block-screen
+            </code>
+            ,{" "}
+            <code className="rounded bg-zinc-100 px-1 py-0.5 text-xs text-zinc-800">
+              .block-screen__title
+            </code>
+            ,{" "}
+            <code className="rounded bg-zinc-100 px-1 py-0.5 text-xs text-zinc-800">
+              .block-screen__row
+            </code>
+            , and variant classes such as{" "}
+            <code className="rounded bg-zinc-100 px-1 py-0.5 text-xs text-zinc-800">
+              .block-screen__row--early-morning
+            </code>
+            . App theme variables such as{" "}
+            <code className="rounded bg-zinc-100 px-1 py-0.5 text-xs text-zinc-800">
+              var(--font-quantify)
+            </code>{" "}
+            work here.
+          </p>
+          <label className="mt-4 flex flex-col gap-1">
+            <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+              CSS
+            </span>
+            <textarea
+              value={blocksCssInput}
+              onChange={(e) => setBlocksCssInput(e.target.value)}
+              spellCheck={false}
+              rows={12}
+              placeholder={`.block-screen__title {\n  letter-spacing: 0.12em;\n}\n\n#block-screen .block-screen__row p:first-child {\n  font-weight: 700;\n}`}
+              className="min-h-[200px] w-full resize-y rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 font-mono text-sm text-zinc-900 outline-none ring-zinc-400 focus:ring-2"
+            />
+          </label>
+          {blocksCssSavedFlash ? (
+            <p className="mt-3 text-sm text-emerald-600">
+              Blocks appearance updated.
+            </p>
+          ) : null}
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={onSaveBlocksCss}
+              className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+            >
+              Save Blocks CSS
+            </button>
+            <button
+              type="button"
+              onClick={onClearBlocksCss}
+              className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-50"
+            >
+              Clear
             </button>
           </div>
         </section>

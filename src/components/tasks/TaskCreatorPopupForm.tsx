@@ -29,6 +29,9 @@ type Props = {
   onAdd: (payload: AddTaskPayload) => void;
   onAddAnother: (payload: AddTaskPayload) => void;
   onDismiss?: () => void;
+
+  initialDueLocal?: string;
+  initialEndLocal?: string;
 };
 
 type SectionId = "basics" | "events" | "notes";
@@ -46,13 +49,21 @@ export function TaskCreatorPopupForm({
   onAdd,
   onAddAnother,
   onDismiss,
+  initialDueLocal,
+  initialEndLocal,
 }: Props) {
+  const pinnedDueRef = useRef(initialDueLocal ?? "");
+  pinnedDueRef.current = initialDueLocal ?? "";
+  const pinnedEndRef = useRef(initialEndLocal ?? "");
+  pinnedEndRef.current = initialEndLocal ?? "";
+
   const [title, setTitle] = useState("");
   const [tagsInput, setTagsInput] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
   const [notes, setNotes] = useState("");
-  const [dueLocal, setDueLocal] = useState("");
+  const [dueLocal, setDueLocal] = useState(initialDueLocal ?? "");
+  const [endLocal, setEndLocal] = useState(initialEndLocal ?? "");
   const [priority, setPriority] = useState<TaskPriority | "">("");
   const [critical, setCritical] = useState(false);
   const [recurrenceChoice, setRecurrenceChoice] =
@@ -66,10 +77,15 @@ export function TaskCreatorPopupForm({
     return () => cancelAnimationFrame(t);
   }, []);
 
+  useEffect(() => {
+    if (initialDueLocal?.trim()) setSection("events");
+  }, [initialDueLocal]);
+
   const buildPayload = (): AddTaskPayload | null => {
     const trimmed = title.trim();
     if (!trimmed) return null;
     const dueDate = parseDueLocalInput(dueLocal);
+    const endDate = parseDueLocalInput(endLocal);
     const cat = category.trim();
     const tags = parseTagsInput(tagsInput);
     const desc = description.trim();
@@ -84,6 +100,7 @@ export function TaskCreatorPopupForm({
     return {
       title: trimmed,
       ...(dueDate ? { dueDate } : {}),
+      ...(dueDate && endDate && endDate >= dueDate ? { endDate } : {}),
       ...(priority ? { priority } : {}),
       ...(critical ? { critical: true } : {}),
       ...(cat ? { category: cat } : {}),
@@ -100,7 +117,8 @@ export function TaskCreatorPopupForm({
     setCategory("");
     setDescription("");
     setNotes("");
-    setDueLocal("");
+    setDueLocal(pinnedDueRef.current);
+    setEndLocal(pinnedEndRef.current);
     setPriority("");
     setCritical(false);
     setRecurrenceChoice("none");
@@ -127,25 +145,22 @@ export function TaskCreatorPopupForm({
       <div className="flex items-start justify-between gap-3">
         <div>
           <motion.h2
-            className="font-display text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50"
+            className="font-display text-xl font-bold flex flex-row tracking-tight text-zinc-900 dark:text-zinc-50"
             initial={{ y: 14, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ type: "spring", stiffness: 420, damping: 30 }}
           >
-            NEW TASK
+            {"NEW TASK".split("").map((char, i) => (
+              <motion.p
+                key={i}
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0 + Math.random() * 4 - 2, opacity: 1 }}
+                transition={{ duration: 0.2, delay: i * 0.1 }}
+              >
+                {char}
+              </motion.p>
+            ))}
           </motion.h2>
-          <motion.p
-            className="mt-1 text-xs text-zinc-500 dark:text-zinc-400"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.2, delay: 0.05 }}
-          >
-            Use{" "}
-            <span className="font-medium text-zinc-600 dark:text-zinc-300">
-              Add another
-            </span>{" "}
-            to save and keep adding without closing.
-          </motion.p>
         </div>
         {onDismiss ? (
           <button
@@ -268,6 +283,22 @@ export function TaskCreatorPopupForm({
                   keep the same time of day.
                 </p>
               </div>
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="popup-task-end" className={fieldLabel}>
+                  End
+                </label>
+                <input
+                  id="popup-task-end"
+                  type="datetime-local"
+                  value={endLocal}
+                  onChange={(e) => setEndLocal(e.target.value)}
+                  className={inputClass}
+                />
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                  Optional. Used for time ranges when creating tasks from week
+                  slots.
+                </p>
+              </div>
 
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="popup-task-repeat" className={fieldLabel}>
@@ -289,7 +320,10 @@ export function TaskCreatorPopupForm({
                 </select>
                 {recurrenceChoice !== "none" ? (
                   <div className="flex flex-col gap-1 pt-1">
-                    <label htmlFor="popup-task-repeat-interval" className={fieldLabel}>
+                    <label
+                      htmlFor="popup-task-repeat-interval"
+                      className={fieldLabel}
+                    >
                       Every
                     </label>
                     <div className="flex items-center gap-2">
@@ -406,17 +440,17 @@ export function TaskCreatorPopupForm({
         <button
           type="submit"
           disabled={!title.trim()}
-          className="min-w-32 flex-1 rounded-xl bg-zinc-900 px-4 py-3 text-sm font-semibold text-white transition-opacity enabled:hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-35 dark:bg-white dark:text-zinc-900 dark:enabled:hover:bg-zinc-100"
+          className="min-w-32 flex-1 font-quantify rounded-xl bg-zinc-900 px-4 py-3 text-sm font-semibold text-white transition-opacity enabled:hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-35 dark:bg-white dark:text-zinc-900 dark:enabled:hover:bg-zinc-100"
         >
-          Create task
+          Create Task
         </button>
         <button
           type="button"
           disabled={!title.trim()}
           onClick={handleAddAnother}
-          className="min-w-32 rounded-xl border border-zinc-300/80 bg-white px-4 py-3 text-sm font-semibold text-zinc-900 transition-colors enabled:hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-35 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:enabled:hover:bg-zinc-700"
+          className="min-w-32 rounded-xl border border-zinc-300/80 bg-white px-4 py-3 text-sm font-semibold text-zinc-900 transition-colors enabled:hover:bg-zinc-50 font-display disabled:cursor-not-allowed disabled:opacity-35 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:enabled:hover:bg-zinc-700"
         >
-          Add another
+          1 More
         </button>
         {onDismiss ? (
           <button

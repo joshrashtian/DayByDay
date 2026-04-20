@@ -10,7 +10,7 @@ import {
 } from "../../lib/calendarUtils";
 import { formatTaskDue } from "../../lib/taskDates";
 import BottomSheet from "../../ui/BottomSheet";
-import { IoCheckmarkDone } from "react-icons/io5";
+import { IoAdd, IoCheckmarkDone } from "react-icons/io5";
 
 const cellEase = [0.25, 0.1, 0.25, 1] as const;
 
@@ -83,7 +83,13 @@ function TaskDueList({ items, onToggle, compact }: TaskListProps) {
                     : "border-white/20 dark:border-white/15"
                 }`}
               >
-                <p>{task.done ? "✅" : "❌"}</p>
+                <p>
+                  {task.done && (
+                    <IoCheckmarkDone
+                      className={`${task.critical ? "text-red-500" : "text-blue-500"}`}
+                    />
+                  )}
+                </p>
                 {task.critical ? (
                   <span className="text-xs font-display italic text-red-500">
                     CRITICAL
@@ -159,6 +165,7 @@ function TaskDueList({ items, onToggle, compact }: TaskListProps) {
       <BottomSheet
         open={bottomSheetOpen}
         onClose={closeSheet}
+        defaultSnap="full"
         title={selectedTask?.title ?? "Task"}
       >
         {selectedTask ? (
@@ -299,9 +306,15 @@ type DayViewProps = {
   day: DateTime;
   tasks: Task[];
   onToggleTask: (id: string) => void;
+  onAddTaskForDay?: (day: DateTime) => void;
 };
 
-export function DayAgendaView({ day, tasks, onToggleTask }: DayViewProps) {
+export function DayAgendaView({
+  day,
+  tasks,
+  onToggleTask,
+  onAddTaskForDay,
+}: DayViewProps) {
   const byDay = tasksByDueDateKeyInRange(
     tasks,
     day.startOf("day"),
@@ -338,9 +351,30 @@ export function DayAgendaView({ day, tasks, onToggleTask }: DayViewProps) {
             </motion.p>
           ))}
       </div>
-      <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-        {dayTasks.length} due {dayTasks.length === 1 ? "task" : "tasks"}
-      </p>
+      <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          {dayTasks.length} due {dayTasks.length === 1 ? "task" : "tasks"}
+        </p>
+        {onAddTaskForDay ? (
+          <motion.button
+            initial={{ opacity: 0, x: 16, transform: "skewX(-3deg)" }}
+            animate={{ opacity: 1, x: 0, transform: "skewX(6deg)" }}
+            exit={{ opacity: 0, x: -16, transform: "skewX(-3deg)" }}
+            whileHover={{ transform: "skew(-5deg, -5deg)", scale: 1.2 }}
+            transition={{
+              duration: 0.28,
+              delay: 0.06,
+              ease: [0.25, 0.1, 0.25, 1],
+            }}
+            type="button"
+            onClick={() => onAddTaskForDay(day)}
+            className="shrink-0 shadow-lg flex flex-row items-center justify-center gap-2 bg-sky-500/50 px-4 py-4 text-xl font-semibold text-sky-800 hover:bg-sky-500/25 dark:border-sky-400/35 dark:bg-sky-500/20 dark:text-sky-100 dark:hover:bg-sky-500/30"
+          >
+            <IoAdd className="text-white drop-shadow-lg -skew-x-3" />{" "}
+            <span className="text-xl font-semibold text-sky-800">Add Task</span>
+          </motion.button>
+        ) : null}
+      </div>
       <div className="mt-6 max-w-md">
         <TaskDueList items={dayTasks} onToggle={onToggleTask} />
       </div>
@@ -353,13 +387,378 @@ type ThreeDayProps = {
   tasks: Task[];
   onToggleTask: (id: string) => void;
   onPickDay: (day: DateTime) => void;
+  onAddTaskForDay?: (day: DateTime) => void;
 };
+
+type WeekViewProps = {
+  startDay: DateTime;
+  tasks: Task[];
+  onPickDay: (day: DateTime) => void;
+  onAddTaskForDay?: (day: DateTime) => void;
+  onCreateTimedTask?: (start: DateTime, end: DateTime) => void;
+};
+
+type WeekDragSelection = {
+  dayIso: string;
+  day: DateTime;
+  startMinuteOfDay: number;
+  endMinuteOfDay: number;
+};
+
+function isDateOnlyDue(dt: DateTime): boolean {
+  const isEndOfDay = dt.hour === 23 && dt.minute === 59;
+  const isStartOfDay = dt.hour === 0 && dt.minute === 0;
+  return isEndOfDay || isStartOfDay;
+}
+
+function minuteOfDayToLabel(minuteOfDay: number): string {
+  const hour = Math.floor(minuteOfDay / 60);
+  return DateTime.fromObject({ hour }).toFormat("h a");
+}
+
+type MinuteRange = {
+  startMinute: number;
+  endMinuteExclusive: number;
+};
+
+function resolveRowMinuteRange(row: CalendarTaskRow): MinuteRange {
+  const start = DateTime.fromJSDate(row.displayDueDate);
+  const taskDue = row.task.dueDate ? DateTime.fromJSDate(row.task.dueDate) : null;
+  const taskEnd = row.task.endDate ? DateTime.fromJSDate(row.task.endDate) : null;
+
+  let end = start.plus({ minutes: 15 });
+  if (taskDue && taskEnd && taskEnd > taskDue) {
+    // Recurring events should preserve their original duration per occurrence.
+    end = start.plus({ milliseconds: taskEnd.toMillis() - taskDue.toMillis() });
+  } else if (taskEnd && taskEnd > start) {
+    end = taskEnd;
+  }
+
+  const rawStartMinute = start.hour * 60 + start.minute;
+  const rawEndMinute = end.hour * 60 + end.minute;
+
+  const startQuarter = Math.max(0, Math.floor(rawStartMinute / 15) * 15);
+  const endQuarter = Math.min(24 * 60, Math.ceil(rawEndMinute / 15) * 15);
+
+  return {
+    startMinute: startQuarter,
+    endMinuteExclusive: Math.max(startQuarter + 15, endQuarter),
+  };
+}
+
+export function WeekView({
+  startDay,
+  tasks,
+  onPickDay,
+  onAddTaskForDay,
+  onCreateTimedTask,
+}: WeekViewProps) {
+  const weekStart = startDay.startOf("week");
+  const weekEnd = weekStart.plus({ days: 6 }).endOf("day");
+  const byDay = tasksByDueDateKeyInRange(
+    tasks,
+    weekStart.startOf("day"),
+    weekEnd,
+  );
+  const days = Array.from({ length: 7 }, (_, i) =>
+    weekStart.plus({ days: i }).startOf("day"),
+  );
+  const today = DateTime.local().startOf("day");
+  const quarterSlots = Array.from({ length: 60 }, (_, i) => 7 * 60 + i * 15);
+  const [dragSelection, setDragSelection] = useState<WeekDragSelection | null>(
+    null,
+  );
+  const [isDragging, setIsDragging] = useState(false);
+
+  const finishDrag = () => {
+    if (!dragSelection) return;
+    if (onCreateTimedTask) {
+      const minMinute = Math.min(
+        dragSelection.startMinuteOfDay,
+        dragSelection.endMinuteOfDay,
+      );
+      const maxMinute = Math.max(
+        dragSelection.startMinuteOfDay,
+        dragSelection.endMinuteOfDay,
+      );
+      const start = dragSelection.day.set({
+        hour: Math.floor(minMinute / 60),
+        minute: minMinute % 60,
+        second: 0,
+        millisecond: 0,
+      });
+      const endMinuteExclusive = Math.min(maxMinute + 15, 24 * 60 - 1);
+      const end = dragSelection.day.set({
+        hour: Math.floor(endMinuteExclusive / 60),
+        minute: endMinuteExclusive % 60,
+        second: 0,
+        millisecond: 0,
+      });
+      onCreateTimedTask(start, end);
+    } else {
+      onPickDay(dragSelection.day);
+    }
+    setDragSelection(null);
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    if (!isDragging) return;
+    const onMouseUp = () => finishDrag();
+    window.addEventListener("mouseup", onMouseUp);
+    return () => window.removeEventListener("mouseup", onMouseUp);
+  }, [isDragging, dragSelection]);
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-end justify-between gap-3">
+        <p className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+          W{weekStart.weekNumber}
+        </p>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          {weekStart.toFormat("d MMM")} -{" "}
+          {weekStart.plus({ days: 6 }).toFormat("d MMM yyyy")}
+        </p>
+      </div>
+
+      <div className="overflow-x-auto px-8 border border-white/60 bg-white/35 ring-1 ring-white/25 dark:border-white/15 dark:bg-zinc-900/35 dark:ring-white/10">
+        <div className=" grid min-w-[920px] grid-cols-[74px_repeat(7,minmax(116px,1fr))]">
+          <div className="border-b border-r border-white/40 px-2 py-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-500 dark:border-white/10 dark:text-zinc-400">
+            Time
+          </div>
+          {days.map((day) => {
+            const key = day.toISODate() ?? "";
+            const count = (byDay.get(key) ?? []).length;
+            const isToday = day.hasSame(today, "day");
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => onPickDay(day)}
+                className={`border-b border-r border-white/40 px-2 py-2 text-left hover:bg-white/35 dark:border-white/10 dark:hover:bg-white/5 ${
+                  isToday ? "bg-sky-500/10 dark:bg-sky-500/20" : ""
+                }`}
+              >
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                  {day.toFormat("ccc")}
+                </p>
+                <p className="text-sm font-black text-zinc-800 dark:text-zinc-100">
+                  {day.toFormat("d")}
+                </p>
+                <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
+                  {count} {count === 1 ? "task" : "tasks"}
+                </p>
+              </button>
+            );
+          })}
+
+          <div className="border-r border-white/40 p-2 dark:border-white/10">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+              All day
+            </p>
+          </div>
+          {days.map((day) => {
+            const key = day.toISODate() ?? "";
+            const allDayItems = (byDay.get(key) ?? []).filter((row) =>
+              isDateOnlyDue(DateTime.fromJSDate(row.displayDueDate)),
+            );
+            return (
+              <div
+                key={`${key}-all-day`}
+                className="border-r border-white/40 p-1.5 dark:border-white/10"
+              >
+                <div className="flex min-h-[44px] flex-col gap-1">
+                  {allDayItems.slice(0, 2).map((row) => (
+                    <button
+                      key={row.rowKey}
+                      type="button"
+                      onClick={() => onPickDay(day)}
+                      className={`truncate rounded-md px-1.5 py-1 text-left text-[10px] font-semibold ${
+                        row.task.critical
+                          ? "bg-red-500/20 text-red-700 dark:bg-red-500/30 dark:text-red-200"
+                          : "bg-zinc-500/15 text-zinc-700 dark:bg-zinc-500/25 dark:text-zinc-200"
+                      }`}
+                    >
+                      {row.task.title}
+                    </button>
+                  ))}
+                  {allDayItems.length > 2 ? (
+                    <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
+                      +{allDayItems.length - 2} more
+                    </p>
+                  ) : null}
+                  {allDayItems.length === 0 && onAddTaskForDay ? (
+                    <button
+                      type="button"
+                      onClick={() => onAddTaskForDay(day)}
+                      className="rounded-md border border-sky-500/30 px-1.5 py-1 text-[10px] font-semibold text-sky-700 hover:bg-sky-500/15 dark:text-sky-300 dark:hover:bg-sky-500/20"
+                    >
+                      + Add
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            );
+          })}
+
+          {quarterSlots.map((minuteOfDay) => (
+            <FragmentQuarterRow
+              key={`quarter-${minuteOfDay}`}
+              minuteOfDay={minuteOfDay}
+              days={days}
+              byDay={byDay}
+              onPickDay={onPickDay}
+              dragSelection={dragSelection}
+              onSlotMouseDown={(day, slotMinuteOfDay) => {
+                const dayIso = day.toISODate() ?? "";
+                setDragSelection({
+                  dayIso,
+                  day,
+                  startMinuteOfDay: slotMinuteOfDay,
+                  endMinuteOfDay: slotMinuteOfDay,
+                });
+                setIsDragging(true);
+              }}
+              onSlotMouseEnter={(day, slotMinuteOfDay) => {
+                if (!isDragging) return;
+                const dayIso = day.toISODate() ?? "";
+                setDragSelection((prev) => {
+                  if (!prev) return prev;
+                  if (dayIso !== prev.dayIso) return prev;
+                  return { ...prev, endMinuteOfDay: slotMinuteOfDay };
+                });
+              }}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+type FragmentQuarterRowProps = {
+  minuteOfDay: number;
+  days: DateTime[];
+  byDay: Map<string, CalendarTaskRow[]>;
+  onPickDay: (day: DateTime) => void;
+  dragSelection: WeekDragSelection | null;
+  onSlotMouseDown: (day: DateTime, minuteOfDay: number) => void;
+  onSlotMouseEnter: (day: DateTime, minuteOfDay: number) => void;
+};
+
+function FragmentQuarterRow({
+  minuteOfDay,
+  days,
+  byDay,
+  onPickDay,
+  dragSelection,
+  onSlotMouseDown,
+  onSlotMouseEnter,
+}: FragmentQuarterRowProps) {
+  const isHourLine = minuteOfDay % 60 === 0;
+  const isHalfLine = minuteOfDay % 60 === 30;
+  return (
+    <>
+      <div
+        className={`border-r border-white/35 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-500 dark:border-white/10 dark:text-zinc-400 ${
+          isHourLine
+            ? "border-t border-white/35 dark:border-white/10"
+            : isHalfLine
+              ? "border-t border-white/20 dark:border-white/5"
+              : "border-t border-dashed border-white/10 dark:border-white/5"
+        }`}
+      >
+        {isHourLine ? minuteOfDayToLabel(minuteOfDay) : ""}
+      </div>
+      {days.map((day) => {
+        const key = day.toISODate() ?? "";
+        const slotStartMinute = minuteOfDay;
+        const slotEndMinuteExclusive = minuteOfDay + 15;
+        const slotTasks = (byDay.get(key) ?? []).filter((row) => {
+          const dt = DateTime.fromJSDate(row.displayDueDate);
+          if (isDateOnlyDue(dt)) return false;
+          const range = resolveRowMinuteRange(row);
+          return (
+            slotStartMinute < range.endMinuteExclusive &&
+            slotEndMinuteExclusive > range.startMinute
+          );
+        });
+        const inSelection = (() => {
+          if (!dragSelection) return false;
+          if (dragSelection.dayIso !== key) return false;
+          const minMinute = Math.min(
+            dragSelection.startMinuteOfDay,
+            dragSelection.endMinuteOfDay,
+          );
+          const maxMinute = Math.max(
+            dragSelection.startMinuteOfDay,
+            dragSelection.endMinuteOfDay,
+          );
+          return minuteOfDay >= minMinute && minuteOfDay <= maxMinute;
+        })();
+        return (
+          <div
+            key={`${key}-${minuteOfDay}`}
+            className={`min-h-[24px] border-r p-0 dark:border-white/10 ${
+              inSelection ? "bg-sky-500/20 dark:bg-sky-500/25" : ""
+            } ${
+              isHourLine
+                ? "border-t border-white/35 dark:border-white/10"
+                : isHalfLine
+                  ? "border-t border-white/20 dark:border-white/5"
+                  : "border-t border-dashed border-white/10 dark:border-white/5"
+            }`}
+            onMouseDown={(e) => {
+              onSlotMouseDown(day, minuteOfDay);
+              e.preventDefault();
+            }}
+            onMouseEnter={() => onSlotMouseEnter(day, minuteOfDay)}
+          >
+            <div className="flex h-full flex-col gap-0">
+              {slotTasks.slice(0, 2).map((row) => (
+                (() => {
+                  const range = resolveRowMinuteRange(row);
+                  const isStartSlot = range.startMinute === minuteOfDay;
+                  const isEndSlot = range.endMinuteExclusive === minuteOfDay + 15;
+                  return (
+                    <button
+                      key={row.rowKey}
+                      type="button"
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onClick={() => onPickDay(day)}
+                      className={`h-full min-h-[24px] w-full truncate px-1.5 py-0.5 text-left text-[10px] leading-tight ${
+                        row.task.critical
+                          ? "bg-red-500/20 text-red-700 dark:bg-red-500/30 dark:text-red-200"
+                          : "bg-amber-500/20 text-amber-800 dark:bg-amber-500/30 dark:text-amber-100"
+                      } ${isStartSlot ? "rounded-t-md" : ""} ${isEndSlot ? "rounded-b-md" : ""}`}
+                      title={`${DateTime.fromJSDate(row.displayDueDate).toFormat("h:mm a")} ${row.task.title}`}
+                    >
+                      {isStartSlot
+                        ? `${DateTime.fromJSDate(row.displayDueDate).toFormat("h:mm a")} ${row.task.title}`
+                        : ""}
+                    </button>
+                  );
+                })()
+              ))}
+              {slotTasks.length > 2 ? (
+                <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
+                  +{slotTasks.length - 2} more
+                </p>
+              ) : null}
+            </div>
+          </div>
+        );
+      })}
+    </>
+  );
+}
 
 export function ThreeDayView({
   startDay,
   tasks,
   onToggleTask,
   onPickDay,
+  onAddTaskForDay,
 }: ThreeDayProps) {
   const mdUp = useMdUp();
   const rangeStart = startDay.startOf("day");
@@ -416,18 +815,33 @@ export function ThreeDayView({
                   : "ring-white/30 dark:ring-white/10"
               } ${mdUp ? "md:z-1 md:shadow-[0_12px_40px_rgba(15,15,15,0.12)] dark:md:shadow-[0_16px_48px_rgba(0,0,0,0.35)]" : ""}`}
             >
-              <button
-                type="button"
-                onClick={() => onPickDay(day)}
-                className="text-left"
-              >
-                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                  {day.toFormat("ccc")}
-                </p>
-                <p className="mt-0.5 font-fava text-xl font-black text-zinc-900 dark:text-zinc-50">
-                  {day.toFormat("d MMM")}
-                </p>
-              </button>
+              <div className="flex items-start justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => onPickDay(day)}
+                  className="min-w-0 flex-1 text-left"
+                >
+                  <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                    {day.toFormat("ccc")}
+                  </p>
+                  <p className="mt-0.5 font-fava text-xl font-black text-zinc-900 dark:text-zinc-50">
+                    {day.toFormat("d MMM")}
+                  </p>
+                </button>
+                {onAddTaskForDay ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAddTaskForDay(day);
+                    }}
+                    className="shrink-0 rounded-lg border border-sky-500/35 bg-sky-500/15 px-2.5 py-1 text-[11px] font-semibold text-sky-800 hover:bg-sky-500/25 dark:border-sky-400/30 dark:bg-sky-500/20 dark:text-sky-100 dark:hover:bg-sky-500/30"
+                    aria-label={`Add task for ${day.toFormat("d MMM")}`}
+                  >
+                    + Task
+                  </button>
+                ) : null}
+              </div>
               <div className="mt-4 min-h-[120px] flex-1">
                 <TaskDueList items={dayTasks} onToggle={onToggleTask} compact />
               </div>

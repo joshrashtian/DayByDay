@@ -26,6 +26,7 @@ function reviveTask(raw: Record<string, unknown>): Task {
     createdAt,
     updatedAt,
     dueDate,
+    endDate,
     category,
     tags: rawTags,
     ...rest
@@ -43,6 +44,7 @@ function reviveTask(raw: Record<string, unknown>): Task {
       | "createdAt"
       | "updatedAt"
       | "dueDate"
+      | "endDate"
       | "category"
       | "recurrence"
       | "tags"
@@ -51,6 +53,9 @@ function reviveTask(raw: Record<string, unknown>): Task {
     updatedAt: new Date(String(updatedAt)),
     ...(dueDate != null && dueDate !== ""
       ? { dueDate: new Date(String(dueDate)) }
+      : {}),
+    ...(endDate != null && endDate !== ""
+      ? { endDate: new Date(String(endDate)) }
       : {}),
     ...(typeof category === "string" && category.trim()
       ? { category: category.trim() }
@@ -138,6 +143,7 @@ export const useTasksStore = create<TasksState>()(
               createdAt: now,
               updatedAt: now,
               ...(payload.dueDate ? { dueDate: payload.dueDate } : {}),
+              ...(payload.endDate ? { endDate: payload.endDate } : {}),
               ...(payload.priority ? { priority: payload.priority } : {}),
               ...(payload.critical ? { critical: true } : {}),
               ...(cat ? { category: cat } : {}),
