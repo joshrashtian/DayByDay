@@ -27,11 +27,12 @@ const modes: { id: CalendarMode; label: string }[] = [
 
 export default function CalendarScreen() {
   const { open: openPopup, close: closePopup } = usePopup();
-  const { tasks, toggleTask, addTask } = useTasksStore(
+  const { tasks, toggleTask, addTask, setTaskSchedule } = useTasksStore(
     useShallow((s) => ({
       tasks: s.tasks,
       toggleTask: s.toggleTask,
       addTask: s.addTask,
+      setTaskSchedule: s.setTaskSchedule,
     })),
   );
 
@@ -214,6 +215,9 @@ export default function CalendarScreen() {
                 onPickDay={handlePickDay}
                 onAddTaskForDay={openAddTaskForDay}
                 onCreateTimedTask={openAddTaskForRange}
+                onUpdateTaskSchedule={(taskId, dueDate, endDate) =>
+                  setTaskSchedule(taskId, dueDate, endDate)
+                }
               />
             ) : null}
             {mode === "three" ? (

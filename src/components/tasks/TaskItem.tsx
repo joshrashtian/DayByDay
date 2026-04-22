@@ -144,6 +144,11 @@ export function TaskItem({ task, onToggle, onDelete, onSetTags }: Props) {
             className="flex min-w-0 flex-wrap items-center gap-2 pl-8 text-xs font-medium text-zinc-600 dark:text-zinc-400"
             onClick={(e) => e.stopPropagation()}
           >
+            {task.block ? (
+              <span className="rounded-md bg-sky-500/12 px-2 py-0.5 text-sky-900 ring-1 ring-sky-500/25 dark:text-sky-200">
+                {task.block}
+              </span>
+            ) : null}
             {task.category ? (
               <span className="min-w-0 max-w-full wrap-break-word text-zinc-600 dark:text-zinc-400">
                 {task.category}

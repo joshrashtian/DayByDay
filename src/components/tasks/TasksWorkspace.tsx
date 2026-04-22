@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { isTaskDueToday } from "../../lib/taskDates";
+import { collectTaskBlocks } from "../../lib/taskBlocks";
 import { TaskCreator } from "./TaskCreator";
 import { taskCreatorPopupContent } from "./taskCreatorPopupContent";
 import { TaskItem } from "./TaskItem";
@@ -21,9 +22,17 @@ function taskMatchesSearch(task: Task, query: string): boolean {
   const q = query.trim().toLowerCase();
   if (!q) return true;
   if (task.title.toLowerCase().includes(q)) return true;
+  if (task.block?.toLowerCase().includes(q)) return true;
   if (task.category?.toLowerCase().includes(q)) return true;
   if (task.tags?.some((tag) => tag.toLowerCase().includes(q))) return true;
   return false;
+}
+
+function taskMatchesBlock(task: Task, filter: "all" | string): boolean {
+  if (filter === "all") return true;
+  const b = task.block?.trim();
+  if (!b) return false;
+  return b.toLowerCase() === filter.toLowerCase();
 }
 
 function taskMatchesCategory(task: Task, filter: "all" | string): boolean {
@@ -67,10 +76,20 @@ export function TasksWorkspace({
   }, [openPopup, closePopup, addTask]);
 
   const [taskSearch, setTaskSearch] = useState("");
+  const [blockFilter, setBlockFilter] = useState<"all" | string>("all");
   const [categoryFilter, setCategoryFilter] = useState<"all" | string>("all");
   const [dueTodayOnly, setDueTodayOnly] = useState(false);
 
+  const blocks = useMemo(() => collectTaskBlocks(tasks), [tasks]);
   const categories = useMemo(() => collectCategories(tasks), [tasks]);
+
+  useEffect(() => {
+    if (blockFilter === "all") return;
+    const stillThere = blocks.some(
+      (b) => b.toLowerCase() === blockFilter.toLowerCase(),
+    );
+    if (!stillThere) setBlockFilter("all");
+  }, [blocks, blockFilter]);
 
   useEffect(() => {
     if (categoryFilter === "all") return;
@@ -84,11 +103,12 @@ export function TasksWorkspace({
     () =>
       tasks.filter((t) => {
         if (!taskMatchesSearch(t, taskSearch)) return false;
+        if (!taskMatchesBlock(t, blockFilter)) return false;
         if (!taskMatchesCategory(t, categoryFilter)) return false;
         if (dueTodayOnly && !isTaskDueToday(t.dueDate)) return false;
         return true;
       }),
-    [tasks, taskSearch, categoryFilter, dueTodayOnly],
+    [tasks, taskSearch, blockFilter, categoryFilter, dueTodayOnly],
   );
 
   const topClass =
@@ -125,10 +145,13 @@ export function TasksWorkspace({
         <TasksHeader
           taskSearch={taskSearch}
           onTaskSearchChange={setTaskSearch}
+          blockFilter={blockFilter}
+          onBlockFilterChange={setBlockFilter}
           categoryFilter={categoryFilter}
           onCategoryFilterChange={setCategoryFilter}
           dueTodayOnly={dueTodayOnly}
           onDueTodayOnlyChange={setDueTodayOnly}
+          blocks={blocks}
           categories={categories}
         />
         <div

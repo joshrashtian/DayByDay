@@ -91,6 +91,17 @@ const HelpScreen = () => {
             <ShortcutRow
               keys={
                 <>
+                  <Kbd className="bg-gray-200 font-display">%</Kbd>
+                  <span className="font-mono text-sm text-zinc-600 dark:text-zinc-400">
+                    block
+                  </span>
+                </>
+              }
+              description='Assign a block segment (e.g. %Early Morning, %work, or quoted custom: %"Deep Work").'
+            />
+            <ShortcutRow
+              keys={
+                <>
                   <Kbd className="bg-gray-200 font-display">@@</Kbd>
                   <span className="font-mono text-sm text-zinc-600 dark:text-zinc-400">
                     name
@@ -154,7 +165,7 @@ const HelpScreen = () => {
             </li>
             <li>
               <code className="rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-[13px] dark:bg-zinc-800">
-                @@work #bug Fix login redirect
+                %work @@engineering #bug Fix login redirect
               </code>
             </li>
             <li>

@@ -1,5 +1,6 @@
 import { DateTime } from "luxon";
 import { parseDueLocalInput } from "../../../lib/taskDates";
+import { DEFAULT_BLOCK_SUGGESTIONS } from "../../../lib/taskBlocks";
 import { normalizeTaskTags, type TaskPriority } from "../../../types/task";
 
 export type TaskChatHint = {
@@ -12,6 +13,7 @@ export type TaskChatParse = {
   title: string;
   priority?: TaskPriority;
   critical?: boolean;
+  block?: string;
   category?: string;
   tags?: string[];
   dueDate?: Date;
@@ -93,6 +95,7 @@ export function parseTaskChatInput(raw: string): TaskChatParse {
   const hints: TaskChatHint[] = [];
   let priority: TaskPriority | undefined;
   let critical: boolean | undefined;
+  let block: string | undefined;
   let category: string | undefined;
   const tagAcc: string[] = [];
   let dueDate: Date | undefined;
@@ -135,6 +138,58 @@ export function parseTaskChatInput(raw: string): TaskChatParse {
         priority = "high";
         work = after.trimStart();
         hints.push({ key: "priority", label: "High priority" });
+        return true;
+      }
+      return false;
+    }
+
+    // Block: %label
+    // Supports:
+    // - one-word tokens: %work
+    // - known multi-word suggestions: %Early Morning
+    // - quoted custom values: %"Deep Work" or %'Deep Work'
+    if (work.startsWith("%")) {
+      const quoted = work.match(
+        /^%\s*(?:"([^"]+)"|'([^']+)'|“([^”]+)”|‘([^’]+)’)(\s|$)/,
+      );
+      if (quoted) {
+        const value = (
+          quoted[1] ??
+          quoted[2] ??
+          quoted[3] ??
+          quoted[4] ??
+          ""
+        ).trim();
+        if (value) {
+          block = value;
+          work = work.slice(quoted[0].length);
+          hints.push({ key: "block", label: `Block: ${block}` });
+          return true;
+        }
+      }
+
+      const lowerWork = work.toLowerCase();
+      const match = [...DEFAULT_BLOCK_SUGGESTIONS]
+        .sort((a, b) => b.length - a.length)
+        .find((candidate) => {
+          const withPrefix = `%${candidate}`.toLowerCase();
+          if (!lowerWork.startsWith(withPrefix)) return false;
+          const nextChar = work.charAt(withPrefix.length);
+          return nextChar === "" || /\s/.test(nextChar);
+        });
+      if (match) {
+        block = match;
+        work = work.slice(match.length + 1);
+        work = work.replace(/^\s+/, "");
+        hints.push({ key: "block", label: `Block: ${block}` });
+        return true;
+      }
+
+      const oneWord = work.match(/^%([\w.-]+)(\s|$)/);
+      if (oneWord) {
+        block = oneWord[1];
+        work = work.slice(oneWord[0].length);
+        hints.push({ key: "block", label: `Block: ${block}` });
         return true;
       }
       return false;
@@ -203,6 +258,13 @@ export function parseTaskChatInput(raw: string): TaskChatParse {
         label: rest ? `Category: ${rest}…` : "Category…",
         partial: true,
       });
+    } else if (work.startsWith("%")) {
+      const rest = work.slice(1);
+      hints.push({
+        key: "block",
+        label: rest ? `Block: ${rest}…` : "Block…",
+        partial: true,
+      });
     } else if (work.startsWith("#")) {
       const rest = work.slice(1);
       hints.push({
@@ -226,6 +288,7 @@ export function parseTaskChatInput(raw: string): TaskChatParse {
     title: titleCore,
     ...(priority ? { priority } : {}),
     ...(critical ? { critical } : {}),
+    ...(block ? { block } : {}),
     ...(category ? { category } : {}),
     ...(tags ? { tags } : {}),
     ...(dueDate ? { dueDate } : {}),

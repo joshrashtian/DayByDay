@@ -95,6 +95,11 @@ function TaskDueList({ items, onToggle, compact }: TaskListProps) {
                     CRITICAL
                   </span>
                 ) : null}
+                {task.block ? (
+                  <span className="mb-0.5 block truncate text-[10px] font-semibold uppercase tracking-wide text-indigo-700 dark:text-indigo-300">
+                    {task.block}
+                  </span>
+                ) : null}
                 {task.category ? (
                   <span className="mb-0.5 block truncate text-[10px] font-semibold uppercase tracking-wide text-sky-700 dark:text-sky-300">
                     {task.category}
@@ -147,6 +152,11 @@ function TaskDueList({ items, onToggle, compact }: TaskListProps) {
                     {formatTaskDue(displayDueDate)}
                   </time>
                 )}
+                {task.block ? (
+                  <span className="mb-1 block text-xl font-semibold uppercase tracking-wide text-indigo-700 dark:text-indigo-300">
+                    {task.block}
+                  </span>
+                ) : null}
                 {task.category ? (
                   <span className="mb-1 block text-xl font-semibold uppercase tracking-wide text-sky-700 dark:text-sky-300">
                     {task.category}
@@ -185,6 +195,7 @@ function TaskDueList({ items, onToggle, compact }: TaskListProps) {
               {selectedTask.priority ? (
                 <p>Priority: {selectedTask.priority}</p>
               ) : null}
+              {selectedTask.block ? <p>Block: {selectedTask.block}</p> : null}
               {selectedTask.category ? (
                 <p>Category: {selectedTask.category}</p>
               ) : null}
@@ -396,6 +407,7 @@ type WeekViewProps = {
   onPickDay: (day: DateTime) => void;
   onAddTaskForDay?: (day: DateTime) => void;
   onCreateTimedTask?: (start: DateTime, end: DateTime) => void;
+  onUpdateTaskSchedule?: (taskId: string, dueDate: Date, endDate?: Date) => void;
 };
 
 type WeekDragSelection = {
@@ -404,6 +416,34 @@ type WeekDragSelection = {
   startMinuteOfDay: number;
   endMinuteOfDay: number;
 };
+
+type WeekEditTarget = {
+  day: DateTime;
+  minuteOfDay: number;
+};
+
+type WeekEditInteraction =
+  | {
+      kind: "move";
+      taskId: string;
+      baseDueDate: DateTime;
+      hasEndDate: boolean;
+      displayDurationMs: number;
+      occurrenceOffsetMs: number;
+    }
+  | {
+      kind: "resize-start";
+      taskId: string;
+      baseDueDate: DateTime;
+      baseEndDate: DateTime;
+      occurrenceOffsetMs: number;
+    }
+  | {
+      kind: "resize-end";
+      taskId: string;
+      baseDueDate: DateTime;
+      occurrenceOffsetMs: number;
+    };
 
 function isDateOnlyDue(dt: DateTime): boolean {
   const isEndOfDay = dt.hour === 23 && dt.minute === 59;
@@ -416,6 +456,10 @@ function minuteOfDayToLabel(minuteOfDay: number): string {
   return DateTime.fromObject({ hour }).toFormat("h a");
 }
 
+function slotDateTime(day: DateTime, minuteOfDay: number): DateTime {
+  return day.startOf("day").plus({ minutes: minuteOfDay });
+}
+
 type MinuteRange = {
   startMinute: number;
   endMinuteExclusive: number;
@@ -423,8 +467,12 @@ type MinuteRange = {
 
 function resolveRowMinuteRange(row: CalendarTaskRow): MinuteRange {
   const start = DateTime.fromJSDate(row.displayDueDate);
-  const taskDue = row.task.dueDate ? DateTime.fromJSDate(row.task.dueDate) : null;
-  const taskEnd = row.task.endDate ? DateTime.fromJSDate(row.task.endDate) : null;
+  const taskDue = row.task.dueDate
+    ? DateTime.fromJSDate(row.task.dueDate)
+    : null;
+  const taskEnd = row.task.endDate
+    ? DateTime.fromJSDate(row.task.endDate)
+    : null;
 
   let end = start.plus({ minutes: 15 });
   if (taskDue && taskEnd && taskEnd > taskDue) {
@@ -452,6 +500,7 @@ export function WeekView({
   onPickDay,
   onAddTaskForDay,
   onCreateTimedTask,
+  onUpdateTaskSchedule,
 }: WeekViewProps) {
   const weekStart = startDay.startOf("week");
   const weekEnd = weekStart.plus({ days: 6 }).endOf("day");
@@ -468,9 +517,11 @@ export function WeekView({
   const [dragSelection, setDragSelection] = useState<WeekDragSelection | null>(
     null,
   );
-  const [isDragging, setIsDragging] = useState(false);
+  const [editInteraction, setEditInteraction] =
+    useState<WeekEditInteraction | null>(null);
+  const [editTarget, setEditTarget] = useState<WeekEditTarget | null>(null);
 
-  const finishDrag = () => {
+  const finishCreateDrag = () => {
     if (!dragSelection) return;
     if (onCreateTimedTask) {
       const minMinute = Math.min(
@@ -499,15 +550,62 @@ export function WeekView({
       onPickDay(dragSelection.day);
     }
     setDragSelection(null);
-    setIsDragging(false);
   };
 
   useEffect(() => {
-    if (!isDragging) return;
-    const onMouseUp = () => finishDrag();
+    if (!dragSelection && !editInteraction) return;
+    const onMouseUp = () => {
+      if (editInteraction && editTarget && onUpdateTaskSchedule) {
+        const targetStart = slotDateTime(editTarget.day, editTarget.minuteOfDay);
+        if (editInteraction.kind === "move") {
+          const dueDate = targetStart.minus({
+            milliseconds: editInteraction.occurrenceOffsetMs,
+          });
+          const endDate = editInteraction.hasEndDate
+            ? dueDate.plus({ milliseconds: editInteraction.displayDurationMs })
+            : undefined;
+          onUpdateTaskSchedule(
+            editInteraction.taskId,
+            dueDate.toJSDate(),
+            endDate?.toJSDate(),
+          );
+        } else if (editInteraction.kind === "resize-start") {
+          const minStart = editInteraction.baseEndDate.minus({ minutes: 15 });
+          const dueDateCandidate = targetStart.minus({
+            milliseconds: editInteraction.occurrenceOffsetMs,
+          });
+          const dueDate = dueDateCandidate > minStart ? minStart : dueDateCandidate;
+          onUpdateTaskSchedule(
+            editInteraction.taskId,
+            dueDate.toJSDate(),
+            editInteraction.baseEndDate.toJSDate(),
+          );
+        } else {
+          const targetEndDisplay = slotDateTime(
+            editTarget.day,
+            editTarget.minuteOfDay + 15,
+          );
+          const endDateCandidate = targetEndDisplay.minus({
+            milliseconds: editInteraction.occurrenceOffsetMs,
+          });
+          const minEnd = editInteraction.baseDueDate.plus({ minutes: 15 });
+          const endDate = endDateCandidate < minEnd ? minEnd : endDateCandidate;
+          onUpdateTaskSchedule(
+            editInteraction.taskId,
+            editInteraction.baseDueDate.toJSDate(),
+            endDate.toJSDate(),
+          );
+        }
+      } else if (dragSelection) {
+        finishCreateDrag();
+      }
+      setEditInteraction(null);
+      setEditTarget(null);
+      setDragSelection(null);
+    };
     window.addEventListener("mouseup", onMouseUp);
     return () => window.removeEventListener("mouseup", onMouseUp);
-  }, [isDragging, dragSelection]);
+  }, [dragSelection, editInteraction, editTarget, onUpdateTaskSchedule]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -521,9 +619,9 @@ export function WeekView({
         </p>
       </div>
 
-      <div className="overflow-x-auto px-8 border border-white/60 bg-white/35 ring-1 ring-white/25 dark:border-white/15 dark:bg-zinc-900/35 dark:ring-white/10">
+      <div className="max-h-[70vh] overflow-auto  border border-white/60 bg-white/35 ring-1 ring-white/25 dark:border-white/15 dark:bg-zinc-900/35 dark:ring-white/10">
         <div className=" grid min-w-[920px] grid-cols-[74px_repeat(7,minmax(116px,1fr))]">
-          <div className="border-b border-r border-white/40 px-2 py-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-500 dark:border-white/10 dark:text-zinc-400">
+          <div className="sticky top-0 z-30 border-b border-r border-white/40 bg-zinc-100/95 px-2 py-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-500 backdrop-blur dark:border-white/10 dark:bg-zinc-900/95 dark:text-zinc-400">
             Time
           </div>
           {days.map((day) => {
@@ -535,8 +633,10 @@ export function WeekView({
                 key={key}
                 type="button"
                 onClick={() => onPickDay(day)}
-                className={`border-b border-r border-white/40 px-2 py-2 text-left hover:bg-white/35 dark:border-white/10 dark:hover:bg-white/5 ${
-                  isToday ? "bg-sky-500/10 dark:bg-sky-500/20" : ""
+                className={`sticky top-0 z-30 border-b border-r border-white/40 px-2 py-2 text-left backdrop-blur hover:bg-white/35 dark:border-white/10 dark:hover:bg-white/5 ${
+                  isToday
+                    ? "bg-sky-100/90 dark:bg-sky-900/60"
+                    : "bg-zinc-100/95 dark:bg-zinc-900/95"
                 }`}
               >
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
@@ -607,9 +707,9 @@ export function WeekView({
               minuteOfDay={minuteOfDay}
               days={days}
               byDay={byDay}
-              onPickDay={onPickDay}
               dragSelection={dragSelection}
               onSlotMouseDown={(day, slotMinuteOfDay) => {
+                if (editInteraction) return;
                 const dayIso = day.toISODate() ?? "";
                 setDragSelection({
                   dayIso,
@@ -617,16 +717,64 @@ export function WeekView({
                   startMinuteOfDay: slotMinuteOfDay,
                   endMinuteOfDay: slotMinuteOfDay,
                 });
-                setIsDragging(true);
               }}
               onSlotMouseEnter={(day, slotMinuteOfDay) => {
-                if (!isDragging) return;
+                if (editInteraction) {
+                  setEditTarget({ day, minuteOfDay: slotMinuteOfDay });
+                  return;
+                }
+                if (!dragSelection) return;
                 const dayIso = day.toISODate() ?? "";
                 setDragSelection((prev) => {
                   if (!prev) return prev;
                   if (dayIso !== prev.dayIso) return prev;
                   return { ...prev, endMinuteOfDay: slotMinuteOfDay };
                 });
+              }}
+              onEventMoveStart={(row, day, slotMinuteOfDay) => {
+                if (!onUpdateTaskSchedule || !row.task.dueDate) return;
+                const dueDate = DateTime.fromJSDate(row.task.dueDate);
+                const displayStart = DateTime.fromJSDate(row.displayDueDate);
+                const range = resolveRowMinuteRange(row);
+                const durationMinutes =
+                  range.endMinuteExclusive - range.startMinute;
+                setEditInteraction({
+                  kind: "move",
+                  taskId: row.task.id,
+                  baseDueDate: dueDate,
+                  hasEndDate: Boolean(row.task.endDate),
+                  displayDurationMs: durationMinutes * 60 * 1000,
+                  occurrenceOffsetMs: displayStart.toMillis() - dueDate.toMillis(),
+                });
+                setEditTarget({ day, minuteOfDay: slotMinuteOfDay });
+              }}
+              onEventResizeStart={(row, day, slotMinuteOfDay, edge) => {
+                if (!onUpdateTaskSchedule || !row.task.dueDate) return;
+                const dueDate = DateTime.fromJSDate(row.task.dueDate);
+                const displayStart = DateTime.fromJSDate(row.displayDueDate);
+                const occurrenceOffsetMs =
+                  displayStart.toMillis() - dueDate.toMillis();
+                if (edge === "start") {
+                  const baseEnd =
+                    row.task.endDate && row.task.endDate > row.task.dueDate
+                      ? DateTime.fromJSDate(row.task.endDate)
+                      : dueDate.plus({ minutes: 15 });
+                  setEditInteraction({
+                    kind: "resize-start",
+                    taskId: row.task.id,
+                    baseDueDate: dueDate,
+                    baseEndDate: baseEnd,
+                    occurrenceOffsetMs,
+                  });
+                } else {
+                  setEditInteraction({
+                    kind: "resize-end",
+                    taskId: row.task.id,
+                    baseDueDate: dueDate,
+                    occurrenceOffsetMs,
+                  });
+                }
+                setEditTarget({ day, minuteOfDay: slotMinuteOfDay });
               }}
             />
           ))}
@@ -640,20 +788,31 @@ type FragmentQuarterRowProps = {
   minuteOfDay: number;
   days: DateTime[];
   byDay: Map<string, CalendarTaskRow[]>;
-  onPickDay: (day: DateTime) => void;
   dragSelection: WeekDragSelection | null;
   onSlotMouseDown: (day: DateTime, minuteOfDay: number) => void;
   onSlotMouseEnter: (day: DateTime, minuteOfDay: number) => void;
+  onEventMoveStart: (
+    row: CalendarTaskRow,
+    day: DateTime,
+    minuteOfDay: number,
+  ) => void;
+  onEventResizeStart: (
+    row: CalendarTaskRow,
+    day: DateTime,
+    minuteOfDay: number,
+    edge: "start" | "end",
+  ) => void;
 };
 
 function FragmentQuarterRow({
   minuteOfDay,
   days,
   byDay,
-  onPickDay,
   dragSelection,
   onSlotMouseDown,
   onSlotMouseEnter,
+  onEventMoveStart,
+  onEventResizeStart,
 }: FragmentQuarterRowProps) {
   const isHourLine = minuteOfDay % 60 === 0;
   const isHalfLine = minuteOfDay % 60 === 30;
@@ -715,31 +874,55 @@ function FragmentQuarterRow({
             onMouseEnter={() => onSlotMouseEnter(day, minuteOfDay)}
           >
             <div className="flex h-full flex-col gap-0">
-              {slotTasks.slice(0, 2).map((row) => (
+              {slotTasks.slice(0, 2).map((row) =>
                 (() => {
                   const range = resolveRowMinuteRange(row);
                   const isStartSlot = range.startMinute === minuteOfDay;
-                  const isEndSlot = range.endMinuteExclusive === minuteOfDay + 15;
+                  const isEndSlot =
+                    range.endMinuteExclusive === minuteOfDay + 15;
                   return (
                     <button
                       key={row.rowKey}
                       type="button"
-                      onMouseDown={(e) => e.stopPropagation()}
-                      onClick={() => onPickDay(day)}
-                      className={`h-full min-h-[24px] w-full truncate px-1.5 py-0.5 text-left text-[10px] leading-tight ${
+                      onMouseDown={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        onEventMoveStart(row, day, minuteOfDay);
+                      }}
+                      className={`relative h-full min-h-[24px] w-full truncate px-1.5 py-0.5 text-left text-[10px] leading-tight ${
                         row.task.critical
                           ? "bg-red-500/20 text-red-700 dark:bg-red-500/30 dark:text-red-200"
                           : "bg-amber-500/20 text-amber-800 dark:bg-amber-500/30 dark:text-amber-100"
                       } ${isStartSlot ? "rounded-t-md" : ""} ${isEndSlot ? "rounded-b-md" : ""}`}
                       title={`${DateTime.fromJSDate(row.displayDueDate).toFormat("h:mm a")} ${row.task.title}`}
                     >
+                      {isStartSlot ? (
+                        <span
+                          className="absolute inset-x-1 top-0 h-1 cursor-ns-resize rounded-full bg-current/50"
+                          onMouseDown={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            onEventResizeStart(row, day, minuteOfDay, "start");
+                          }}
+                        />
+                      ) : null}
                       {isStartSlot
                         ? `${DateTime.fromJSDate(row.displayDueDate).toFormat("h:mm a")} ${row.task.title}`
                         : ""}
+                      {isEndSlot ? (
+                        <span
+                          className="absolute inset-x-1 bottom-0 h-1 cursor-ns-resize rounded-full bg-current/50"
+                          onMouseDown={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            onEventResizeStart(row, day, minuteOfDay, "end");
+                          }}
+                        />
+                      ) : null}
                     </button>
                   );
-                })()
-              ))}
+                })(),
+              )}
               {slotTasks.length > 2 ? (
                 <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
                   +{slotTasks.length - 2} more

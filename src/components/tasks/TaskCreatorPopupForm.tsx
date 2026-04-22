@@ -6,6 +6,7 @@ import {
   IoWarning,
 } from "react-icons/io5";
 import { parseDueLocalInput } from "../../lib/taskDates";
+import { DEFAULT_BLOCK_SUGGESTIONS } from "../../lib/taskBlocks";
 import {
   type AddTaskPayload,
   parseTagsInput,
@@ -59,6 +60,7 @@ export function TaskCreatorPopupForm({
 
   const [title, setTitle] = useState("");
   const [tagsInput, setTagsInput] = useState("");
+  const [block, setBlock] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
   const [notes, setNotes] = useState("");
@@ -86,6 +88,7 @@ export function TaskCreatorPopupForm({
     if (!trimmed) return null;
     const dueDate = parseDueLocalInput(dueLocal);
     const endDate = parseDueLocalInput(endLocal);
+    const normalizedBlock = block.trim();
     const cat = category.trim();
     const tags = parseTagsInput(tagsInput);
     const desc = description.trim();
@@ -103,6 +106,7 @@ export function TaskCreatorPopupForm({
       ...(dueDate && endDate && endDate >= dueDate ? { endDate } : {}),
       ...(priority ? { priority } : {}),
       ...(critical ? { critical: true } : {}),
+      ...(normalizedBlock ? { block: normalizedBlock } : {}),
       ...(cat ? { category: cat } : {}),
       ...(tags ? { tags } : {}),
       ...(desc ? { description: desc } : {}),
@@ -114,6 +118,7 @@ export function TaskCreatorPopupForm({
   const resetForm = () => {
     setTitle("");
     setTagsInput("");
+    setBlock("");
     setCategory("");
     setDescription("");
     setNotes("");
@@ -217,6 +222,27 @@ export function TaskCreatorPopupForm({
                   className={inputClass}
                   required
                 />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="popup-task-block" className={fieldLabel}>
+                  Block
+                </label>
+                <input
+                  id="popup-task-block"
+                  list="popup-task-block-suggestions"
+                  type="text"
+                  value={block}
+                  onChange={(e) => setBlock(e.target.value)}
+                  placeholder="Morning, Work, Home..."
+                  autoComplete="off"
+                  className={inputClass}
+                />
+                <datalist id="popup-task-block-suggestions">
+                  {DEFAULT_BLOCK_SUGGESTIONS.map((option) => (
+                    <option key={option} value={option} />
+                  ))}
+                </datalist>
               </div>
 
               <div className="flex flex-col gap-1.5">

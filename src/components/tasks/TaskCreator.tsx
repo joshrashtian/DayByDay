@@ -8,6 +8,7 @@ import {
 } from "react";
 import { IoArrowUp, IoChevronDown, IoPencil, IoWarning } from "react-icons/io5";
 import { parseDueLocalInput } from "../../lib/taskDates";
+import { DEFAULT_BLOCK_SUGGESTIONS } from "../../lib/taskBlocks";
 import {
   type AddTaskPayload,
   parseTagsInput,
@@ -39,6 +40,7 @@ export function TaskCreator({
   const [dueLocal, setDueLocal] = useState("");
   const [priority, setPriority] = useState<TaskPriority | "">("");
   const [critical, setCritical] = useState(false);
+  const [block, setBlock] = useState("");
   const [category, setCategory] = useState("");
   const [tagsInput, setTagsInput] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -73,6 +75,7 @@ export function TaskCreator({
         title: parsed.title.trim(),
         ...(parsed.priority ? { priority: parsed.priority } : {}),
         ...(parsed.critical ? { critical: true } : {}),
+        ...(parsed.block ? { block: parsed.block } : {}),
         ...(parsed.category ? { category: parsed.category } : {}),
         ...(parsed.tags?.length ? { tags: parsed.tags } : {}),
         ...(parsed.dueDate ? { dueDate: parsed.dueDate } : {}),
@@ -80,12 +83,14 @@ export function TaskCreator({
     } else {
       const dueDate = parseDueLocalInput(dueLocal);
       const cat = category.trim();
+      const trimmedBlock = block.trim();
       const tags = parseTagsInput(tagsInput);
       onAdd({
         title: trimmed,
         ...(dueDate ? { dueDate } : {}),
         ...(priority ? { priority } : {}),
         ...(critical ? { critical } : {}),
+        ...(trimmedBlock ? { block: trimmedBlock } : {}),
         ...(cat ? { category: cat } : {}),
         ...(tags ? { tags } : {}),
       });
@@ -94,6 +99,7 @@ export function TaskCreator({
     setDueLocal("");
     setPriority("");
     setCritical(false);
+    setBlock("");
     setCategory("");
     setTagsInput("");
     if (isChatDock) {
@@ -242,6 +248,26 @@ export function TaskCreator({
         {!isChatDock ? (
           <>
             <div className="mt-2 space-y-2">
+              <div>
+                <label htmlFor="task-block" className="sr-only">
+                  Block segment
+                </label>
+                <input
+                  id="task-block"
+                  list="task-block-suggestions"
+                  type="text"
+                  value={block}
+                  onChange={(e) => setBlock(e.target.value)}
+                  placeholder="Block (optional — e.g. Morning, Work, Home)"
+                  autoComplete="off"
+                  className="w-full rounded-xl border border-zinc-300/50 bg-white/40 px-3 py-2 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400/40 dark:border-zinc-600/60 dark:bg-zinc-950/30 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-500"
+                />
+                <datalist id="task-block-suggestions">
+                  {DEFAULT_BLOCK_SUGGESTIONS.map((option) => (
+                    <option key={option} value={option} />
+                  ))}
+                </datalist>
+              </div>
               <div>
                 <label htmlFor="task-category" className="sr-only">
                   Category — used when you search the list

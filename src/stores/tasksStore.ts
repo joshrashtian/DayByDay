@@ -6,6 +6,7 @@ import {
   type AddTaskPayload,
   type Task,
 } from "../types/task";
+import { normalizeTaskBlock } from "../lib/taskBlocks";
 
 const STORAGE_KEY = "daybyday-tasks";
 
@@ -14,9 +15,11 @@ type LegacyCategory = { id: string; name: string };
 type TasksState = {
   tasks: Task[];
   addTask: (payload: AddTaskPayload) => void;
+  setTaskSchedule: (taskId: string, dueDate: Date, endDate?: Date) => void;
   toggleTask: (id: string) => void;
   removeTask: (id: string) => void;
   setTaskCategory: (taskId: string, category: string | undefined) => void;
+  setTaskBlock: (taskId: string, block: string | undefined) => void;
   setTaskTags: (taskId: string, tags: string[] | undefined) => void;
 };
 
@@ -27,6 +30,8 @@ function reviveTask(raw: Record<string, unknown>): Task {
     updatedAt,
     dueDate,
     endDate,
+    block: rawBlock,
+    context: rawLegacyContext,
     category,
     tags: rawTags,
     ...rest
@@ -37,6 +42,9 @@ function reviveTask(raw: Record<string, unknown>): Task {
   );
 
   const tags = normalizeTaskTags(rawTags);
+  const block = normalizeTaskBlock(
+    typeof rawBlock === "string" ? rawBlock : rawLegacyContext,
+  );
 
   const task: Task = {
     ...(rest as Omit<
@@ -60,6 +68,7 @@ function reviveTask(raw: Record<string, unknown>): Task {
     ...(typeof category === "string" && category.trim()
       ? { category: category.trim() }
       : {}),
+    ...(block ? { block } : {}),
     ...(tags ? { tags } : {}),
     ...(recurrence ? { recurrence } : {}),
   };
@@ -105,6 +114,19 @@ export const useTasksStore = create<TasksState>()(
           ),
         })),
 
+      setTaskBlock: (taskId, block) =>
+        set((s) => ({
+          tasks: s.tasks.map((t) =>
+            t.id === taskId
+              ? {
+                  ...t,
+                  block: normalizeTaskBlock(block),
+                  updatedAt: new Date(),
+                }
+              : t,
+          ),
+        })),
+
       setTaskTags: (taskId, tags) =>
         set((s) => ({
           tasks: s.tasks.map((t) =>
@@ -123,6 +145,7 @@ export const useTasksStore = create<TasksState>()(
         if (!trimmed) return;
         const now = new Date();
         const cat = payload.category?.trim() || undefined;
+        const block = normalizeTaskBlock(payload.block ?? payload.context);
         const description = payload.description?.trim() || undefined;
         const notes = payload.notes?.trim() || undefined;
         const recurrence =
@@ -146,6 +169,7 @@ export const useTasksStore = create<TasksState>()(
               ...(payload.endDate ? { endDate: payload.endDate } : {}),
               ...(payload.priority ? { priority: payload.priority } : {}),
               ...(payload.critical ? { critical: true } : {}),
+              ...(block ? { block } : {}),
               ...(cat ? { category: cat } : {}),
               ...(description ? { description } : {}),
               ...(notes ? { notes } : {}),
@@ -155,6 +179,20 @@ export const useTasksStore = create<TasksState>()(
           ],
         }));
       },
+
+      setTaskSchedule: (taskId, dueDate, endDate) =>
+        set((s) => ({
+          tasks: s.tasks.map((t) =>
+            t.id === taskId
+              ? {
+                  ...t,
+                  dueDate,
+                  endDate,
+                  updatedAt: new Date(),
+                }
+              : t,
+          ),
+        })),
 
       toggleTask: (id) =>
         set((s) => ({

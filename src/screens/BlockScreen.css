@@ -61,20 +61,28 @@
   gap: 0.5rem;
 }
 
+.block-screen__row--title {
+  margin: 0;
+  font-family: var(--font-quantify);
+  font-size: 1.5rem;
+  line-height: 1.1;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  color: #18181b;
+}
+
+@media (prefers-color-scheme: dark) {
+  .block-screen__row--title {
+    color: #fafafa;
+  }
+}
+
 
 .block-screen__row--early-morning {
   position: relative;
   isolation: isolate;
   padding: 0.5rem 0.75rem;
   border-radius: 0.75rem;
-}
-
-.block-screen__row--early-morning h1 {
-  font-family: var(--font-quantify);
-  font-size: 1.5rem;
-  font-weight: 900;
-  letter-spacing: 0.025em;
-  color: #18181b;
 }
 
 .block-screen__row--early-morning::before {

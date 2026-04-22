@@ -3,10 +3,13 @@ import { IoCalendarOutline, IoSearch } from "react-icons/io5";
 export type TasksHeaderProps = {
   taskSearch: string;
   onTaskSearchChange: (value: string) => void;
+  blockFilter: "all" | string;
+  onBlockFilterChange: (value: "all" | string) => void;
   categoryFilter: "all" | string;
   onCategoryFilterChange: (value: "all" | string) => void;
   dueTodayOnly: boolean;
   onDueTodayOnlyChange: (value: boolean) => void;
+  blocks: string[];
   categories: string[];
 };
 
@@ -16,10 +19,13 @@ const shellInputClass =
 export function TasksHeader({
   taskSearch,
   onTaskSearchChange,
+  blockFilter,
+  onBlockFilterChange,
   categoryFilter,
   onCategoryFilterChange,
   dueTodayOnly,
   onDueTodayOnlyChange,
+  blocks,
   categories,
 }: TasksHeaderProps) {
   return (
@@ -43,6 +49,27 @@ export function TasksHeader({
           </label>
 
           <div className="flex min-w-0 flex-wrap items-center gap-2 sm:justify-end">
+            <label className="flex min-w-0 items-center gap-2">
+              <span className="sr-only">Filter By Block</span>
+              <select
+                value={blockFilter}
+                onChange={(e) =>
+                  onBlockFilterChange(
+                    e.target.value === "all" ? "all" : e.target.value,
+                  )
+                }
+                className={`min-w-0 max-w-full h-full py-2.5 pl-3 pr-8 border px-3 rounded-2xl ${shellInputClass}`}
+                aria-label="Filter By Block"
+              >
+                <option value="all">All Blocks</option>
+                {blocks.map((b) => (
+                  <option key={b} value={b}>
+                    {b}
+                  </option>
+                ))}
+              </select>
+            </label>
+
             <label className="flex min-w-0 items-center gap-2">
               <span className="sr-only">Filter By Category</span>
               <select

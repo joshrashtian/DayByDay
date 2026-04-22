@@ -54,6 +54,7 @@ export type Task = {
   dueDate?: Date;
   endDate?: Date;
   priority?: TaskPriority;
+  block?: string;
   category?: string;
   description?: string;
   tags?: string[];
@@ -68,7 +69,8 @@ export type AddTaskPayload = {
   endDate?: Date;
   priority?: TaskPriority;
   critical?: boolean;
-  context?: "Early Morning" | "Morning" | "Afternoon" | "After School" | "Evening" | "Late Night";
+  block?: string;
+  context?: string;
   category?: string;
   description?: string;
   notes?: string;
