@@ -1,4 +1,5 @@
 import "./App.css";
+import { useState } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "motion/react";
 import { AnimatedPage } from "./components/layout/AnimatedPage";
@@ -12,11 +13,15 @@ import BlockScreen from "./screens/BlockScreen";
 
 export default function App() {
   const location = useLocation();
+  const [sidebarOffset, setSidebarOffset] = useState(64);
 
   return (
     <>
-      <SideBar />
-      <div className="ml-16 min-h-screen">
+      <SideBar onWidthChange={setSidebarOffset} />
+      <div
+        className="min-h-screen transition-[margin] duration-200"
+        style={{ marginLeft: sidebarOffset }}
+      >
         <div className="min-h-screen">
           <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>

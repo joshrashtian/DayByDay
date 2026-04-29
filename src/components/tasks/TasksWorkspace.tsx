@@ -291,10 +291,8 @@ export function TasksWorkspace({
         ) : null}
       </div>
       <nav
-        className={`fixed right-4 top-1/2 z-30 hidden -translate-y-1/2 flex-col gap-2 rounded-full border p-2 shadow-xl backdrop-blur-md sm:flex ${
-          viewMode === "block"
-            ? "border-sky-400/35 bg-sky-100/45 dark:border-sky-700/30 dark:bg-sky-950/35"
-            : "border-violet-400/35 bg-violet-100/45 dark:border-violet-700/30 dark:bg-violet-950/35"
+        className={`fixed right-4 duration-1000 ease-in-out transition-all top-1/2 z-30 hidden -translate-y-1/2 flex-col gap-2 rounded-full p-2 shadow-xl backdrop-blur-md sm:flex ${
+          viewMode === "block" ? "bg-blue-500" : "bg-purple-500"
         }`}
         aria-label="Tasks sidebar controls"
       >
@@ -326,6 +324,7 @@ export function TasksWorkspace({
         >
           <IoList className="h-5 w-5" aria-hidden />
         </button>
+        <div className="w-full h-0.5 my-2 bg-white/30 -skew-12 rounded-full"></div>
         <button
           type="button"
           title="Unfinished tasks"

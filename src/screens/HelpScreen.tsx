@@ -17,7 +17,19 @@ function ShortcutRow({
   );
 }
 
+const helpSections = [
+  { id: "task-chat-composer", label: "Task Chat Composer" },
+  { id: "keys", label: "Keys" },
+  { id: "examples", label: "Examples" },
+];
+
 const HelpScreen = () => {
+  const scrollToSection = (id: string) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
     <div className="flex flex-col items-start justify-start gap-4 overflow-x-hidden p-4">
       <motion.div
@@ -45,17 +57,9 @@ const HelpScreen = () => {
         </motion.p>
       </motion.div>
 
-      <div className="mt-20 flex max-w-2xl flex-col items-start justify-start gap-8">
-        <nav>
-          <button
-            type="button"
-            className="text-2xl font-bold font-quantify text-blue-500 transition-all duration-200 hover:text-blue-600"
-          >
-            Shortcuts
-          </button>
-        </nav>
-
-        <section className="flex flex-col gap-4">
+      <div className="mt-20 flex w-full max-w-6xl flex-col items-start justify-start gap-10 lg:flex-row">
+        <div className="w-full max-w-2xl flex-1 space-y-8">
+          <section id="task-chat-composer" className="scroll-mt-20 flex flex-col gap-4">
           <h3 className="text-2xl font-quantify">Task Chat Composer</h3>
           <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
             In the chat-style task box, type tokens at the{" "}
@@ -133,9 +137,9 @@ const HelpScreen = () => {
               description="Due date or time: ISO datetime, today, tomorrow, tonight, a time like 3pm or 15:00, or a date like 4/16/2026 or 4/16. Or, combined it could be 4/163:00pm"
             />
           </div>
-        </section>
+          </section>
 
-        <section className="flex flex-col gap-3">
+          <section id="keys" className="scroll-mt-20 flex flex-col gap-3">
           <h3 className="text-xl font-bold">Keys</h3>
           <div className="flex flex-col gap-3">
             <ShortcutRow
@@ -153,9 +157,9 @@ const HelpScreen = () => {
               description="New line in the chat composer."
             />
           </div>
-        </section>
+          </section>
 
-        <section className="flex flex-col gap-2">
+          <section id="examples" className="scroll-mt-20 flex flex-col gap-2">
           <h3 className="text-xl font-bold">Examples</h3>
           <ul className="list-inside list-disc space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
             <li>
@@ -174,7 +178,26 @@ const HelpScreen = () => {
               </code>
             </li>
           </ul>
-        </section>
+          </section>
+        </div>
+
+        <aside className="sticky top-5 hidden w-full max-w-[240px] self-start rounded-2xl border border-zinc-200 bg-white/90 p-4 shadow-sm backdrop-blur lg:block dark:border-zinc-800 dark:bg-zinc-900/80">
+          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            On this page
+          </p>
+          <nav className="mt-3 flex flex-col gap-2">
+            {helpSections.map((section) => (
+              <button
+                key={section.id}
+                type="button"
+                onClick={() => scrollToSection(section.id)}
+                className="rounded-md px-2 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-blue-50 hover:text-blue-700 dark:text-zinc-300 dark:hover:bg-blue-950/40 dark:hover:text-blue-300"
+              >
+                {section.label}
+              </button>
+            ))}
+          </nav>
+        </aside>
       </div>
     </div>
   );

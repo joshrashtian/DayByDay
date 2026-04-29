@@ -8,7 +8,7 @@ import {
 } from "react";
 import { IoArrowUp, IoChevronDown, IoPencil, IoWarning } from "react-icons/io5";
 import { parseDueLocalInput } from "../../lib/taskDates";
-import { DEFAULT_BLOCK_SUGGESTIONS } from "../../lib/taskBlocks";
+import { collectAvailableBlocks } from "../../lib/taskBlocks";
 import {
   type AddTaskPayload,
   parseTagsInput,
@@ -16,6 +16,7 @@ import {
 } from "../../types/task";
 import { parseTaskChatInput } from "./functions/parseTokens";
 import { motion } from "motion/react";
+import { useTasksStore } from "../../stores/tasksStore";
 
 type Props = {
   onAdd: (payload: AddTaskPayload) => void;
@@ -43,8 +44,10 @@ export function TaskCreator({
   const [block, setBlock] = useState("");
   const [category, setCategory] = useState("");
   const [tagsInput, setTagsInput] = useState("");
+  const tasks = useTasksStore((s) => s.tasks);
   const inputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const blockSuggestions = useMemo(() => collectAvailableBlocks(tasks), [tasks]);
 
   const isChatDock = variant === "chatDock";
 
@@ -263,7 +266,7 @@ export function TaskCreator({
                   className="w-full rounded-xl border border-zinc-300/50 bg-white/40 px-3 py-2 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400/40 dark:border-zinc-600/60 dark:bg-zinc-950/30 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-500"
                 />
                 <datalist id="task-block-suggestions">
-                  {DEFAULT_BLOCK_SUGGESTIONS.map((option) => (
+                  {blockSuggestions.map((option) => (
                     <option key={option} value={option} />
                   ))}
                 </datalist>

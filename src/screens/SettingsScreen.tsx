@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { IoSettings } from "react-icons/io5";
 import {
   clearBlocksUserCss,
@@ -19,6 +19,23 @@ export const SettingsScreen = () => {
   const [savedFlash, setSavedFlash] = useState(false);
   const [blocksCssInput, setBlocksCssInput] = useState("");
   const [blocksCssSavedFlash, setBlocksCssSavedFlash] = useState(false);
+  const [blocksCssUploadError, setBlocksCssUploadError] = useState<string | null>(
+    null,
+  );
+  const [blocksEarlyMorningBg, setBlocksEarlyMorningBg] = useState(
+    "linear-gradient(135deg, #e0f2fe 0%, #dbeafe 45%, #ede9fe 100%)",
+  );
+  const [blocksAfternoonBg, setBlocksAfternoonBg] = useState(
+    "linear-gradient(135deg, #fef3c7 0%, #fed7aa 52%, #fdba74 100%)",
+  );
+  const [blocksEarlyMorningBgDark, setBlocksEarlyMorningBgDark] = useState(
+    "rgba(12, 74, 110, 0.25)",
+  );
+  const [blocksAfternoonBgDark, setBlocksAfternoonBgDark] = useState(
+    "rgba(180, 83, 9, 0.28)",
+  );
+  const [uploadMode, setUploadMode] = useState<"append" | "replace">("append");
+  const cssFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const m = getManualWeatherCoords();
@@ -68,6 +85,42 @@ export const SettingsScreen = () => {
     setBlocksCssInput("");
     setBlocksCssSavedFlash(true);
     window.setTimeout(() => setBlocksCssSavedFlash(false), 2000);
+  };
+
+  const onInsertBlocksVariableSnippet = () => {
+    const snippet = `#block-screen {\n  --blocks-early-morning-bg: ${blocksEarlyMorningBg};\n  --blocks-early-morning-bg-dark: ${blocksEarlyMorningBgDark};\n  --blocks-afternoon-bg: ${blocksAfternoonBg};\n  --blocks-afternoon-bg-dark: ${blocksAfternoonBgDark};\n}`;
+    setBlocksCssInput((prev) =>
+      prev.trim().length === 0
+        ? snippet
+        : `${prev.trimEnd()}\n\n/* Variable snippet */\n${snippet}`,
+    );
+    setBlocksCssSavedFlash(false);
+  };
+
+  const openCssUploadPicker = (mode: "append" | "replace") => {
+    setBlocksCssUploadError(null);
+    setUploadMode(mode);
+    cssFileInputRef.current?.click();
+  };
+
+  const onUploadBlocksCssFile = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    try {
+      const content = await file.text();
+      setBlocksCssInput((prev) => {
+        if (uploadMode === "replace") return content;
+        if (prev.trim().length === 0) return content;
+        return `${prev.trimEnd()}\n\n/* Imported from ${file.name} */\n${content}`;
+      });
+      setBlocksCssUploadError(null);
+      setBlocksCssSavedFlash(false);
+    } catch {
+      setBlocksCssUploadError("Couldn't read that file. Try a plain .css file.");
+    }
   };
 
   return (
@@ -206,6 +259,58 @@ export const SettingsScreen = () => {
             </code>{" "}
             work here.
           </p>
+          <div className="mt-4 rounded-xl border border-zinc-200 bg-zinc-50 p-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+              Quick variables
+            </p>
+            <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2">
+              <label className="flex flex-col gap-1">
+                <span className="text-xs text-zinc-600">Early morning bg</span>
+                <input
+                  type="text"
+                  value={blocksEarlyMorningBg}
+                  onChange={(e) => setBlocksEarlyMorningBg(e.target.value)}
+                  className="rounded-lg border border-zinc-200 bg-white px-2 py-1.5 text-xs text-zinc-900 outline-none ring-zinc-400 focus:ring-2"
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-xs text-zinc-600">
+                  Early morning bg (dark)
+                </span>
+                <input
+                  type="text"
+                  value={blocksEarlyMorningBgDark}
+                  onChange={(e) => setBlocksEarlyMorningBgDark(e.target.value)}
+                  className="rounded-lg border border-zinc-200 bg-white px-2 py-1.5 text-xs text-zinc-900 outline-none ring-zinc-400 focus:ring-2"
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-xs text-zinc-600">Afternoon bg</span>
+                <input
+                  type="text"
+                  value={blocksAfternoonBg}
+                  onChange={(e) => setBlocksAfternoonBg(e.target.value)}
+                  className="rounded-lg border border-zinc-200 bg-white px-2 py-1.5 text-xs text-zinc-900 outline-none ring-zinc-400 focus:ring-2"
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-xs text-zinc-600">Afternoon bg (dark)</span>
+                <input
+                  type="text"
+                  value={blocksAfternoonBgDark}
+                  onChange={(e) => setBlocksAfternoonBgDark(e.target.value)}
+                  className="rounded-lg border border-zinc-200 bg-white px-2 py-1.5 text-xs text-zinc-900 outline-none ring-zinc-400 focus:ring-2"
+                />
+              </label>
+            </div>
+            <button
+              type="button"
+              onClick={onInsertBlocksVariableSnippet}
+              className="mt-3 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-100"
+            >
+              Insert variable snippet
+            </button>
+          </div>
           <label className="mt-4 flex flex-col gap-1">
             <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
               CSS
@@ -219,9 +324,21 @@ export const SettingsScreen = () => {
               className="min-h-[200px] w-full resize-y rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 font-mono text-sm text-zinc-900 outline-none ring-zinc-400 focus:ring-2"
             />
           </label>
+          <input
+            ref={cssFileInputRef}
+            type="file"
+            accept=".css,text/css,text/plain,.txt"
+            onChange={onUploadBlocksCssFile}
+            className="hidden"
+          />
           {blocksCssSavedFlash ? (
             <p className="mt-3 text-sm text-emerald-600">
               Blocks appearance updated.
+            </p>
+          ) : null}
+          {blocksCssUploadError ? (
+            <p className="mt-3 text-sm text-red-600" role="alert">
+              {blocksCssUploadError}
             </p>
           ) : null}
           <div className="mt-4 flex flex-wrap gap-2">
@@ -238,6 +355,20 @@ export const SettingsScreen = () => {
               className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-50"
             >
               Clear
+            </button>
+            <button
+              type="button"
+              onClick={() => openCssUploadPicker("append")}
+              className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-50"
+            >
+              Upload snippet (append)
+            </button>
+            <button
+              type="button"
+              onClick={() => openCssUploadPicker("replace")}
+              className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-50"
+            >
+              Upload snippet (replace)
             </button>
           </div>
         </section>

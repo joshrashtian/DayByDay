@@ -6,7 +6,11 @@ import { IoCheckmarkCircleOutline } from "react-icons/io5";
 
 const STACK_MAX = 4;
 
-export const TasksFrontPage = () => {
+type Props = {
+  activeBlockName?: string;
+};
+
+export const TasksFrontPage = ({ activeBlockName }: Props) => {
   const { tasks } = useTasksStore(useShallow((s) => ({ tasks: s.tasks })));
   const { toggleTask } = useTasksStore(
     useShallow((s) => ({ toggleTask: s.toggleTask })),
@@ -15,12 +19,16 @@ export const TasksFrontPage = () => {
   const stack = useMemo(
     () =>
       [...tasks]
+        .filter((task) => {
+          if (!activeBlockName) return true;
+          return task.block?.trim().toLowerCase() === activeBlockName.toLowerCase();
+        })
         .sort(
           (a, b) => (b.dueDate?.getTime() ?? 0) - (a.dueDate?.getTime() ?? 0),
         )
         .filter((task) => !task.done)
         .slice(0, STACK_MAX),
-    [tasks],
+    [tasks, activeBlockName],
   );
 
   const stackHeightPx = 52 + (Math.max(stack.length, 1) - 1) * 14;
@@ -32,7 +40,7 @@ export const TasksFrontPage = () => {
           Task Stack
         </h1>
         <p className="text-md font-display text-zinc-500 dark:text-zinc-400">
-          Tasks in this Block: {stack.length}
+          {activeBlockName ? `${activeBlockName} tasks: ${stack.length}` : `Tasks in this block: ${stack.length}`}
         </p>
       </div>
 

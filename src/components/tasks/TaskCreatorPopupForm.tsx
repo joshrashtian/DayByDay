@@ -6,7 +6,7 @@ import {
   IoWarning,
 } from "react-icons/io5";
 import { parseDueLocalInput } from "../../lib/taskDates";
-import { DEFAULT_BLOCK_SUGGESTIONS } from "../../lib/taskBlocks";
+import { collectAvailableBlocks } from "../../lib/taskBlocks";
 import {
   type AddTaskPayload,
   parseTagsInput,
@@ -14,6 +14,7 @@ import {
   type TaskPriority,
 } from "../../types/task";
 import { motion } from "motion/react";
+import { useTasksStore } from "../../stores/tasksStore";
 
 const PRIORITIES: { value: TaskPriority; label: string }[] = [
   { value: "low", label: "Low" },
@@ -73,6 +74,8 @@ export function TaskCreatorPopupForm({
   const [recurrenceInterval, setRecurrenceInterval] = useState(1);
   const [section, setSection] = useState<SectionId>("basics");
   const titleRef = useRef<HTMLInputElement>(null);
+  const tasks = useTasksStore((s) => s.tasks);
+  const blockSuggestions = collectAvailableBlocks(tasks);
 
   useEffect(() => {
     const t = requestAnimationFrame(() => titleRef.current?.focus());
@@ -239,7 +242,7 @@ export function TaskCreatorPopupForm({
                   className={inputClass}
                 />
                 <datalist id="popup-task-block-suggestions">
-                  {DEFAULT_BLOCK_SUGGESTIONS.map((option) => (
+                  {blockSuggestions.map((option) => (
                     <option key={option} value={option} />
                   ))}
                 </datalist>

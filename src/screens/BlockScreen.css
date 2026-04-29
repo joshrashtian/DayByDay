@@ -10,6 +10,7 @@
  *   .block-screen__list        — list container
  *   .block-screen__row         — one block row
  *   .block-screen__row--early-morning — sample variant row
+ *   .block-screen__row--afternoon     — sample variant row
  */
 
 .block-screen {
@@ -90,12 +91,42 @@
   position: absolute;
   inset: -0.5rem;
   z-index: -1;
-  background: lightblue;
+  border-radius: 0.9rem;
+  background: var(
+    --blocks-early-morning-bg,
+    linear-gradient(135deg, #e0f2fe 0%, #dbeafe 45%, #ede9fe 100%)
+  );
   pointer-events: none;
 }
 
 @media (prefers-color-scheme: dark) {
   .block-screen__row--early-morning::before {
-    background: rgba(12, 74, 110, 0.25);
+    background: var(--blocks-early-morning-bg-dark, rgba(12, 74, 110, 0.25));
+  }
+}
+
+.block-screen__row--afternoon {
+  position: relative;
+  isolation: isolate;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+}
+
+.block-screen__row--afternoon::before {
+  content: "";
+  position: absolute;
+  inset: -0.5rem;
+  z-index: -1;
+  border-radius: 0.9rem;
+  background: var(
+    --blocks-afternoon-bg,
+    linear-gradient(135deg, #fef3c7 0%, #fed7aa 52%, #fdba74 100%)
+  );
+  pointer-events: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .block-screen__row--afternoon::before {
+    background: var(--blocks-afternoon-bg-dark, rgba(180, 83, 9, 0.28));
   }
 }
