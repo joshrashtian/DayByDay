@@ -28,6 +28,7 @@ export type BlockConfig = {
   name: string;
   startMinutes: number;
   endMinutes: number;
+  customCss?: string;
 };
 
 const MINUTES_IN_DAY = 24 * 60;
@@ -52,7 +53,17 @@ function normalizeBlockConfig(raw: unknown): BlockConfig | undefined {
   const startMinutes = normalizeClockMinutes(item.startMinutes);
   const endMinutes = normalizeClockMinutes(item.endMinutes);
   if (!name || startMinutes == null || endMinutes == null) return undefined;
-  return { name, startMinutes, endMinutes };
+  const rawCustomCss = item.customCss;
+  const customCss =
+    typeof rawCustomCss === "string" && rawCustomCss.trim().length > 0
+      ? rawCustomCss
+      : undefined;
+  return {
+    name,
+    startMinutes,
+    endMinutes,
+    ...(customCss ? { customCss } : {}),
+  };
 }
 
 function dedupeByName(configs: BlockConfig[]): BlockConfig[] {

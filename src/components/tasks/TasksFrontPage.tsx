@@ -1,8 +1,8 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useTasksStore } from "../../stores/tasksStore";
 import { formatTaskDue } from "../../lib/taskDates";
-import { IoCheckmarkCircleOutline } from "react-icons/io5";
+import { IoCheckmarkCircleOutline, IoChevronDown } from "react-icons/io5";
 
 const STACK_MAX = 4;
 
@@ -15,21 +15,57 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
   const { toggleTask } = useTasksStore(
     useShallow((s) => ({ toggleTask: s.toggleTask })),
   );
+  const [rotationOffset, setRotationOffset] = useState(0);
 
-  const stack = useMemo(
+  useEffect(() => {
+    setRotationOffset(0);
+  }, [activeBlockName]);
+
+  const openTasks = useMemo(
     () =>
       [...tasks]
         .filter((task) => {
           if (!activeBlockName) return true;
-          return task.block?.trim().toLowerCase() === activeBlockName.toLowerCase();
+          return (
+            task.block?.trim().toLowerCase() === activeBlockName.toLowerCase()
+          );
         })
         .sort(
           (a, b) => (b.dueDate?.getTime() ?? 0) - (a.dueDate?.getTime() ?? 0),
         )
-        .filter((task) => !task.done)
-        .slice(0, STACK_MAX),
+        .filter((task) => !task.done),
     [tasks, activeBlockName],
   );
+
+  useEffect(() => {
+    if (openTasks.length === 0) {
+      if (rotationOffset !== 0) setRotationOffset(0);
+      return;
+    }
+    if (rotationOffset >= openTasks.length) {
+      setRotationOffset(rotationOffset % openTasks.length);
+    }
+  }, [openTasks.length, rotationOffset]);
+
+  const rotatedTasks = useMemo(() => {
+    if (openTasks.length < 2) return openTasks;
+    const normalizedOffset =
+      ((rotationOffset % openTasks.length) + openTasks.length) % openTasks.length;
+    return [
+      ...openTasks.slice(normalizedOffset),
+      ...openTasks.slice(0, normalizedOffset),
+    ];
+  }, [openTasks, rotationOffset]);
+
+  const stack = useMemo(() => rotatedTasks.slice(0, STACK_MAX), [rotatedTasks]);
+  const activeTask = rotatedTasks[0];
+  const canRotateActive =
+    rotatedTasks.length > 1 && Boolean(activeTask) && !activeTask.critical;
+
+  const rotateActiveTask = () => {
+    if (!canRotateActive) return;
+    setRotationOffset((offset) => (offset + 1) % rotatedTasks.length);
+  };
 
   const stackHeightPx = 52 + (Math.max(stack.length, 1) - 1) * 14;
 
@@ -40,7 +76,9 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
           Task Stack
         </h1>
         <p className="text-md font-display text-zinc-500 dark:text-zinc-400">
-          {activeBlockName ? `${activeBlockName} tasks: ${stack.length}` : `Tasks in this block: ${stack.length}`}
+          {activeBlockName
+            ? `${activeBlockName} tasks: ${stack.length}`
+            : `Tasks in this block: ${stack.length}`}
         </p>
       </div>
 
@@ -59,6 +97,7 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
           </div>
         ) : (
           stack.map((task, index) => {
+            const isTopCard = index === 0;
             const depth = index;
             const rotate = depth * 1.25 - (stack.length - 1) * 0.625;
             const y = depth * 14;
@@ -67,43 +106,60 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
               <div
                 key={task.id}
                 role="listitem"
-                className="absolute left-1/2 top-0 w-[94%] h-32 origin-top rounded-xl border border-zinc-200/90 bg-white/95 px-4 py-3 shadow-[0_10px_30px_-12px_rgba(15,23,42,0.35)] dark:border-zinc-600/90 dark:bg-zinc-800/95 dark:shadow-[0_12px_32px_-14px_rgba(0,0,0,0.65)]"
+                className="absolute flex flex-col items-start justify-between left-1/2 top-0 w-[60%] h-64 origin-top rounded-xl border border-zinc-200/90 bg-white/95 px-4 py-3 shadow-[0_10px_30px_-12px_rgba(15,23,42,0.35)] dark:border-zinc-600/90 dark:bg-zinc-800/95 dark:shadow-[0_12px_32px_-14px_rgba(0,0,0,0.65)]"
                 style={{
                   transform: `translate(-50%, ${y}px) rotate(${rotate}deg) scale(${scale})`,
                   zIndex: stack.length - depth,
                 }}
               >
-                <h2 className="truncate text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-                  {task.title}
-                </h2>
-                {task.description ? (
-                  <p className="mt-0.5 line-clamp-2 text-xs text-zinc-500 dark:text-zinc-400">
-                    {task.description}
+                <div>
+                  <h2 className="truncate text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+                    {task.title}
+                  </h2>
+                  {task.description ? (
+                    <p className="mt-0.5 line-clamp-2 text-xs text-zinc-500 dark:text-zinc-400">
+                      {task.description}
+                    </p>
+                  ) : null}
+                  <div className="flex flex-row items-center justify-between">
+                    <span className="text-xs font-medium text-zinc-400 dark:text-zinc-500">
+                      Priority:{" "}
+                      {task.critical
+                        ? "Critical"
+                        : task.priority
+                          ? task.priority.charAt(0).toUpperCase() +
+                            task.priority.slice(1)
+                          : "No priority"}
+                    </span>
+                  </div>
+
+                  <p className="mt-1 text-xs font-medium text-zinc-400 dark:text-zinc-500">
+                    {task.dueDate ? formatTaskDue(task.dueDate) : "No due date"}
                   </p>
-                ) : null}
-                <div className="flex flex-row items-center justify-between">
-                  <span className="text-xs font-medium text-zinc-400 dark:text-zinc-500">
-                    Priority:{" "}
-                    {task.critical
-                      ? "Critical"
-                      : task.priority
-                        ? task.priority.charAt(0).toUpperCase() +
-                          task.priority.slice(1)
-                        : "No priority"}
-                  </span>
                 </div>
-                <div className="flex flex-row items-center justify-between">
+
+                <div className="flex flex-row items-center justify-center w-full">
                   <button
                     onClick={() => toggleTask(task.id)}
                     type="button"
-                    className="text-xs font-medium text-zinc-400 dark:text-zinc-500"
+                    className="text-2xl bg-zinc-100 rounded-full p-2 text-zinc-400 dark:text-zinc-500"
                   >
                     <IoCheckmarkCircleOutline />
                   </button>
+                  <button
+                    onClick={rotateActiveTask}
+                    type="button"
+                    disabled={!isTopCard || !canRotateActive}
+                    className="text-2xl bg-zinc-100 rounded-full p-2 text-zinc-400 disabled:cursor-not-allowed disabled:opacity-40 dark:text-zinc-500"
+                    title={
+                      isTopCard && activeTask?.critical
+                        ? "Critical active task cannot be rotated"
+                        : "Rotate active task"
+                    }
+                  >
+                    <IoChevronDown />
+                  </button>
                 </div>
-                <p className="mt-1 text-xs font-medium text-zinc-400 dark:text-zinc-500">
-                  {task.dueDate ? formatTaskDue(task.dueDate) : "No due date"}
-                </p>
               </div>
             );
           })

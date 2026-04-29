@@ -34,8 +34,37 @@ type Block = {
   taskCount: number;
   startTime: string;
   endTime: string;
+  blockKey: string;
+  customCss?: string;
   rowVariant?: BlockRowVariant;
 };
+
+const blockKeyFromName = (name: string) =>
+  name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+const buildPerBlockCss = (configs: ReturnType<typeof getBlockConfigs>) =>
+  configs
+    .map((cfg) => {
+      const key = blockKeyFromName(cfg.name);
+      const customCss = cfg.customCss?.trim();
+      if (!key || !customCss) return "";
+      const baseSelector = `#block-screen .block-screen__row[data-block-key="${key}"]`;
+      return `${baseSelector} {
+  background: var(--blocks-${key}-bg);
+  ${customCss}
+}
+@media (prefers-color-scheme: dark) {
+  ${baseSelector} {
+    background: var(--blocks-${key}-bg-dark, var(--blocks-${key}-bg));
+  }
+}`;
+    })
+    .filter(Boolean)
+    .join("\n");
 
 const rowClassName = (variant?: BlockRowVariant) => {
   const base = "block-screen__row";
@@ -51,6 +80,7 @@ const rowClassName = (variant?: BlockRowVariant) => {
 const BlockScreen = () => {
   const [userCss, setUserCss] = useState(() => getBlocksUserCss());
   const userStyleRef = useRef<HTMLStyleElement>(null);
+  const perBlockStyleRef = useRef<HTMLStyleElement>(null);
   const tasks = useTasksStore((s) => s.tasks);
   const setTaskBlock = useTasksStore((s) => s.setTaskBlock);
   const [editorOpen, setEditorOpen] = useState(false);
@@ -60,11 +90,20 @@ const BlockScreen = () => {
   const [editorBlockName, setEditorBlockName] = useState("");
   const [editorStartTime, setEditorStartTime] = useState("08:00");
   const [editorEndTime, setEditorEndTime] = useState("12:00");
+  const [editorCustomCss, setEditorCustomCss] = useState("");
+  const editorBlockKey = blockKeyFromName(
+    editorMode === "edit" ? (editingBlockName ?? editorBlockName) : editorBlockName,
+  );
 
   useLayoutEffect(() => {
     const el = userStyleRef.current;
     if (el) el.textContent = userCss;
   }, [userCss]);
+
+  useLayoutEffect(() => {
+    const el = perBlockStyleRef.current;
+    if (el) el.textContent = buildPerBlockCss(blockConfigs);
+  }, [blockConfigs]);
 
   useEffect(() => {
     const sync = () => setUserCss(getBlocksUserCss());
@@ -115,6 +154,8 @@ const BlockScreen = () => {
       taskCount: inBlock.length,
       startTime: formatMinutesAsTimeInput(config?.startMinutes ?? 8 * 60),
       endTime: formatMinutesAsTimeInput(config?.endMinutes ?? 12 * 60),
+      blockKey: blockKeyFromName(name),
+      customCss: config?.customCss,
       rowVariant:
         normalizedName === "early morning"
           ? "early-morning"
@@ -130,6 +171,7 @@ const BlockScreen = () => {
     setEditorBlockName("");
     setEditorStartTime("08:00");
     setEditorEndTime("12:00");
+    setEditorCustomCss("");
     setEditorOpen(true);
   };
 
@@ -139,6 +181,7 @@ const BlockScreen = () => {
     setEditorBlockName(block.name);
     setEditorStartTime(block.startTime);
     setEditorEndTime(block.endTime);
+    setEditorCustomCss(block.customCss ?? "");
     setEditorOpen(true);
   };
 
@@ -154,6 +197,7 @@ const BlockScreen = () => {
       name: trimmed,
       startMinutes,
       endMinutes,
+      customCss: editorCustomCss.trim() || undefined,
     });
     setEditorOpen(false);
   };
@@ -174,6 +218,8 @@ const BlockScreen = () => {
     <>
       {/* User rules from Settings; textContent assigned in useLayoutEffect */}
       <style ref={userStyleRef} id="daybyday-blocks-user-css" />
+      {/* Per-block CSS rules generated from block configs */}
+      <style ref={perBlockStyleRef} id="daybyday-blocks-per-block-css" />
       <div id="block-screen" className="block-screen">
         <button
           onClick={() => {
@@ -207,6 +253,7 @@ const BlockScreen = () => {
           {blocks.map((block) => (
             <div
               key={block.name}
+              data-block-key={block.blockKey}
               className={
                 rowClassName(block.rowVariant) +
                 " flex flex-col h-32 w-full items-start justify-start gap-2"
@@ -311,6 +358,28 @@ const BlockScreen = () => {
               Delete block
             </button>
           ) : null}
+          <div className="mt-2 border-t border-zinc-200/80 pt-3 dark:border-zinc-700/70">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+              This block CSS (declarations only)
+            </p>
+            {editorBlockKey ? (
+              <p className="mb-2 text-[11px] text-zinc-500 dark:text-zinc-400">
+                Variable hooks: <code>{`--blocks-${editorBlockKey}-bg`}</code> and{" "}
+                <code>{`--blocks-${editorBlockKey}-bg-dark`}</code>
+              </p>
+            ) : null}
+            <textarea
+              value={editorCustomCss}
+              onChange={(e) => setEditorCustomCss(e.target.value)}
+              spellCheck={false}
+              rows={6}
+              placeholder={`background: linear-gradient(135deg, #f5f3ff, #dbeafe);\nborder-radius: 16px;\nbox-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);`}
+              className="min-h-[140px] w-full resize-y rounded-lg border border-zinc-300/80 bg-white/80 px-3 py-2 font-mono text-xs text-zinc-900 outline-none ring-zinc-400/60 focus:ring-2 dark:border-zinc-600 dark:bg-zinc-900/70 dark:text-zinc-100"
+            />
+            <p className="mt-2 text-[11px] text-zinc-500 dark:text-zinc-400">
+              Saved with this block. Applies only to this block row.
+            </p>
+          </div>
         </div>
       </BottomSheet>
     </>
