@@ -77,3 +77,17 @@ export type AddTaskPayload = {
   tags?: string[];
   recurrence?: TaskRecurrence;
 };
+
+export type UpdateTaskPayload = {
+  title: string;
+  dueDate?: Date;
+  endDate?: Date;
+  priority?: TaskPriority;
+  critical?: boolean;
+  block?: string;
+  category?: string;
+  description?: string;
+  notes?: string;
+  tags?: string[];
+  recurrence?: TaskRecurrence;
+};

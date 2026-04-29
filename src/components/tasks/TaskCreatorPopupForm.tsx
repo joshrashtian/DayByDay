@@ -12,6 +12,7 @@ import {
   parseTagsInput,
   type RecurrenceFrequency,
   type TaskPriority,
+  type UpdateTaskPayload,
 } from "../../types/task";
 import { motion } from "motion/react";
 import { useTasksStore } from "../../stores/tasksStore";
@@ -28,12 +29,26 @@ const inputClass =
   "w-full rounded-xl border border-zinc-300/80 bg-white/80 px-3 py-2.5 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-500 focus:ring-2 focus:ring-zinc-400/30 dark:border-zinc-600 dark:bg-zinc-950/50 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-500 dark:focus:ring-zinc-500/25";
 
 type Props = {
-  onAdd: (payload: AddTaskPayload) => void;
-  onAddAnother: (payload: AddTaskPayload) => void;
+  onAdd?: (payload: AddTaskPayload) => void;
+  onAddAnother?: (payload: AddTaskPayload) => void;
+  onSave?: (payload: UpdateTaskPayload) => void;
   onDismiss?: () => void;
+  mode?: "create" | "edit";
+  headingText?: string;
+  submitText?: string;
 
   initialDueLocal?: string;
   initialEndLocal?: string;
+  initialTitle?: string;
+  initialTagsInput?: string;
+  initialBlock?: string;
+  initialCategory?: string;
+  initialDescription?: string;
+  initialNotes?: string;
+  initialPriority?: TaskPriority | "";
+  initialCritical?: boolean;
+  initialRecurrenceChoice?: RecurrenceChoice;
+  initialRecurrenceInterval?: number;
 };
 
 type SectionId = "basics" | "events" | "notes";
@@ -50,28 +65,45 @@ const RECURRENCE_OPTIONS: { value: RecurrenceChoice; label: string }[] = [
 export function TaskCreatorPopupForm({
   onAdd,
   onAddAnother,
+  onSave,
   onDismiss,
+  mode = "create",
+  headingText = "NEW TASK",
+  submitText = "Create Task",
   initialDueLocal,
   initialEndLocal,
+  initialTitle = "",
+  initialTagsInput = "",
+  initialBlock = "",
+  initialCategory = "",
+  initialDescription = "",
+  initialNotes = "",
+  initialPriority = "",
+  initialCritical = false,
+  initialRecurrenceChoice = "none",
+  initialRecurrenceInterval = 1,
 }: Props) {
+  const isEditMode = mode === "edit";
   const pinnedDueRef = useRef(initialDueLocal ?? "");
   pinnedDueRef.current = initialDueLocal ?? "";
   const pinnedEndRef = useRef(initialEndLocal ?? "");
   pinnedEndRef.current = initialEndLocal ?? "";
 
-  const [title, setTitle] = useState("");
-  const [tagsInput, setTagsInput] = useState("");
-  const [block, setBlock] = useState("");
-  const [category, setCategory] = useState("");
-  const [description, setDescription] = useState("");
-  const [notes, setNotes] = useState("");
+  const [title, setTitle] = useState(initialTitle);
+  const [tagsInput, setTagsInput] = useState(initialTagsInput);
+  const [block, setBlock] = useState(initialBlock);
+  const [category, setCategory] = useState(initialCategory);
+  const [description, setDescription] = useState(initialDescription);
+  const [notes, setNotes] = useState(initialNotes);
   const [dueLocal, setDueLocal] = useState(initialDueLocal ?? "");
   const [endLocal, setEndLocal] = useState(initialEndLocal ?? "");
-  const [priority, setPriority] = useState<TaskPriority | "">("");
-  const [critical, setCritical] = useState(false);
+  const [priority, setPriority] = useState<TaskPriority | "">(initialPriority);
+  const [critical, setCritical] = useState(initialCritical);
   const [recurrenceChoice, setRecurrenceChoice] =
-    useState<RecurrenceChoice>("none");
-  const [recurrenceInterval, setRecurrenceInterval] = useState(1);
+    useState<RecurrenceChoice>(initialRecurrenceChoice);
+  const [recurrenceInterval, setRecurrenceInterval] = useState(
+    Math.max(1, Math.min(365, initialRecurrenceInterval || 1)),
+  );
   const [section, setSection] = useState<SectionId>("basics");
   const titleRef = useRef<HTMLInputElement>(null);
   const tasks = useTasksStore((s) => s.tasks);
@@ -86,7 +118,7 @@ export function TaskCreatorPopupForm({
     if (initialDueLocal?.trim()) setSection("events");
   }, [initialDueLocal]);
 
-  const buildPayload = (): AddTaskPayload | null => {
+  const buildPayload = (): UpdateTaskPayload | null => {
     const trimmed = title.trim();
     if (!trimmed) return null;
     const dueDate = parseDueLocalInput(dueLocal);
@@ -119,31 +151,35 @@ export function TaskCreatorPopupForm({
   };
 
   const resetForm = () => {
-    setTitle("");
-    setTagsInput("");
-    setBlock("");
-    setCategory("");
-    setDescription("");
-    setNotes("");
+    setTitle(initialTitle);
+    setTagsInput(initialTagsInput);
+    setBlock(initialBlock);
+    setCategory(initialCategory);
+    setDescription(initialDescription);
+    setNotes(initialNotes);
     setDueLocal(pinnedDueRef.current);
     setEndLocal(pinnedEndRef.current);
-    setPriority("");
-    setCritical(false);
-    setRecurrenceChoice("none");
-    setRecurrenceInterval(1);
+    setPriority(initialPriority);
+    setCritical(initialCritical);
+    setRecurrenceChoice(initialRecurrenceChoice);
+    setRecurrenceInterval(Math.max(1, Math.min(365, initialRecurrenceInterval || 1)));
   };
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
     const payload = buildPayload();
     if (!payload) return;
-    onAdd(payload);
+    if (isEditMode) {
+      onSave?.(payload);
+      return;
+    }
+    onAdd?.(payload);
   };
 
   const handleAddAnother = () => {
     const payload = buildPayload();
     if (!payload) return;
-    onAddAnother(payload);
+    onAddAnother?.(payload);
     resetForm();
     requestAnimationFrame(() => titleRef.current?.focus());
   };
@@ -158,7 +194,7 @@ export function TaskCreatorPopupForm({
             animate={{ y: 0, opacity: 1 }}
             transition={{ type: "spring", stiffness: 420, damping: 30 }}
           >
-            {"NEW TASK".split("").map((char, i) => (
+            {headingText.split("").map((char, i) => (
               <motion.p
                 key={i}
                 initial={{ y: 10, opacity: 0 }}
@@ -471,16 +507,18 @@ export function TaskCreatorPopupForm({
           disabled={!title.trim()}
           className="min-w-32 flex-1 font-quantify rounded-xl bg-zinc-900 px-4 py-3 text-sm font-semibold text-white transition-opacity enabled:hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-35 dark:bg-white dark:text-zinc-900 dark:enabled:hover:bg-zinc-100"
         >
-          Create Task
+          {submitText}
         </button>
-        <button
-          type="button"
-          disabled={!title.trim()}
-          onClick={handleAddAnother}
-          className="min-w-32 rounded-xl border border-zinc-300/80 bg-white px-4 py-3 text-sm font-semibold text-zinc-900 transition-colors enabled:hover:bg-zinc-50 font-display disabled:cursor-not-allowed disabled:opacity-35 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:enabled:hover:bg-zinc-700"
-        >
-          1 More
-        </button>
+        {!isEditMode ? (
+          <button
+            type="button"
+            disabled={!title.trim()}
+            onClick={handleAddAnother}
+            className="min-w-32 rounded-xl border border-zinc-300/80 bg-white px-4 py-3 text-sm font-semibold text-zinc-900 transition-colors enabled:hover:bg-zinc-50 font-display disabled:cursor-not-allowed disabled:opacity-35 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:enabled:hover:bg-zinc-700"
+          >
+            1 More
+          </button>
+        ) : null}
         {onDismiss ? (
           <button
             type="button"

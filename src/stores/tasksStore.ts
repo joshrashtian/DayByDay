@@ -5,6 +5,7 @@ import {
   parseTaskRecurrence,
   type AddTaskPayload,
   type Task,
+  type UpdateTaskPayload,
 } from "../types/task";
 import { normalizeTaskBlock } from "../lib/taskBlocks";
 
@@ -15,6 +16,7 @@ type LegacyCategory = { id: string; name: string };
 type TasksState = {
   tasks: Task[];
   addTask: (payload: AddTaskPayload) => void;
+  updateTask: (taskId: string, payload: UpdateTaskPayload) => void;
   setTaskSchedule: (taskId: string, dueDate: Date, endDate?: Date) => void;
   toggleTask: (id: string) => void;
   removeTask: (id: string) => void;
@@ -179,6 +181,51 @@ export const useTasksStore = create<TasksState>()(
           ],
         }));
       },
+
+      updateTask: (taskId, payload) =>
+        set((s) => {
+          const title = payload.title.trim();
+          if (!title) return s;
+          const block = normalizeTaskBlock(payload.block);
+          const category = payload.category?.trim() || undefined;
+          const description = payload.description?.trim() || undefined;
+          const notes = payload.notes?.trim() || undefined;
+          const tags = normalizeTaskTags(payload.tags ?? []);
+          const dueDate = payload.dueDate;
+          const endDate =
+            dueDate && payload.endDate && payload.endDate >= dueDate
+              ? payload.endDate
+              : undefined;
+          const recurrence =
+            dueDate && payload.recurrence
+              ? {
+                  frequency: payload.recurrence.frequency,
+                  interval: Math.max(1, payload.recurrence.interval ?? 1),
+                }
+              : undefined;
+
+          return {
+            tasks: s.tasks.map((t) =>
+              t.id === taskId
+                ? {
+                    ...t,
+                    title,
+                    dueDate,
+                    endDate,
+                    priority: payload.priority,
+                    critical: payload.critical ? true : undefined,
+                    block,
+                    category,
+                    description,
+                    notes,
+                    tags,
+                    recurrence,
+                    updatedAt: new Date(),
+                  }
+                : t,
+            ),
+          };
+        }),
 
       setTaskSchedule: (taskId, dueDate, endDate) =>
         set((s) => ({

@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { IoClose, IoRepeatOutline } from "react-icons/io5";
+import { IoClose, IoCreateOutline, IoRepeatOutline } from "react-icons/io5";
 import { formatTaskDue, taskDueToIso } from "../../lib/taskDates";
 import { useContextMenu } from "../../providers/ContextMenuProvider";
 import {
@@ -12,6 +12,7 @@ type Props = {
   task: Task;
   onToggle: () => void;
   onDelete?: () => void;
+  onEditTask?: () => void;
   onSetTags?: (tags: string[] | undefined) => void;
 };
 
@@ -27,7 +28,13 @@ function priorityChipClass(p: TaskPriority) {
   return "bg-slate-500/12 text-slate-800 ring-slate-500/20 dark:text-slate-200";
 }
 
-export function TaskItem({ task, onToggle, onDelete, onSetTags }: Props) {
+export function TaskItem({
+  task,
+  onToggle,
+  onDelete,
+  onEditTask,
+  onSetTags,
+}: Props) {
   const { openMenu } = useContextMenu();
   const tags = task.tags ?? [];
 
@@ -50,6 +57,15 @@ export function TaskItem({ task, onToggle, onDelete, onSetTags }: Props) {
         onClick={onToggle}
         onContextMenu={(e) =>
           openMenu(e, [
+            ...(onEditTask
+              ? [
+                  {
+                    id: "edit-task",
+                    label: "Edit task…",
+                    onSelect: onEditTask,
+                  } as const,
+                ]
+              : []),
             {
               id: "toggle",
               label: task.done ? "Mark not done" : "Mark done",
@@ -139,6 +155,20 @@ export function TaskItem({ task, onToggle, onDelete, onSetTags }: Props) {
             >
               {task.title}
             </span>
+            {onEditTask ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditTask();
+                }}
+                className="shrink-0 rounded-md p-1.5 text-zinc-500 transition-colors hover:bg-zinc-200/50 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-100"
+                aria-label="Edit task"
+                title="Edit task"
+              >
+                <IoCreateOutline className="h-4 w-4" aria-hidden />
+              </button>
+            ) : null}
           </div>
           <div
             className="flex min-w-0 flex-wrap items-center gap-2 pl-8 text-xs font-medium text-zinc-600 dark:text-zinc-400"

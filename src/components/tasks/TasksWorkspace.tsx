@@ -4,6 +4,7 @@ import { isTaskDueToday } from "../../lib/taskDates";
 import { collectTaskBlocks } from "../../lib/taskBlocks";
 import { TaskCreator } from "./TaskCreator";
 import { taskCreatorPopupContent } from "./taskCreatorPopupContent";
+import { taskEditorPopupContent } from "./taskEditorPopupContent";
 import { TaskItem } from "./TaskItem";
 import { TasksHeader } from "./TasksHeader";
 import { useContextMenu } from "../../providers/ContextMenuProvider";
@@ -73,15 +74,17 @@ export function TasksWorkspace({
   contentWidth = "wide",
   composerLayout = "inline",
 }: Props) {
-  const { tasks, addTask, toggleTask, removeTask, setTaskTags } = useTasksStore(
-    useShallow((s) => ({
-      tasks: s.tasks,
-      addTask: s.addTask,
-      toggleTask: s.toggleTask,
-      removeTask: s.removeTask,
-      setTaskTags: s.setTaskTags,
-    })),
-  );
+  const { tasks, addTask, toggleTask, removeTask, setTaskTags, updateTask } =
+    useTasksStore(
+      useShallow((s) => ({
+        tasks: s.tasks,
+        addTask: s.addTask,
+        toggleTask: s.toggleTask,
+        removeTask: s.removeTask,
+        setTaskTags: s.setTaskTags,
+        updateTask: s.updateTask,
+      })),
+    );
 
   const { openMenu } = useContextMenu();
   const { open: openPopup, close: closePopup } = usePopup();
@@ -89,6 +92,13 @@ export function TasksWorkspace({
   const openTaskFormPopup = useCallback(() => {
     openPopup(taskCreatorPopupContent({ addTask, closePopup }));
   }, [openPopup, closePopup, addTask]);
+
+  const openTaskEditorPopup = useCallback(
+    (task: Task) => {
+      openPopup(taskEditorPopupContent({ task, updateTask, closePopup }));
+    },
+    [openPopup, updateTask, closePopup],
+  );
 
   const [taskSearch, setTaskSearch] = useState("");
   const [blockFilter, setBlockFilter] = useState<"all" | string>("all");
@@ -267,6 +277,7 @@ export function TasksWorkspace({
                           task={task}
                           onToggle={() => toggleTask(task.id)}
                           onDelete={() => removeTask(task.id)}
+                          onEditTask={() => openTaskEditorPopup(task)}
                           onSetTags={(tags) => setTaskTags(task.id, tags)}
                         />
                       ))}
