@@ -10,7 +10,12 @@ import { useContextMenu } from "../../providers/ContextMenuProvider";
 import { usePopup } from "../../providers/PopupProvider";
 import { useTasksStore } from "../../stores/tasksStore";
 import type { Task } from "../../types/task";
-import { IoGrid } from "react-icons/io5";
+import {
+  IoCheckmarkCircle,
+  IoCheckmarkCircleOutline,
+  IoGrid,
+  IoList,
+} from "react-icons/io5";
 
 type Props = {
   topPadding?: "header" | "comfortable" | "none";
@@ -40,6 +45,16 @@ function taskMatchesCategory(task: Task, filter: "all" | string): boolean {
   const c = task.category?.trim();
   if (!c) return false;
   return c.toLowerCase() === filter.toLowerCase();
+}
+
+function normalizedBlockName(task: Task): string | undefined {
+  const value = task.block?.trim();
+  return value ? value : undefined;
+}
+
+function normalizedCategoryName(task: Task): string | undefined {
+  const value = task.category?.trim();
+  return value ? value : undefined;
 }
 
 function collectCategories(tasks: Task[]): string[] {
@@ -79,6 +94,10 @@ export function TasksWorkspace({
   const [blockFilter, setBlockFilter] = useState<"all" | string>("all");
   const [categoryFilter, setCategoryFilter] = useState<"all" | string>("all");
   const [dueTodayOnly, setDueTodayOnly] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "unfinished" | "completed"
+  >("all");
+  const [viewMode, setViewMode] = useState<"block" | "category">("block");
 
   const blocks = useMemo(() => collectTaskBlocks(tasks), [tasks]);
   const categories = useMemo(() => collectCategories(tasks), [tasks]);
@@ -106,10 +125,58 @@ export function TasksWorkspace({
         if (!taskMatchesBlock(t, blockFilter)) return false;
         if (!taskMatchesCategory(t, categoryFilter)) return false;
         if (dueTodayOnly && !isTaskDueToday(t.dueDate)) return false;
+        if (statusFilter === "unfinished" && t.done) return false;
+        if (statusFilter === "completed" && !t.done) return false;
         return true;
       }),
-    [tasks, taskSearch, blockFilter, categoryFilter, dueTodayOnly],
+    [
+      tasks,
+      taskSearch,
+      blockFilter,
+      categoryFilter,
+      dueTodayOnly,
+      statusFilter,
+    ],
   );
+
+  const groupedVisibleTasks = useMemo(() => {
+    const knownGroups =
+      viewMode === "block"
+        ? collectTaskBlocks(visibleTasks)
+        : collectCategories(visibleTasks);
+    const orderByLower = new Map(
+      knownGroups.map((name, index) => [name.toLowerCase(), index]),
+    );
+    const groups = new Map<string, { label: string; tasks: Task[] }>();
+
+    for (const task of visibleTasks) {
+      const groupName =
+        viewMode === "block"
+          ? normalizedBlockName(task)
+          : normalizedCategoryName(task);
+      const key = groupName ? groupName.toLowerCase() : "__unassigned__";
+      const label = groupName ?? "Unassigned";
+      const existing = groups.get(key);
+      if (existing) {
+        existing.tasks.push(task);
+      } else {
+        groups.set(key, { label, tasks: [task] });
+      }
+    }
+
+    return [...groups.values()].sort((a, b) => {
+      const aUnassigned = a.label === "Unassigned";
+      const bUnassigned = b.label === "Unassigned";
+      if (aUnassigned && !bUnassigned) return 1;
+      if (!aUnassigned && bUnassigned) return -1;
+      const aOrder =
+        orderByLower.get(a.label.toLowerCase()) ?? Number.MAX_SAFE_INTEGER;
+      const bOrder =
+        orderByLower.get(b.label.toLowerCase()) ?? Number.MAX_SAFE_INTEGER;
+      if (aOrder !== bOrder) return aOrder - bOrder;
+      return a.label.localeCompare(b.label, undefined, { sensitivity: "base" });
+    });
+  }, [visibleTasks, viewMode]);
 
   const topClass =
     topPadding === "header"
@@ -154,37 +221,59 @@ export function TasksWorkspace({
           blocks={blocks}
           categories={categories}
         />
-        <div
-          onContextMenu={(e) => {
-            e.preventDefault();
-            openMenu(e, [
-              {
-                id: "add-task-popup",
-                label: "Add task (full form)…",
-                onSelect: openTaskFormPopup,
-              },
-            ]);
-          }}
-          className={`min-h-0 flex-1 overflow-y-scroll overflow-x-hidden overscroll-contain px-5 sm:px-8 ${composerLayout === "bottomChat" ? "pb-4 pt-2" : "pb-10"}`}
-        >
+        <div className="min-h-0 flex flex-1 overflow-hidden">
           <div
-            className={`mx-auto flex min-h-0 w-full min-w-0 flex-col gap-6 ${maxW}`}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              openMenu(e, [
+                {
+                  id: "add-task-popup",
+                  label: "Add task (full form)…",
+                  onSelect: openTaskFormPopup,
+                },
+              ]);
+            }}
+            className={`min-h-0 flex-1 overflow-y-scroll overflow-x-hidden overscroll-contain px-5 sm:px-8 ${composerLayout === "bottomChat" ? "pb-4 pt-2" : "pb-10"}`}
           >
-            {composerLayout === "inline" ? (
-              <TaskCreator onAdd={addTask} onOpenFullForm={openTaskFormPopup} />
-            ) : null}
-            <div className="flex flex-col gap-3">
-              <ul className="flex w-full flex-col gap-3 pb-8">
-                {visibleTasks.map((task) => (
-                  <TaskItem
-                    key={task.id}
-                    task={task}
-                    onToggle={() => toggleTask(task.id)}
-                    onDelete={() => removeTask(task.id)}
-                    onSetTags={(tags) => setTaskTags(task.id, tags)}
-                  />
+            <div
+              className={`mx-auto flex min-h-0 w-full min-w-0 flex-col gap-6 ${maxW}`}
+            >
+              {composerLayout === "inline" ? (
+                <TaskCreator
+                  onAdd={addTask}
+                  onOpenFullForm={openTaskFormPopup}
+                />
+              ) : null}
+              <div className="flex flex-col gap-6 pb-8">
+                {groupedVisibleTasks.map((group) => (
+                  <section
+                    key={group.label}
+                    className="rounded-2xl border border-white/50 bg-white/25 p-3 shadow-[0_6px_24px_rgba(15,15,15,0.05)] backdrop-blur-sm dark:border-white/10 dark:bg-zinc-900/20"
+                    aria-label={`${group.label} task container`}
+                  >
+                    <header className="mb-3 flex items-center justify-between px-1">
+                      <h3 className="text-sm font-semibold tracking-wide text-zinc-800 dark:text-zinc-100">
+                        {group.label}
+                      </h3>
+                      <span className="rounded-full bg-zinc-500/15 px-2 py-0.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                        {group.tasks.length}{" "}
+                        {group.tasks.length === 1 ? "task" : "tasks"}
+                      </span>
+                    </header>
+                    <ul className="flex w-full flex-col gap-3">
+                      {group.tasks.map((task) => (
+                        <TaskItem
+                          key={task.id}
+                          task={task}
+                          onToggle={() => toggleTask(task.id)}
+                          onDelete={() => removeTask(task.id)}
+                          onSetTags={(tags) => setTaskTags(task.id, tags)}
+                        />
+                      ))}
+                    </ul>
+                  </section>
                 ))}
-              </ul>
+              </div>
             </div>
           </div>
         </div>
@@ -201,9 +290,77 @@ export function TasksWorkspace({
           </div>
         ) : null}
       </div>
-      <nav className="fixed bottom-0 right-0 z-20">
-        <button className="bg-white/80 backdrop-blur-sm rounded-full p-2">
-          <IoGrid />
+      <nav
+        className={`fixed right-4 top-1/2 z-30 hidden -translate-y-1/2 flex-col gap-2 rounded-full border p-2 shadow-xl backdrop-blur-md sm:flex ${
+          viewMode === "block"
+            ? "border-sky-400/35 bg-sky-100/45 dark:border-sky-700/30 dark:bg-sky-950/35"
+            : "border-violet-400/35 bg-violet-100/45 dark:border-violet-700/30 dark:bg-violet-950/35"
+        }`}
+        aria-label="Tasks sidebar controls"
+      >
+        <button
+          type="button"
+          title="Block view"
+          aria-label="Block view"
+          aria-pressed={viewMode === "block"}
+          onClick={() => setViewMode("block")}
+          className={`inline-flex h-11 w-11 items-center justify-center rounded-full transition-colors ${
+            viewMode === "block"
+              ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25"
+              : "bg-white/70 text-zinc-700 hover:bg-white dark:bg-zinc-900/70 dark:text-zinc-200 dark:hover:bg-zinc-900"
+          }`}
+        >
+          <IoGrid className="h-5 w-5" aria-hidden />
+        </button>
+        <button
+          type="button"
+          title="Category view"
+          aria-label="Category view"
+          aria-pressed={viewMode === "category"}
+          onClick={() => setViewMode("category")}
+          className={`inline-flex h-11 w-11 items-center justify-center rounded-full transition-colors ${
+            viewMode === "category"
+              ? "bg-violet-500 text-white shadow-lg shadow-violet-500/25"
+              : "bg-white/70 text-zinc-700 hover:bg-white dark:bg-zinc-900/70 dark:text-zinc-200 dark:hover:bg-zinc-900"
+          }`}
+        >
+          <IoList className="h-5 w-5" aria-hidden />
+        </button>
+        <button
+          type="button"
+          title="Unfinished tasks"
+          aria-label="Unfinished tasks"
+          aria-pressed={statusFilter === "unfinished"}
+          onClick={() =>
+            setStatusFilter((current) =>
+              current === "unfinished" ? "all" : "unfinished",
+            )
+          }
+          className={`inline-flex h-11 w-11 items-center justify-center rounded-full transition-colors ${
+            statusFilter === "unfinished"
+              ? "bg-amber-500 text-white shadow-lg shadow-amber-500/25"
+              : "bg-white/70 text-zinc-700 hover:bg-white dark:bg-zinc-900/70 dark:text-zinc-200 dark:hover:bg-zinc-900"
+          }`}
+        >
+          <IoCheckmarkCircleOutline className="h-5 w-5" aria-hidden />
+        </button>
+        <button
+          type="button"
+          title="Completed tasks"
+          aria-label="Completed tasks"
+          aria-pressed={statusFilter === "completed"}
+          onClick={() =>
+            setStatusFilter((current) =>
+              current === "completed" ? "all" : "completed",
+            )
+          }
+          className={`inline-flex h-11 w-11 items-center justify-center rounded-full transition-colors ${
+            statusFilter === "completed"
+              ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/25"
+              : "bg-white/70 text-zinc-700 hover:bg-white dark:bg-zinc-900/70 dark:text-zinc-200 dark:hover:bg-zinc-900"
+          }`}
+        >
+          <IoCheckmarkCircle className="h-5 w-5" aria-hidden />
         </button>
       </nav>
     </main>

@@ -1,4 +1,4 @@
-import { motion } from "motion/react";
+import { LayoutGroup, motion } from "motion/react";
 import { DateTime } from "luxon";
 import { useEffect, useState, type MouseEvent } from "react";
 import type { Task } from "../../types/task";
@@ -429,6 +429,7 @@ type WeekEditInteraction =
       baseDueDate: DateTime;
       hasEndDate: boolean;
       displayDurationMs: number;
+      displayDurationMinutes: number;
       occurrenceOffsetMs: number;
     }
   | {
@@ -437,12 +438,14 @@ type WeekEditInteraction =
       baseDueDate: DateTime;
       baseEndDate: DateTime;
       occurrenceOffsetMs: number;
+      baseDisplayEndMinute: number;
     }
   | {
       kind: "resize-end";
       taskId: string;
       baseDueDate: DateTime;
       occurrenceOffsetMs: number;
+      baseDisplayStartMinute: number;
     };
 
 function isDateOnlyDue(dt: DateTime): boolean {
@@ -458,6 +461,67 @@ function minuteOfDayToLabel(minuteOfDay: number): string {
 
 function slotDateTime(day: DateTime, minuteOfDay: number): DateTime {
   return day.startOf("day").plus({ minutes: minuteOfDay });
+}
+
+type WeekPreviewRange = {
+  dayIso: string;
+  startMinute: number;
+  endMinuteExclusive: number;
+};
+
+function resolvePreviewRange(
+  interaction: WeekEditInteraction | null,
+  target: WeekEditTarget | null,
+): WeekPreviewRange | null {
+  if (!interaction || !target) return null;
+  const dayIso = target.day.toISODate();
+  if (!dayIso) return null;
+
+  if (interaction.kind === "move") {
+    const startMinute = Math.max(0, Math.min(24 * 60 - 15, target.minuteOfDay));
+    const endMinuteExclusive = Math.min(
+      24 * 60,
+      startMinute + interaction.displayDurationMinutes,
+    );
+    return {
+      dayIso,
+      startMinute,
+      endMinuteExclusive: Math.max(startMinute + 15, endMinuteExclusive),
+    };
+  }
+
+  if (interaction.kind === "resize-start") {
+    const maxStart = interaction.baseDisplayEndMinute - 15;
+    const startMinute = Math.max(0, Math.min(target.minuteOfDay, maxStart));
+    return {
+      dayIso,
+      startMinute,
+      endMinuteExclusive: interaction.baseDisplayEndMinute,
+    };
+  }
+
+  const minEnd = interaction.baseDisplayStartMinute + 15;
+  const endMinuteExclusive = Math.max(minEnd, target.minuteOfDay + 15);
+  return {
+    dayIso,
+    startMinute: interaction.baseDisplayStartMinute,
+    endMinuteExclusive: Math.min(24 * 60, endMinuteExclusive),
+  };
+}
+
+function resolveCreatePreviewRange(
+  dragSelection: WeekDragSelection | null,
+): WeekPreviewRange | null {
+  if (!dragSelection) return null;
+  return {
+    dayIso: dragSelection.dayIso,
+    startMinute: Math.min(
+      dragSelection.startMinuteOfDay,
+      dragSelection.endMinuteOfDay,
+    ),
+    endMinuteExclusive:
+      Math.max(dragSelection.startMinuteOfDay, dragSelection.endMinuteOfDay) + 15,
+  };
 }
 
 type MinuteRange = {
@@ -520,6 +584,9 @@ export function WeekView({
   const [editInteraction, setEditInteraction] =
     useState<WeekEditInteraction | null>(null);
   const [editTarget, setEditTarget] = useState<WeekEditTarget | null>(null);
+  const editPreviewRange = resolvePreviewRange(editInteraction, editTarget);
+  const createPreviewRange = resolveCreatePreviewRange(dragSelection);
+  const previewRange = editPreviewRange ?? createPreviewRange;
 
   const finishCreateDrag = () => {
     if (!dragSelection) return;
@@ -701,83 +768,89 @@ export function WeekView({
             );
           })}
 
-          {quarterSlots.map((minuteOfDay) => (
-            <FragmentQuarterRow
-              key={`quarter-${minuteOfDay}`}
-              minuteOfDay={minuteOfDay}
-              days={days}
-              byDay={byDay}
-              dragSelection={dragSelection}
-              onSlotMouseDown={(day, slotMinuteOfDay) => {
-                if (editInteraction) return;
-                const dayIso = day.toISODate() ?? "";
-                setDragSelection({
-                  dayIso,
-                  day,
-                  startMinuteOfDay: slotMinuteOfDay,
-                  endMinuteOfDay: slotMinuteOfDay,
-                });
-              }}
-              onSlotMouseEnter={(day, slotMinuteOfDay) => {
-                if (editInteraction) {
+          <LayoutGroup id="week-events">
+            {quarterSlots.map((minuteOfDay) => (
+              <FragmentQuarterRow
+                key={`quarter-${minuteOfDay}`}
+                minuteOfDay={minuteOfDay}
+                days={days}
+                byDay={byDay}
+                onSlotMouseDown={(day, slotMinuteOfDay) => {
+                  if (editInteraction) return;
+                  const dayIso = day.toISODate() ?? "";
+                  setDragSelection({
+                    dayIso,
+                    day,
+                    startMinuteOfDay: slotMinuteOfDay,
+                    endMinuteOfDay: slotMinuteOfDay,
+                  });
+                }}
+                onSlotMouseEnter={(day, slotMinuteOfDay) => {
+                  if (editInteraction) {
+                    setEditTarget({ day, minuteOfDay: slotMinuteOfDay });
+                    return;
+                  }
+                  if (!dragSelection) return;
+                  const dayIso = day.toISODate() ?? "";
+                  setDragSelection((prev) => {
+                    if (!prev) return prev;
+                    if (dayIso !== prev.dayIso) return prev;
+                    return { ...prev, endMinuteOfDay: slotMinuteOfDay };
+                  });
+                }}
+                onEventMoveStart={(row, day, slotMinuteOfDay) => {
+                  if (!onUpdateTaskSchedule || !row.task.dueDate) return;
+                  const dueDate = DateTime.fromJSDate(row.task.dueDate);
+                  const displayStart = DateTime.fromJSDate(row.displayDueDate);
+                  const range = resolveRowMinuteRange(row);
+                  const durationMinutes =
+                    range.endMinuteExclusive - range.startMinute;
+                  setEditInteraction({
+                    kind: "move",
+                    taskId: row.task.id,
+                    baseDueDate: dueDate,
+                    hasEndDate: Boolean(row.task.endDate),
+                    displayDurationMs: durationMinutes * 60 * 1000,
+                    displayDurationMinutes: durationMinutes,
+                    occurrenceOffsetMs: displayStart.toMillis() - dueDate.toMillis(),
+                  });
                   setEditTarget({ day, minuteOfDay: slotMinuteOfDay });
-                  return;
-                }
-                if (!dragSelection) return;
-                const dayIso = day.toISODate() ?? "";
-                setDragSelection((prev) => {
-                  if (!prev) return prev;
-                  if (dayIso !== prev.dayIso) return prev;
-                  return { ...prev, endMinuteOfDay: slotMinuteOfDay };
-                });
-              }}
-              onEventMoveStart={(row, day, slotMinuteOfDay) => {
-                if (!onUpdateTaskSchedule || !row.task.dueDate) return;
-                const dueDate = DateTime.fromJSDate(row.task.dueDate);
-                const displayStart = DateTime.fromJSDate(row.displayDueDate);
-                const range = resolveRowMinuteRange(row);
-                const durationMinutes =
-                  range.endMinuteExclusive - range.startMinute;
-                setEditInteraction({
-                  kind: "move",
-                  taskId: row.task.id,
-                  baseDueDate: dueDate,
-                  hasEndDate: Boolean(row.task.endDate),
-                  displayDurationMs: durationMinutes * 60 * 1000,
-                  occurrenceOffsetMs: displayStart.toMillis() - dueDate.toMillis(),
-                });
-                setEditTarget({ day, minuteOfDay: slotMinuteOfDay });
-              }}
-              onEventResizeStart={(row, day, slotMinuteOfDay, edge) => {
-                if (!onUpdateTaskSchedule || !row.task.dueDate) return;
-                const dueDate = DateTime.fromJSDate(row.task.dueDate);
-                const displayStart = DateTime.fromJSDate(row.displayDueDate);
-                const occurrenceOffsetMs =
-                  displayStart.toMillis() - dueDate.toMillis();
-                if (edge === "start") {
-                  const baseEnd =
-                    row.task.endDate && row.task.endDate > row.task.dueDate
-                      ? DateTime.fromJSDate(row.task.endDate)
-                      : dueDate.plus({ minutes: 15 });
-                  setEditInteraction({
-                    kind: "resize-start",
-                    taskId: row.task.id,
-                    baseDueDate: dueDate,
-                    baseEndDate: baseEnd,
-                    occurrenceOffsetMs,
-                  });
-                } else {
-                  setEditInteraction({
-                    kind: "resize-end",
-                    taskId: row.task.id,
-                    baseDueDate: dueDate,
-                    occurrenceOffsetMs,
-                  });
-                }
-                setEditTarget({ day, minuteOfDay: slotMinuteOfDay });
-              }}
-            />
-          ))}
+                }}
+                onEventResizeStart={(row, day, slotMinuteOfDay, edge) => {
+                  if (!onUpdateTaskSchedule || !row.task.dueDate) return;
+                  const dueDate = DateTime.fromJSDate(row.task.dueDate);
+                  const displayStart = DateTime.fromJSDate(row.displayDueDate);
+                  const range = resolveRowMinuteRange(row);
+                  const occurrenceOffsetMs =
+                    displayStart.toMillis() - dueDate.toMillis();
+                  if (edge === "start") {
+                    const baseEnd =
+                      row.task.endDate && row.task.endDate > row.task.dueDate
+                        ? DateTime.fromJSDate(row.task.endDate)
+                        : dueDate.plus({ minutes: 15 });
+                    setEditInteraction({
+                      kind: "resize-start",
+                      taskId: row.task.id,
+                      baseDueDate: dueDate,
+                      baseEndDate: baseEnd,
+                      occurrenceOffsetMs,
+                      baseDisplayEndMinute: range.endMinuteExclusive,
+                    });
+                  } else {
+                    setEditInteraction({
+                      kind: "resize-end",
+                      taskId: row.task.id,
+                      baseDueDate: dueDate,
+                      occurrenceOffsetMs,
+                      baseDisplayStartMinute: range.startMinute,
+                    });
+                  }
+                  setEditTarget({ day, minuteOfDay: slotMinuteOfDay });
+                }}
+                previewRange={previewRange}
+              />
+            ))}
+          </LayoutGroup>
         </div>
       </div>
     </div>
@@ -788,7 +861,6 @@ type FragmentQuarterRowProps = {
   minuteOfDay: number;
   days: DateTime[];
   byDay: Map<string, CalendarTaskRow[]>;
-  dragSelection: WeekDragSelection | null;
   onSlotMouseDown: (day: DateTime, minuteOfDay: number) => void;
   onSlotMouseEnter: (day: DateTime, minuteOfDay: number) => void;
   onEventMoveStart: (
@@ -802,17 +874,18 @@ type FragmentQuarterRowProps = {
     minuteOfDay: number,
     edge: "start" | "end",
   ) => void;
+  previewRange: WeekPreviewRange | null;
 };
 
 function FragmentQuarterRow({
   minuteOfDay,
   days,
   byDay,
-  dragSelection,
   onSlotMouseDown,
   onSlotMouseEnter,
   onEventMoveStart,
   onEventResizeStart,
+  previewRange,
 }: FragmentQuarterRowProps) {
   const isHourLine = minuteOfDay % 60 === 0;
   const isHalfLine = minuteOfDay % 60 === 30;
@@ -842,25 +915,21 @@ function FragmentQuarterRow({
             slotEndMinuteExclusive > range.startMinute
           );
         });
-        const inSelection = (() => {
-          if (!dragSelection) return false;
-          if (dragSelection.dayIso !== key) return false;
-          const minMinute = Math.min(
-            dragSelection.startMinuteOfDay,
-            dragSelection.endMinuteOfDay,
+        const inPreview = (() => {
+          if (!previewRange) return false;
+          if (previewRange.dayIso !== key) return false;
+          return (
+            minuteOfDay >= previewRange.startMinute &&
+            minuteOfDay < previewRange.endMinuteExclusive
           );
-          const maxMinute = Math.max(
-            dragSelection.startMinuteOfDay,
-            dragSelection.endMinuteOfDay,
-          );
-          return minuteOfDay >= minMinute && minuteOfDay <= maxMinute;
         })();
+        const isPreviewStart = inPreview && previewRange?.startMinute === minuteOfDay;
+        const isPreviewEnd =
+          inPreview && previewRange?.endMinuteExclusive === minuteOfDay + 15;
         return (
           <div
             key={`${key}-${minuteOfDay}`}
-            className={`min-h-[24px] border-r p-0 dark:border-white/10 ${
-              inSelection ? "bg-sky-500/20 dark:bg-sky-500/25" : ""
-            } ${
+            className={`relative min-h-[24px] border-r p-0 dark:border-white/10 ${
               isHourLine
                 ? "border-t border-white/35 dark:border-white/10"
                 : isHalfLine
@@ -873,6 +942,15 @@ function FragmentQuarterRow({
             }}
             onMouseEnter={() => onSlotMouseEnter(day, minuteOfDay)}
           >
+            {inPreview ? (
+              <motion.div
+                layout
+                transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                className={`pointer-events-none absolute inset-x-0 top-0 bottom-0 border border-sky-500/45 bg-sky-500/20 dark:border-sky-300/45 dark:bg-sky-400/20 ${
+                  isPreviewStart ? "rounded-t-md" : ""
+                } ${isPreviewEnd ? "rounded-b-md" : ""}`}
+              />
+            ) : null}
             <div className="flex h-full flex-col gap-0">
               {slotTasks.slice(0, 2).map((row) =>
                 (() => {
@@ -881,7 +959,9 @@ function FragmentQuarterRow({
                   const isEndSlot =
                     range.endMinuteExclusive === minuteOfDay + 15;
                   return (
-                    <button
+                    <motion.button
+                      layout="position"
+                      transition={{ type: "spring", stiffness: 420, damping: 36 }}
                       key={row.rowKey}
                       type="button"
                       onMouseDown={(e) => {
@@ -919,7 +999,7 @@ function FragmentQuarterRow({
                           }}
                         />
                       ) : null}
-                    </button>
+                    </motion.button>
                   );
                 })(),
               )}

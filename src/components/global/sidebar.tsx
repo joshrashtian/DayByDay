@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import {
   IoHomeOutline,
   IoListOutline,
@@ -7,9 +7,10 @@ import {
   IoCalendarOutline,
   IoHelpCircleOutline,
   IoGrid,
+  IoChevronBack,
+  IoMenu,
 } from "react-icons/io5";
-import BottomSheet from "../../ui/BottomSheet";
-import { Reorder } from "motion/react";
+import { AnimatePresence, motion, Reorder } from "motion/react";
 
 type SidebarNavItem = {
   label: string;
@@ -27,52 +28,91 @@ const defaultNavItems: SidebarNavItem[] = [
 ];
 
 const SideBar = () => {
-  const [activeItem, setActiveItem] = useState<string | null>(null);
+  const location = useLocation();
   const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
-  const [items, setItems] = useState<SidebarNavItem[]>(() => [...defaultNavItems]);
-
-  const handleClick = (item: string) => {
-    setActiveItem(item);
-  };
+  const [items, setItems] = useState<SidebarNavItem[]>(() => [
+    ...defaultNavItems,
+  ]);
 
   return (
-    <div className="fixed inset-y-0 left-0 z-40 w-16 group  transition-all duration-200 *: h-full bg-white shadow-lg">
-      <Reorder.Group
-        axis="y"
-        className="flex flex-col"
-        values={items}
-        onReorder={setItems}
-      >
-        {items.map((item) => (
-          <Reorder.Item key={item.label} value={item} className="list-none">
-            <Link to={item.link} draggable={false}>
-              <button
-                type="button"
-                className={`flex items-center justify-center text-2xl h-16 w-16 transition-all duration-200 ${
-                  activeItem === item.label ? "text-blue-500" : "text-gray-500"
-                }`}
-                onClick={() => handleClick(item.label)}
+    <div className="fixed bottom-0 left-2 top-0 z-50 flex items-stretch">
+      <AnimatePresence mode="wait">
+        {bottomSheetOpen ? (
+          <motion.nav
+            key="sidebar-nav"
+            aria-label="Primary navigation"
+            className="my-6 flex w-16 flex-col items-center justify-between rounded-2xl border border-zinc-200/80 bg-white shadow-lg backdrop-blur-sm"
+            initial={{ x: -100, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -100, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+          >
+            <div className="flex flex-col items-center justify-center">
+              <Reorder.Group
+                axis="y"
+                className="flex flex-col"
+                values={items}
+                onReorder={setItems}
               >
-                {item.icon}
+                {items.map((item) => {
+                  const isActive =
+                    item.link === "/"
+                      ? location.pathname === "/"
+                      : location.pathname.startsWith(item.link);
+
+                  return (
+                    <Reorder.Item
+                      key={item.label}
+                      value={item}
+                      className="list-none"
+                    >
+                      <NavLink
+                        to={item.link}
+                        draggable={false}
+                        aria-label={item.label}
+                        className={`flex h-16 w-16 items-center justify-center text-2xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${
+                          isActive
+                            ? "text-blue-600"
+                            : "text-gray-600 hover:text-gray-900"
+                        }`}
+                      >
+                        {item.icon}
+                      </NavLink>
+                    </Reorder.Item>
+                  );
+                })}
+              </Reorder.Group>
+            </div>
+            <div className="flex flex-col  items-center justify-center">
+              <button
+                onClick={() => setBottomSheetOpen(false)}
+                type="button"
+                className="flex h-16 w-16 items-center justify-center text-2xl text-gray-600 transition-all duration-200 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+              >
+                <IoChevronBack className="h-6 w-6" />
               </button>
-            </Link>
-          </Reorder.Item>
-        ))}
-      </Reorder.Group>
-      <button
-        onClick={() => setBottomSheetOpen(true)}
-        type="button"
-        className="flex items-center justify-center text-2xl h-16 w-16 transition-all duration-200"
-      >
-        <IoHelpCircleOutline />
-      </button>
-      <BottomSheet
-        open={bottomSheetOpen}
-        onClose={() => setBottomSheetOpen(false)}
-        title="Help"
-      >
-        <p>Hello to All of you!</p>
-      </BottomSheet>
+            </div>
+          </motion.nav>
+        ) : (
+          <motion.div
+            key="sidebar-menu"
+            className="flex items-start pt-6"
+            initial={{ opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -12 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+          >
+            <button
+              type="button"
+              onClick={() => setBottomSheetOpen(true)}
+              className="rounded-xl p-2 text-gray-600 transition-colors hover:bg-zinc-100 hover:text-gray-900 dark:hover:bg-zinc-800"
+              aria-label="Open navigation"
+            >
+              <IoMenu className="h-6 w-6" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
