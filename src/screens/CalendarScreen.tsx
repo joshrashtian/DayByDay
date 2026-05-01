@@ -9,6 +9,7 @@ import {
   WeekView,
 } from "../components/calendar/calendarViews";
 import { taskCreatorPopupContent } from "../components/tasks/taskCreatorPopupContent";
+import { taskEditorPopupContent } from "../components/tasks/taskEditorPopupContent";
 import {
   dueLocalInputForCalendarDayEnd,
   localInputForDateTime,
@@ -27,14 +28,16 @@ const modes: { id: CalendarMode; label: string }[] = [
 
 export default function CalendarScreen() {
   const { open: openPopup, close: closePopup } = usePopup();
-  const { tasks, toggleTask, addTask, setTaskSchedule } = useTasksStore(
-    useShallow((s) => ({
-      tasks: s.tasks,
-      toggleTask: s.toggleTask,
-      addTask: s.addTask,
-      setTaskSchedule: s.setTaskSchedule,
-    })),
-  );
+  const { tasks, toggleTask, addTask, setTaskSchedule, updateTask } =
+    useTasksStore(
+      useShallow((s) => ({
+        tasks: s.tasks,
+        toggleTask: s.toggleTask,
+        addTask: s.addTask,
+        setTaskSchedule: s.setTaskSchedule,
+        updateTask: s.updateTask,
+      })),
+    );
 
   const [mode, setMode] = useState<CalendarMode>("month");
   const [focus, setFocus] = useState(() => DateTime.local().startOf("day"));
@@ -64,6 +67,13 @@ export default function CalendarScreen() {
       );
     },
     [openPopup, closePopup, addTask],
+  );
+
+  const openTaskEditor = useCallback(
+    (task: (typeof tasks)[number]) => {
+      openPopup(taskEditorPopupContent({ task, updateTask, closePopup }));
+    },
+    [openPopup, updateTask, closePopup],
   );
 
   const monthRef = useMemo(() => focus.startOf("month"), [focus]);
@@ -111,7 +121,7 @@ export default function CalendarScreen() {
   const viewKey = `${mode}-${focus.toISODate()}-${monthRef.toISODate()}`;
 
   return (
-    <main className="relative flex min-h-screen flex-col gap-6 overflow-hidden bg-zinc-100  p-6 dark:bg-zinc-700">
+    <main className="relative flex h-screen min-h-screen flex-col overflow-hidden bg-zinc-50 dark:bg-zinc-950">
       <div
         className="pointer-events-none absolute -right-24 top-1/4 h-80 w-80 rounded-full bg-sky-200/35 blur-3xl dark:bg-sky-900/25"
         aria-hidden
@@ -121,63 +131,60 @@ export default function CalendarScreen() {
         aria-hidden
       />
 
-      <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col gap-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="font-quantify text-4xl font-black tracking-wide text-zinc-900 sm:text-5xl dark:text-zinc-50">
-            Calendar
-          </h1>
-
-          <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-white/70 bg-white/40 p-1.5 shadow-sm ring-1 ring-white/30 backdrop-blur-xl dark:border-white/15 dark:bg-zinc-900/40 dark:ring-white/10">
-            {modes.map(({ id, label }) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setMode(id)}
-                className={` px-4 py-2 text-sm font-semibold skew-x-6 transition-colors ${
-                  mode === id
-                    ? "bg-zinc-900 text-white shadow-sm dark:bg-white dark:text-zinc-900"
-                    : "text-zinc-600 hover:bg-white/50 dark:text-zinc-400 dark:hover:bg-white/10"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/70 bg-white/35 px-4 py-3 ring-1 ring-white/30 backdrop-blur-xl dark:border-white/15 dark:bg-zinc-900/35 dark:ring-white/10">
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-lg font-semibold text-zinc-800 dark:text-zinc-100">
-              {title}
-            </p>
-          </div>
-          <div className="flex items-center gap-1">
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.94 }}
-              onClick={goPrev}
-              className="rounded-xl border border-zinc-300/80 bg-white/60 px-3 py-2 text-sm font-semibold text-zinc-800 hover:bg-white dark:border-zinc-600 dark:bg-zinc-800/60 dark:text-zinc-100 dark:hover:bg-zinc-800"
-              aria-label="Previous"
-            >
-              ←
-            </motion.button>
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.94 }}
-              onClick={() => setFocus(DateTime.local().startOf("day"))}
-              className="rounded-xl border border-zinc-300/80 bg-white/60 px-3 py-2 text-sm font-semibold text-zinc-800 hover:bg-white dark:border-zinc-600 dark:bg-zinc-800/60 dark:text-zinc-100 dark:hover:bg-zinc-800"
-            >
-              Today
-            </motion.button>
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.94 }}
-              onClick={goNext}
-              className="rounded-xl border border-zinc-300/80 bg-white/60 px-3 py-2 text-sm font-semibold text-zinc-800 hover:bg-white dark:border-zinc-600 dark:bg-zinc-800/60 dark:text-zinc-100 dark:hover:bg-zinc-800"
-              aria-label="Next"
-            >
-              →
-            </motion.button>
+      <div className="relative z-10 mx-auto flex h-full w-full max-w-[1400px] flex-col gap-4 px-4 pb-4 pt-3 sm:px-6">
+        <div className="fixed bottom-8 w-3/5 left-1/2 -translate-x-1/2 z-40 flex flex-col gap-4 pb-1 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex w-full flex-wrap items-center justify-between gap-2 rounded-2xl border border-white/60 bg-white/70 p-1.5 shadow-[0_8px_24px_rgba(15,23,42,0.06)] ring-1 ring-white/40 backdrop-blur-xl dark:border-white/15 dark:bg-zinc-900/70 dark:ring-white/10">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/70 bg-white/35 px-4 py-3 ring-1 ring-white/30 backdrop-blur-xl dark:border-white/15 dark:bg-zinc-900/35 dark:ring-white/10">
+              {modes.map(({ id, label }) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setMode(id)}
+                  className={` px-4 py-2 text-sm font-semibold skew-x-6 transition-colors ${
+                    mode === id
+                      ? "bg-zinc-900 text-white shadow-sm dark:bg-white dark:text-zinc-900"
+                      : "text-zinc-600 hover:bg-white/50 dark:text-zinc-400 dark:hover:bg-white/10"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/70 bg-white/35 px-4 py-3 ring-1 ring-white/30 backdrop-blur-xl dark:border-white/15 dark:bg-zinc-900/35 dark:ring-white/10">
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-quantify text-lg font-semibold text-zinc-800 dark:text-zinc-100">
+                  {title}
+                </p>
+              </div>
+              <div className="flex items-center gap-1">
+                <motion.button
+                  type="button"
+                  whileTap={{ scale: 0.94 }}
+                  onClick={goPrev}
+                  className="rounded-full bg-blue-300/40 px-3 py-2 text-sm font-semibold text-zinc-800 hover:bg-white dark:border-zinc-600 dark:bg-zinc-800/60 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                  aria-label="Previous"
+                >
+                  ←
+                </motion.button>
+                <motion.button
+                  type="button"
+                  whileTap={{ scale: 0.94 }}
+                  onClick={() => setFocus(DateTime.local().startOf("day"))}
+                  className=" bg-blue-500 transition-colors px-6 rounded-full py-2 text-sm font-semibold text-white hover:bg-zinc-800 dark:bg-zinc-800/60 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                >
+                  Today
+                </motion.button>
+                <motion.button
+                  type="button"
+                  whileTap={{ scale: 0.94 }}
+                  onClick={goNext}
+                  className="rounded-full bg-blue-300/40 px-3 py-2 text-sm font-semibold text-zinc-800 hover:bg-white dark:border-zinc-600 dark:bg-zinc-800/60 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                  aria-label="Next"
+                >
+                  →
+                </motion.button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -188,14 +195,15 @@ export default function CalendarScreen() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -16 }}
             transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-            className="min-h-[320px]"
+            className="min-h-0 flex-1"
           >
             {mode === "month" ? (
-              <div className="rounded-2xl border border-white/70 bg-white/40 p-4 shadow-[0_4px_24px_rgba(15,15,15,0.06)] ring-1 ring-white/30 backdrop-blur-xl sm:p-6 dark:border-white/15 dark:bg-zinc-900/35 dark:ring-white/10">
+              <div className="h-full overflow-auto rounded-2xl border border-white/70 bg-white/40 p-4 shadow-[0_4px_24px_rgba(15,15,15,0.06)] ring-1 ring-white/30 backdrop-blur-xl sm:p-6 dark:border-white/15 dark:bg-zinc-900/35 dark:ring-white/10">
                 <MonthGridView
                   month={monthRef}
                   tasks={tasks}
                   onToggleTask={toggleTask}
+                  onEditTask={openTaskEditor}
                   onPickDay={handlePickDay}
                 />
               </div>
@@ -205,26 +213,31 @@ export default function CalendarScreen() {
                 day={focus}
                 tasks={tasks}
                 onToggleTask={toggleTask}
+                onEditTask={openTaskEditor}
                 onAddTaskForDay={openAddTaskForDay}
               />
             ) : null}
             {mode === "week" ? (
-              <WeekView
-                startDay={focus}
-                tasks={tasks}
-                onPickDay={handlePickDay}
-                onAddTaskForDay={openAddTaskForDay}
-                onCreateTimedTask={openAddTaskForRange}
-                onUpdateTaskSchedule={(taskId, dueDate, endDate) =>
-                  setTaskSchedule(taskId, dueDate, endDate)
-                }
-              />
+              <div className="h-full min-h-0">
+                <WeekView
+                  startDay={focus}
+                  tasks={tasks}
+                  onPickDay={handlePickDay}
+                  onAddTaskForDay={openAddTaskForDay}
+                  onCreateTimedTask={openAddTaskForRange}
+                  onUpdateTaskSchedule={(taskId, dueDate, endDate) =>
+                    setTaskSchedule(taskId, dueDate, endDate)
+                  }
+                  onEditTask={openTaskEditor}
+                />
+              </div>
             ) : null}
             {mode === "three" ? (
               <ThreeDayView
                 startDay={focus}
                 tasks={tasks}
                 onToggleTask={toggleTask}
+                onEditTask={openTaskEditor}
                 onPickDay={handlePickDay}
                 onAddTaskForDay={openAddTaskForDay}
               />

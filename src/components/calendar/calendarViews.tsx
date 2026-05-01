@@ -1,6 +1,6 @@
 import { LayoutGroup, motion } from "motion/react";
 import { DateTime } from "luxon";
-import { useEffect, useState, type MouseEvent } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 import type { Task } from "../../types/task";
 import {
   buildMonthGrid,
@@ -8,6 +8,7 @@ import {
   tasksByDueDateKeyInRange,
   weekdayLabelsShort,
 } from "../../lib/calendarUtils";
+import { resolveCategoryVisual } from "../../lib/taskCategories";
 import { formatTaskDue } from "../../lib/taskDates";
 import BottomSheet from "../../ui/BottomSheet";
 import { IoAdd, IoCheckmarkDone } from "react-icons/io5";
@@ -42,10 +43,11 @@ const cellVariants = {
 type TaskListProps = {
   items: CalendarTaskRow[];
   onToggle: (id: string) => void;
+  onEditTask?: (task: Task) => void;
   compact?: boolean;
 };
 
-function TaskDueList({ items, onToggle, compact }: TaskListProps) {
+function TaskDueList({ items, onToggle, onEditTask, compact }: TaskListProps) {
   const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
@@ -72,104 +74,126 @@ function TaskDueList({ items, onToggle, compact }: TaskListProps) {
     <>
       {compact ? (
         <ul className="flex min-h-0 flex-col gap-1">
-          {items.map(({ task, displayDueDate, rowKey }) => (
-            <li key={rowKey}>
-              <button
-                type="button"
-                onClick={(e) => openTask(task, e)}
-                className={`w-full rounded-lg border px-2 py-1 text-left text-xs font-medium transition-colors hover:bg-white/60 dark:hover:bg-white/10 ${
-                  task.critical
-                    ? "border-red-500/80"
-                    : "border-white/20 dark:border-white/15"
-                }`}
-              >
-                <p>
-                  {task.done && (
-                    <IoCheckmarkDone
-                      className={`${task.critical ? "text-red-500" : "text-blue-500"}`}
-                    />
-                  )}
-                </p>
-                {task.critical ? (
-                  <span className="text-xs font-display italic text-red-500">
-                    CRITICAL
-                  </span>
-                ) : null}
-                {task.block ? (
-                  <span className="mb-0.5 block truncate text-[10px] font-semibold uppercase tracking-wide text-indigo-700 dark:text-indigo-300">
-                    {task.block}
-                  </span>
-                ) : null}
-                {task.category ? (
-                  <span className="mb-0.5 block truncate text-[10px] font-semibold uppercase tracking-wide text-sky-700 dark:text-sky-300">
-                    {task.category}
-                  </span>
-                ) : null}
-                <span className="line-clamp-2 font-black leading-snug">
-                  {task.title}
-                </span>
-                <time
-                  dateTime={displayDueDate.toISOString()}
-                  className="mt-0.5 block truncate text-[10px] text-zinc-500 dark:text-zinc-400"
+          {items.map(({ task, displayDueDate, rowKey }) => {
+            const categoryVisual = resolveCategoryVisual(task.category);
+            return (
+              <li key={rowKey}>
+                <button
+                  type="button"
+                  onClick={(e) => openTask(task, e)}
+                  className={`w-full rounded-lg border px-2 py-1.5 text-left text-xs font-medium transition-colors hover:bg-white/60 dark:hover:bg-white/10 ${
+                    task.critical
+                      ? "border-red-500/80 bg-red-500/5"
+                      : "border-white/30 bg-white/30 dark:border-white/15 dark:bg-white/5"
+                  }`}
                 >
-                  {formatTaskDue(displayDueDate)}
-                </time>
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <ul className="flex flex-col gap-1">
-          {items.map(({ task, displayDueDate, rowKey }) => (
-            <li key={rowKey} className="flex flex-row items-center gap-2">
-              {task.done ? (
-                <span
-                  className="relative inline-grid h-14 w-14 shrink-0 place-items-center before:absolute before:z-0 before:h-10 before:w-10 before:rotate-45 before:rounded-sm before:bg-red-500 before:content-['']"
-                  aria-hidden
-                >
-                  <IoCheckmarkDone className="relative z-10 text-3xl text-white" />
-                </span>
-              ) : null}
-              <button
-                type="button"
-                onClick={(e) => openTask(task, e)}
-                className={`w-full rounded-lg  px-2 py-2 text-left  font-medium transition-colors hover:bg-white/60 dark:hover:bg-white/10 `}
-              >
-                {task.priority && !task.critical ? (
-                  <span className="block text-xl font-display italic text-zinc-500">
-                    {task.priority.toUpperCase()} PRIORITY
+                  <div className="mb-1 flex items-center justify-between gap-2">
+                    {task.critical ? (
+                      <span className="text-[10px] font-display italic text-red-500">
+                        CRITICAL
+                      </span>
+                    ) : task.category && categoryVisual ? (
+                      <span
+                        className="inline-flex max-w-full items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide"
+                        style={{
+                          backgroundColor: categoryVisual.bg,
+                          color: categoryVisual.text,
+                          borderColor: categoryVisual.border,
+                        }}
+                      >
+                        {categoryVisual.icon ? (
+                          <span>{categoryVisual.icon}</span>
+                        ) : null}
+                        <span className="truncate">{task.category}</span>
+                      </span>
+                    ) : null}
+                    {task.done ? (
+                      <IoCheckmarkDone
+                        className={`${task.critical ? "text-red-500" : "text-blue-500"}`}
+                      />
+                    ) : null}
+                  </div>
+                  <span className="line-clamp-2 font-black leading-snug">
+                    {task.title}
                   </span>
-                ) : null}
-                {task.critical ? (
-                  <span className="block text-xl font-display italic text-red-500">
-                    CRITICAL — {formatTaskDue(displayDueDate)}
-                  </span>
-                ) : (
                   <time
                     dateTime={displayDueDate.toISOString()}
-                    className="mb-0.5 block text-xl text-zinc-500 dark:text-zinc-400"
+                    className="mt-1 block truncate text-[10px] text-zinc-500 dark:text-zinc-400"
                   >
                     {formatTaskDue(displayDueDate)}
                   </time>
-                )}
-                {task.block ? (
-                  <span className="mb-1 block text-xl font-semibold uppercase tracking-wide text-indigo-700 dark:text-indigo-300">
-                    {task.block}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <ul className="flex flex-col gap-1">
+          {items.map(({ task, displayDueDate, rowKey }) => {
+            const categoryVisual = resolveCategoryVisual(task.category);
+            return (
+              <li key={rowKey} className="flex flex-row items-center gap-2">
+                {task.done ? (
+                  <span
+                    className="relative inline-grid h-14 w-14 shrink-0 place-items-center before:absolute before:z-0 before:h-10 before:w-10 before:rotate-45 before:rounded-sm before:bg-red-500 before:content-['']"
+                    aria-hidden
+                  >
+                    <IoCheckmarkDone className="relative z-10 text-3xl text-white" />
                   </span>
                 ) : null}
-                {task.category ? (
-                  <span className="mb-1 block text-xl font-semibold uppercase tracking-wide text-sky-700 dark:text-sky-300">
-                    {task.category}
-                  </span>
-                ) : null}
-                <span
-                  className={`line-clamp-2 text-4xl font-black leading-tight ${task.done ? "line-through" : ""}`}
+                <button
+                  type="button"
+                  onClick={(e) => openTask(task, e)}
+                  className="w-full rounded-xl  px-3 py-2 text-left font-medium  transition-colors hover:bg-white/60 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
                 >
-                  {task.title}
-                </span>
-              </button>
-            </li>
-          ))}
+                  {task.priority && !task.critical ? (
+                    <span className="block text-lg font-display italic text-zinc-500">
+                      {task.priority.toUpperCase()} PRIORITY
+                    </span>
+                  ) : null}
+                  {task.critical ? (
+                    <span className="block text-lg font-display italic text-red-500">
+                      CRITICAL — {formatTaskDue(displayDueDate)}
+                    </span>
+                  ) : (
+                    <time
+                      dateTime={displayDueDate.toISOString()}
+                      className="mb-1 block text-base text-zinc-500 dark:text-zinc-400"
+                    >
+                      {formatTaskDue(displayDueDate)}
+                    </time>
+                  )}
+                  <div className="mb-1 flex flex-wrap items-center gap-2">
+                    {task.block ? (
+                      <span className="rounded-full bg-indigo-500/15 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-indigo-700 dark:text-indigo-300">
+                        {task.block}
+                      </span>
+                    ) : null}
+                    {task.category && categoryVisual ? (
+                      <span
+                        className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-semibold uppercase tracking-wide"
+                        style={{
+                          backgroundColor: categoryVisual.bg,
+                          color: categoryVisual.text,
+                          borderColor: categoryVisual.border,
+                        }}
+                      >
+                        {categoryVisual.icon ? (
+                          <span>{categoryVisual.icon}</span>
+                        ) : null}
+                        {task.category}
+                      </span>
+                    ) : null}
+                  </div>
+                  <span
+                    className={`line-clamp-2 text-3xl font-black leading-tight ${task.done ? "line-through" : ""}`}
+                  >
+                    {task.title}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
       <BottomSheet
@@ -213,6 +237,18 @@ function TaskDueList({ items, onToggle, compact }: TaskListProps) {
             >
               Toggle done
             </button>
+            {onEditTask ? (
+              <button
+                type="button"
+                onClick={() => {
+                  onEditTask(selectedTask);
+                  closeSheet();
+                }}
+                className="rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
+              >
+                Edit
+              </button>
+            ) : null}
           </div>
         ) : null}
       </BottomSheet>
@@ -224,6 +260,7 @@ type MonthGridProps = {
   month: DateTime;
   tasks: Task[];
   onToggleTask: (id: string) => void;
+  onEditTask?: (task: Task) => void;
   onPickDay: (day: DateTime) => void;
 };
 
@@ -231,6 +268,7 @@ export function MonthGridView({
   month,
   tasks,
   onToggleTask,
+  onEditTask,
   onPickDay,
 }: MonthGridProps) {
   const gridStart = month.startOf("month").startOf("week");
@@ -296,6 +334,7 @@ export function MonthGridView({
                   <TaskDueList
                     items={dayTasks.slice(0, 3)}
                     onToggle={onToggleTask}
+                    onEditTask={onEditTask}
                     compact
                   />
                   {dayTasks.length > 3 ? (
@@ -317,6 +356,7 @@ type DayViewProps = {
   day: DateTime;
   tasks: Task[];
   onToggleTask: (id: string) => void;
+  onEditTask?: (task: Task) => void;
   onAddTaskForDay?: (day: DateTime) => void;
 };
 
@@ -324,6 +364,7 @@ export function DayAgendaView({
   day,
   tasks,
   onToggleTask,
+  onEditTask,
   onAddTaskForDay,
 }: DayViewProps) {
   const byDay = tasksByDueDateKeyInRange(
@@ -387,7 +428,11 @@ export function DayAgendaView({
         ) : null}
       </div>
       <div className="mt-6 max-w-md">
-        <TaskDueList items={dayTasks} onToggle={onToggleTask} />
+        <TaskDueList
+          items={dayTasks}
+          onToggle={onToggleTask}
+          onEditTask={onEditTask}
+        />
       </div>
     </motion.div>
   );
@@ -397,6 +442,7 @@ type ThreeDayProps = {
   startDay: DateTime;
   tasks: Task[];
   onToggleTask: (id: string) => void;
+  onEditTask?: (task: Task) => void;
   onPickDay: (day: DateTime) => void;
   onAddTaskForDay?: (day: DateTime) => void;
 };
@@ -407,7 +453,12 @@ type WeekViewProps = {
   onPickDay: (day: DateTime) => void;
   onAddTaskForDay?: (day: DateTime) => void;
   onCreateTimedTask?: (start: DateTime, end: DateTime) => void;
-  onUpdateTaskSchedule?: (taskId: string, dueDate: Date, endDate?: Date) => void;
+  onUpdateTaskSchedule?: (
+    taskId: string,
+    dueDate: Date,
+    endDate?: Date,
+  ) => void;
+  onEditTask?: (task: Task) => void;
 };
 
 type WeekDragSelection = {
@@ -457,6 +508,14 @@ function isDateOnlyDue(dt: DateTime): boolean {
 function minuteOfDayToLabel(minuteOfDay: number): string {
   const hour = Math.floor(minuteOfDay / 60);
   return DateTime.fromObject({ hour }).toFormat("h a");
+}
+
+function minuteOfDayToClockLabel(minuteOfDay: number): string {
+  if (minuteOfDay >= 24 * 60) return "12:00 AM";
+  const clampedMinute = Math.max(0, minuteOfDay);
+  const hour = Math.floor(clampedMinute / 60);
+  const minute = clampedMinute % 60;
+  return DateTime.fromObject({ hour, minute }).toFormat("h:mm a");
 }
 
 function slotDateTime(day: DateTime, minuteOfDay: number): DateTime {
@@ -520,7 +579,8 @@ function resolveCreatePreviewRange(
       dragSelection.endMinuteOfDay,
     ),
     endMinuteExclusive:
-      Math.max(dragSelection.startMinuteOfDay, dragSelection.endMinuteOfDay) + 15,
+      Math.max(dragSelection.startMinuteOfDay, dragSelection.endMinuteOfDay) +
+      15,
   };
 }
 
@@ -565,6 +625,7 @@ export function WeekView({
   onAddTaskForDay,
   onCreateTimedTask,
   onUpdateTaskSchedule,
+  onEditTask,
 }: WeekViewProps) {
   const weekStart = startDay.startOf("week");
   const weekEnd = weekStart.plus({ days: 6 }).endOf("day");
@@ -584,9 +645,21 @@ export function WeekView({
   const [editInteraction, setEditInteraction] =
     useState<WeekEditInteraction | null>(null);
   const [editTarget, setEditTarget] = useState<WeekEditTarget | null>(null);
+  const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const editPreviewRange = resolvePreviewRange(editInteraction, editTarget);
   const createPreviewRange = resolveCreatePreviewRange(dragSelection);
   const previewRange = editPreviewRange ?? createPreviewRange;
+
+  const openTaskSheet = (task: Task) => {
+    setSelectedTask(task);
+    setBottomSheetOpen(true);
+  };
+
+  const closeTaskSheet = () => {
+    setBottomSheetOpen(false);
+    setSelectedTask(null);
+  };
 
   const finishCreateDrag = () => {
     if (!dragSelection) return;
@@ -623,7 +696,10 @@ export function WeekView({
     if (!dragSelection && !editInteraction) return;
     const onMouseUp = () => {
       if (editInteraction && editTarget && onUpdateTaskSchedule) {
-        const targetStart = slotDateTime(editTarget.day, editTarget.minuteOfDay);
+        const targetStart = slotDateTime(
+          editTarget.day,
+          editTarget.minuteOfDay,
+        );
         if (editInteraction.kind === "move") {
           const dueDate = targetStart.minus({
             milliseconds: editInteraction.occurrenceOffsetMs,
@@ -641,7 +717,8 @@ export function WeekView({
           const dueDateCandidate = targetStart.minus({
             milliseconds: editInteraction.occurrenceOffsetMs,
           });
-          const dueDate = dueDateCandidate > minStart ? minStart : dueDateCandidate;
+          const dueDate =
+            dueDateCandidate > minStart ? minStart : dueDateCandidate;
           onUpdateTaskSchedule(
             editInteraction.taskId,
             dueDate.toJSDate(),
@@ -675,7 +752,7 @@ export function WeekView({
   }, [dragSelection, editInteraction, editTarget, onUpdateTaskSchedule]);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex h-full min-h-0 flex-col gap-4">
       <div className="flex items-end justify-between gap-3">
         <p className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
           W{weekStart.weekNumber}
@@ -686,12 +763,12 @@ export function WeekView({
         </p>
       </div>
 
-      <div className="max-h-[70vh] overflow-auto  border border-white/60 bg-white/35 ring-1 ring-white/25 dark:border-white/15 dark:bg-zinc-900/35 dark:ring-white/10">
-        <div className=" grid min-w-[920px] grid-cols-[74px_repeat(7,minmax(116px,1fr))]">
-          <div className="sticky top-0 z-30 border-b border-r border-white/40 bg-zinc-100/95 px-2 py-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-500 backdrop-blur dark:border-white/10 dark:bg-zinc-900/95 dark:text-zinc-400">
+      <div className="min-h-0 flex-1 overflow-auto rounded-2xl border border-zinc-200/70 bg-white/75 shadow-[0_8px_30px_rgba(15,23,42,0.06)] ring-1 ring-white/60 dark:border-white/15 dark:bg-zinc-900/45 dark:ring-white/10">
+        <div className="grid min-w-[920px] grid-cols-[74px_repeat(7,minmax(116px,1fr))]">
+          <div className="sticky top-0 z-30 border-b border-r border-zinc-200/80 bg-zinc-50/95 px-2 py-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-500 backdrop-blur dark:border-white/10 dark:bg-zinc-900/95 dark:text-zinc-400">
             Time
           </div>
-          {days.map((day) => {
+          {days.map((day, dayIndex) => {
             const key = day.toISODate() ?? "";
             const count = (byDay.get(key) ?? []).length;
             const isToday = day.hasSame(today, "day");
@@ -700,10 +777,12 @@ export function WeekView({
                 key={key}
                 type="button"
                 onClick={() => onPickDay(day)}
-                className={`sticky top-0 z-30 border-b border-r border-white/40 px-2 py-2 text-left backdrop-blur hover:bg-white/35 dark:border-white/10 dark:hover:bg-white/5 ${
+                className={`sticky top-0 z-30 border-b border-r border-zinc-200/80 px-2 py-2 text-left backdrop-blur transition-colors hover:bg-white/80 dark:border-white/10 dark:hover:bg-white/5 ${
                   isToday
                     ? "bg-sky-100/90 dark:bg-sky-900/60"
-                    : "bg-zinc-100/95 dark:bg-zinc-900/95"
+                    : dayIndex % 2 === 0
+                      ? "bg-zinc-50/95 dark:bg-zinc-900/95"
+                      : "bg-white/95 dark:bg-zinc-900/90"
                 }`}
               >
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
@@ -719,12 +798,12 @@ export function WeekView({
             );
           })}
 
-          <div className="border-r border-white/40 p-2 dark:border-white/10">
+          <div className="border-r border-zinc-200/80 bg-zinc-50/60 p-2 dark:border-white/10 dark:bg-zinc-900/35">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-              All day
+              All Day
             </p>
           </div>
-          {days.map((day) => {
+          {days.map((day, dayIndex) => {
             const key = day.toISODate() ?? "";
             const allDayItems = (byDay.get(key) ?? []).filter((row) =>
               isDateOnlyDue(DateTime.fromJSDate(row.displayDueDate)),
@@ -732,14 +811,18 @@ export function WeekView({
             return (
               <div
                 key={`${key}-all-day`}
-                className="border-r border-white/40 p-1.5 dark:border-white/10"
+                className={`border-r border-zinc-200/80 p-1.5 dark:border-white/10 ${
+                  dayIndex % 2 === 0
+                    ? "bg-zinc-50/45 dark:bg-zinc-900/30"
+                    : "bg-white/65 dark:bg-zinc-900/20"
+                }`}
               >
                 <div className="flex min-h-[44px] flex-col gap-1">
                   {allDayItems.slice(0, 2).map((row) => (
                     <button
                       key={row.rowKey}
                       type="button"
-                      onClick={() => onPickDay(day)}
+                      onClick={() => openTaskSheet(row.task)}
                       className={`truncate rounded-md px-1.5 py-1 text-left text-[10px] font-semibold ${
                         row.task.critical
                           ? "bg-red-500/20 text-red-700 dark:bg-red-500/30 dark:text-red-200"
@@ -812,7 +895,8 @@ export function WeekView({
                     hasEndDate: Boolean(row.task.endDate),
                     displayDurationMs: durationMinutes * 60 * 1000,
                     displayDurationMinutes: durationMinutes,
-                    occurrenceOffsetMs: displayStart.toMillis() - dueDate.toMillis(),
+                    occurrenceOffsetMs:
+                      displayStart.toMillis() - dueDate.toMillis(),
                   });
                   setEditTarget({ day, minuteOfDay: slotMinuteOfDay });
                 }}
@@ -847,12 +931,57 @@ export function WeekView({
                   }
                   setEditTarget({ day, minuteOfDay: slotMinuteOfDay });
                 }}
+                onEventClick={(row) => openTaskSheet(row.task)}
                 previewRange={previewRange}
               />
             ))}
           </LayoutGroup>
         </div>
       </div>
+      <BottomSheet
+        open={bottomSheetOpen}
+        onClose={closeTaskSheet}
+        defaultSnap="half"
+        title={selectedTask?.title ?? "Task"}
+      >
+        {selectedTask ? (
+          <div className="flex flex-col gap-3">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              {selectedTask.done ? "Completed" : "Open"} · Due{" "}
+              {selectedTask.dueDate
+                ? formatTaskDue(selectedTask.dueDate)
+                : "not set"}
+            </p>
+            {selectedTask.description ? (
+              <p className="text-sm leading-relaxed">
+                {selectedTask.description}
+              </p>
+            ) : null}
+            <div className="flex flex-col gap-1 text-sm text-zinc-600 dark:text-zinc-400">
+              {selectedTask.priority ? (
+                <p>Priority: {selectedTask.priority}</p>
+              ) : null}
+              {selectedTask.block ? <p>Block: {selectedTask.block}</p> : null}
+              {selectedTask.category ? (
+                <p>Category: {selectedTask.category}</p>
+              ) : null}
+              {selectedTask.tags?.length ? (
+                <p>Tags: {selectedTask.tags.join(", ")}</p>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                onEditTask?.(selectedTask);
+                closeTaskSheet();
+              }}
+              className="rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
+            >
+              Edit
+            </button>
+          </div>
+        ) : null}
+      </BottomSheet>
     </div>
   );
 }
@@ -874,6 +1003,7 @@ type FragmentQuarterRowProps = {
     minuteOfDay: number,
     edge: "start" | "end",
   ) => void;
+  onEventClick: (row: CalendarTaskRow) => void;
   previewRange: WeekPreviewRange | null;
 };
 
@@ -885,24 +1015,35 @@ function FragmentQuarterRow({
   onSlotMouseEnter,
   onEventMoveStart,
   onEventResizeStart,
+  onEventClick,
   previewRange,
 }: FragmentQuarterRowProps) {
+  const dragHoldTimeoutRef = useRef<number | null>(null);
+  const consumedByDragRef = useRef(false);
+  const HOLD_TO_DRAG_MS = 110;
+  const SMOOTH_DRAG_SPRING = {
+    type: "spring" as const,
+    stiffness: 260,
+    damping: 32,
+    mass: 0.7,
+  };
+  const PREVIEW_ENTER_EASE = [0.22, 1, 0.36, 1] as const;
+
+  const clearDragHoldTimeout = () => {
+    if (dragHoldTimeoutRef.current == null) return;
+    window.clearTimeout(dragHoldTimeoutRef.current);
+    dragHoldTimeoutRef.current = null;
+  };
+
+  useEffect(() => () => clearDragHoldTimeout(), []);
+
   const isHourLine = minuteOfDay % 60 === 0;
-  const isHalfLine = minuteOfDay % 60 === 30;
   return (
     <>
-      <div
-        className={`border-r border-white/35 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-500 dark:border-white/10 dark:text-zinc-400 ${
-          isHourLine
-            ? "border-t border-white/35 dark:border-white/10"
-            : isHalfLine
-              ? "border-t border-white/20 dark:border-white/5"
-              : "border-t border-dashed border-white/10 dark:border-white/5"
-        }`}
-      >
+      <div className="border-r border-zinc-200/80 bg-zinc-50/55 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-500 dark:border-white/10 dark:bg-zinc-900/35 dark:text-zinc-400">
         {isHourLine ? minuteOfDayToLabel(minuteOfDay) : ""}
       </div>
-      {days.map((day) => {
+      {days.map((day, dayIndex) => {
         const key = day.toISODate() ?? "";
         const slotStartMinute = minuteOfDay;
         const slotEndMinuteExclusive = minuteOfDay + 15;
@@ -923,20 +1064,20 @@ function FragmentQuarterRow({
             minuteOfDay < previewRange.endMinuteExclusive
           );
         })();
-        const isPreviewStart = inPreview && previewRange?.startMinute === minuteOfDay;
+        const isPreviewStart =
+          inPreview && previewRange?.startMinute === minuteOfDay;
         const isPreviewEnd =
           inPreview && previewRange?.endMinuteExclusive === minuteOfDay + 15;
         return (
           <div
             key={`${key}-${minuteOfDay}`}
-            className={`relative min-h-[24px] border-r p-0 dark:border-white/10 ${
-              isHourLine
-                ? "border-t border-white/35 dark:border-white/10"
-                : isHalfLine
-                  ? "border-t border-white/20 dark:border-white/5"
-                  : "border-t border-dashed border-white/10 dark:border-white/5"
+            className={`relative min-h-[24px] border-r border-zinc-200/80 p-0 dark:border-white/10 ${
+              dayIndex % 2 === 0
+                ? "bg-zinc-50/35 dark:bg-zinc-900/20"
+                : "bg-white/55 dark:bg-zinc-900/10"
             }`}
             onMouseDown={(e) => {
+              if (e.button !== 0) return;
               onSlotMouseDown(day, minuteOfDay);
               e.preventDefault();
             }}
@@ -945,11 +1086,38 @@ function FragmentQuarterRow({
             {inPreview ? (
               <motion.div
                 layout
-                transition={{ type: "spring", stiffness: 420, damping: 34 }}
-                className={`pointer-events-none absolute inset-x-0 top-0 bottom-0 border border-sky-500/45 bg-sky-500/20 dark:border-sky-300/45 dark:bg-sky-400/20 ${
+                initial={{ opacity: 0.5, y: 2 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  layout: SMOOTH_DRAG_SPRING,
+                  opacity: { duration: 0.14, ease: PREVIEW_ENTER_EASE },
+                  y: { duration: 0.14, ease: PREVIEW_ENTER_EASE },
+                }}
+                className={`pointer-events-none absolute inset-x-0 top-0 bottom-0  border-sky-500/45 bg-sky-500/20 dark:border-sky-300/45 dark:bg-sky-400/20 ${
                   isPreviewStart ? "rounded-t-md" : ""
                 } ${isPreviewEnd ? "rounded-b-md" : ""}`}
-              />
+              >
+                {isPreviewStart ? (
+                  <motion.span
+                    initial={{ opacity: 0, x: -2 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.12, ease: PREVIEW_ENTER_EASE }}
+                    className="absolute left-1.5 top-0.5  px-1 py-px text-[9px] font-semibold leading-none text-sky-900 italic font-display dark:bg-sky-400/90 dark:text-zinc-950"
+                  >
+                    {minuteOfDayToClockLabel(previewRange.startMinute)}
+                  </motion.span>
+                ) : null}
+                {isPreviewEnd ? (
+                  <motion.span
+                    initial={{ opacity: 0, x: -2 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.12, ease: PREVIEW_ENTER_EASE }}
+                    className="absolute left-1.5 bottom-0.5 rounded  px-1 py-px text-[9px] font-semibold leading-none italic font-display text-sky-900 dark:bg-sky-400/90 dark:text-zinc-950"
+                  >
+                    {minuteOfDayToClockLabel(previewRange.endMinuteExclusive)}
+                  </motion.span>
+                ) : null}
+              </motion.div>
             ) : null}
             <div className="flex h-full flex-col gap-0">
               {slotTasks.slice(0, 2).map((row) =>
@@ -958,28 +1126,61 @@ function FragmentQuarterRow({
                   const isStartSlot = range.startMinute === minuteOfDay;
                   const isEndSlot =
                     range.endMinuteExclusive === minuteOfDay + 15;
+                  const categoryVisual = resolveCategoryVisual(
+                    row.task.category,
+                  );
                   return (
                     <motion.button
                       layout="position"
-                      transition={{ type: "spring", stiffness: 420, damping: 36 }}
+                      transition={SMOOTH_DRAG_SPRING}
                       key={row.rowKey}
                       type="button"
                       onMouseDown={(e) => {
+                        if (e.button !== 0) return;
                         e.stopPropagation();
                         e.preventDefault();
-                        onEventMoveStart(row, day, minuteOfDay);
+                        consumedByDragRef.current = false;
+                        clearDragHoldTimeout();
+                        const releasePendingDrag = () => clearDragHoldTimeout();
+                        window.addEventListener("mouseup", releasePendingDrag, {
+                          once: true,
+                        });
+                        dragHoldTimeoutRef.current = window.setTimeout(() => {
+                          consumedByDragRef.current = true;
+                          onEventMoveStart(row, day, minuteOfDay);
+                        }, HOLD_TO_DRAG_MS);
                       }}
-                      className={`relative h-full min-h-[24px] w-full truncate px-1.5 py-0.5 text-left text-[10px] leading-tight ${
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (consumedByDragRef.current) {
+                          consumedByDragRef.current = false;
+                          return;
+                        }
+                        onEventClick(row);
+                      }}
+                      className={`relative h-full min-h-[24px] w-full truncate border-l-2 border-l-zinc-400/35 px-1.5 py-0.5 text-left text-[10px] leading-tight shadow-sm ${
                         row.task.critical
                           ? "bg-red-500/20 text-red-700 dark:bg-red-500/30 dark:text-red-200"
-                          : "bg-amber-500/20 text-amber-800 dark:bg-amber-500/30 dark:text-amber-100"
+                          : "bg-white/90 text-zinc-800 dark:bg-white/15 dark:text-zinc-100"
                       } ${isStartSlot ? "rounded-t-md" : ""} ${isEndSlot ? "rounded-b-md" : ""}`}
+                      style={
+                        row.task.critical
+                          ? undefined
+                          : categoryVisual
+                            ? {
+                                backgroundColor: categoryVisual.bg,
+                                color: categoryVisual.text,
+                                borderLeftColor: categoryVisual.accent,
+                              }
+                            : undefined
+                      }
                       title={`${DateTime.fromJSDate(row.displayDueDate).toFormat("h:mm a")} ${row.task.title}`}
                     >
                       {isStartSlot ? (
                         <span
-                          className="absolute inset-x-1 top-0 h-1 cursor-ns-resize rounded-full bg-current/50"
+                          className="absolute inset-x-1 top-0 h-1 cursor-ns-resize rounded-full bg-transparent"
                           onMouseDown={(e) => {
+                            if (e.button !== 0) return;
                             e.stopPropagation();
                             e.preventDefault();
                             onEventResizeStart(row, day, minuteOfDay, "start");
@@ -987,12 +1188,13 @@ function FragmentQuarterRow({
                         />
                       ) : null}
                       {isStartSlot
-                        ? `${DateTime.fromJSDate(row.displayDueDate).toFormat("h:mm a")} ${row.task.title}`
+                        ? `${categoryVisual?.icon ? `${categoryVisual.icon} ` : ""}${DateTime.fromJSDate(row.displayDueDate).toFormat("h:mm a")} ${row.task.title}`
                         : ""}
                       {isEndSlot ? (
                         <span
-                          className="absolute inset-x-1 bottom-0 h-1 cursor-ns-resize rounded-full bg-current/50"
+                          className="absolute inset-x-1 bottom-0 h-1 cursor-ns-resize rounded-full bg-transparent"
                           onMouseDown={(e) => {
+                            if (e.button !== 0) return;
                             e.stopPropagation();
                             e.preventDefault();
                             onEventResizeStart(row, day, minuteOfDay, "end");
@@ -1020,6 +1222,7 @@ export function ThreeDayView({
   startDay,
   tasks,
   onToggleTask,
+  onEditTask,
   onPickDay,
   onAddTaskForDay,
 }: ThreeDayProps) {
@@ -1106,7 +1309,12 @@ export function ThreeDayView({
                 ) : null}
               </div>
               <div className="mt-4 min-h-[120px] flex-1">
-                <TaskDueList items={dayTasks} onToggle={onToggleTask} compact />
+                <TaskDueList
+                  items={dayTasks}
+                  onToggle={onToggleTask}
+                  onEditTask={onEditTask}
+                  compact
+                />
               </div>
             </motion.div>
           );

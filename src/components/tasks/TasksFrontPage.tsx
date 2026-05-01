@@ -16,12 +16,17 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
     useShallow((s) => ({ toggleTask: s.toggleTask })),
   );
   const [rotationOffset, setRotationOffset] = useState(0);
+  const [showFinished, setShowFinished] = useState(false);
 
   useEffect(() => {
     setRotationOffset(0);
   }, [activeBlockName]);
 
-  const openTasks = useMemo(
+  useEffect(() => {
+    setRotationOffset(0);
+  }, [showFinished]);
+
+  const visibleTasks = useMemo(
     () =>
       [...tasks]
         .filter((task) => {
@@ -33,29 +38,30 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
         .sort(
           (a, b) => (b.dueDate?.getTime() ?? 0) - (a.dueDate?.getTime() ?? 0),
         )
-        .filter((task) => !task.done),
-    [tasks, activeBlockName],
+        .filter((task) => (showFinished ? task.done : !task.done)),
+    [tasks, activeBlockName, showFinished],
   );
 
   useEffect(() => {
-    if (openTasks.length === 0) {
+    if (visibleTasks.length === 0) {
       if (rotationOffset !== 0) setRotationOffset(0);
       return;
     }
-    if (rotationOffset >= openTasks.length) {
-      setRotationOffset(rotationOffset % openTasks.length);
+    if (rotationOffset >= visibleTasks.length) {
+      setRotationOffset(rotationOffset % visibleTasks.length);
     }
-  }, [openTasks.length, rotationOffset]);
+  }, [visibleTasks.length, rotationOffset]);
 
   const rotatedTasks = useMemo(() => {
-    if (openTasks.length < 2) return openTasks;
+    if (visibleTasks.length < 2) return visibleTasks;
     const normalizedOffset =
-      ((rotationOffset % openTasks.length) + openTasks.length) % openTasks.length;
+      ((rotationOffset % visibleTasks.length) + visibleTasks.length) %
+      visibleTasks.length;
     return [
-      ...openTasks.slice(normalizedOffset),
-      ...openTasks.slice(0, normalizedOffset),
+      ...visibleTasks.slice(normalizedOffset),
+      ...visibleTasks.slice(0, normalizedOffset),
     ];
-  }, [openTasks, rotationOffset]);
+  }, [visibleTasks, rotationOffset]);
 
   const stack = useMemo(() => rotatedTasks.slice(0, STACK_MAX), [rotatedTasks]);
   const activeTask = rotatedTasks[0];
@@ -77,9 +83,16 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
         </h1>
         <p className="text-md font-display text-zinc-500 dark:text-zinc-400">
           {activeBlockName
-            ? `${activeBlockName} tasks: ${stack.length}`
-            : `Tasks in this block: ${stack.length}`}
+            ? `${activeBlockName} ${showFinished ? "finished" : "active"} tasks: ${stack.length}`
+            : `${showFinished ? "Finished" : "Active"} tasks in this block: ${stack.length}`}
         </p>
+        <button
+          type="button"
+          onClick={() => setShowFinished((v) => !v)}
+          className="rounded-lg border border-zinc-300/80 bg-white/70 px-2.5 py-1 text-xs font-semibold text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-900/60 dark:text-zinc-300 dark:hover:bg-zinc-900"
+        >
+          {showFinished ? "Show active" : "Show finished"}
+        </button>
       </div>
 
       <div
@@ -93,7 +106,9 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
             className="absolute left-1/2 top-0 w-[94%] -translate-x-1/2 rounded-xl border border-dashed border-zinc-300/80 bg-zinc-50/80 px-4 py-4 text-center text-sm text-zinc-500 dark:border-zinc-600 dark:bg-zinc-800/50 dark:text-zinc-400"
             role="listitem"
           >
-            No tasks yet — add one from Tasks.
+            {showFinished
+              ? "No finished tasks in this block yet."
+              : "No active tasks yet — add one from Tasks."}
           </div>
         ) : (
           stack.map((task, index) => {

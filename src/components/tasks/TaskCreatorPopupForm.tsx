@@ -7,6 +7,7 @@ import {
 } from "react-icons/io5";
 import { parseDueLocalInput } from "../../lib/taskDates";
 import { collectAvailableBlocks } from "../../lib/taskBlocks";
+import { collectAvailableCategories } from "../../lib/taskCategories";
 import {
   type AddTaskPayload,
   parseTagsInput,
@@ -108,6 +109,7 @@ export function TaskCreatorPopupForm({
   const titleRef = useRef<HTMLInputElement>(null);
   const tasks = useTasksStore((s) => s.tasks);
   const blockSuggestions = collectAvailableBlocks(tasks);
+  const categorySuggestions = collectAvailableCategories(tasks);
 
   useEffect(() => {
     const t = requestAnimationFrame(() => titleRef.current?.focus());
@@ -290,6 +292,7 @@ export function TaskCreatorPopupForm({
                 </label>
                 <input
                   id="popup-task-category"
+                  list="popup-task-category-suggestions"
                   type="text"
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
@@ -297,6 +300,11 @@ export function TaskCreatorPopupForm({
                   autoComplete="off"
                   className={inputClass}
                 />
+                <datalist id="popup-task-category-suggestions">
+                  {categorySuggestions.map((option) => (
+                    <option key={option} value={option} />
+                  ))}
+                </datalist>
               </div>
 
               <div className="flex flex-col gap-1.5">

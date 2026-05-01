@@ -11,6 +11,18 @@ import {
   getManualWeatherCoords,
   setManualWeatherCoords,
 } from "../lib/weatherCoords";
+import { useTasksStore } from "../stores/tasksStore";
+import {
+  CATEGORY_CONFIGS_CHANGED,
+  CATEGORY_CONFIG_STORAGE_KEY,
+  collectAvailableCategories,
+  getCategoryConfigByName,
+  getCategoryConfigs,
+  removeCategoryConfigByName,
+  setOrUpdateCategoryConfig,
+  suggestCategoryColor,
+  type CategoryTone,
+} from "../lib/taskCategories";
 
 export const SettingsScreen = () => {
   const [latInput, setLatInput] = useState("");
@@ -36,6 +48,15 @@ export const SettingsScreen = () => {
   );
   const [uploadMode, setUploadMode] = useState<"append" | "replace">("append");
   const cssFileInputRef = useRef<HTMLInputElement>(null);
+  const tasks = useTasksStore((s) => s.tasks);
+  const [categoryConfigs, setCategoryConfigs] = useState(() => getCategoryConfigs());
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [categoryNameInput, setCategoryNameInput] = useState("");
+  const [categoryColorInput, setCategoryColorInput] = useState("#6366f1");
+  const [categoryTextColorInput, setCategoryTextColorInput] = useState("#ffffff");
+  const [categoryTone, setCategoryTone] = useState<CategoryTone>("soft");
+  const [categoryIconInput, setCategoryIconInput] = useState("");
+  const [categoryMessage, setCategoryMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const m = getManualWeatherCoords();
@@ -45,6 +66,39 @@ export const SettingsScreen = () => {
     }
     setBlocksCssInput(getBlocksUserCss());
   }, []);
+
+  useEffect(() => {
+    const sync = () => setCategoryConfigs(getCategoryConfigs());
+    window.addEventListener(CATEGORY_CONFIGS_CHANGED, sync);
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === CATEGORY_CONFIG_STORAGE_KEY || e.key === null) sync();
+    };
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener(CATEGORY_CONFIGS_CHANGED, sync);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, []);
+
+  const availableCategories = collectAvailableCategories(tasks);
+
+  useEffect(() => {
+    if (!selectedCategory) return;
+    if (!availableCategories.some((name) => name === selectedCategory)) {
+      setSelectedCategory("");
+    }
+  }, [availableCategories, selectedCategory]);
+
+  useEffect(() => {
+    if (!selectedCategory) return;
+    const cfg = getCategoryConfigByName(selectedCategory);
+    setCategoryNameInput(selectedCategory);
+    setCategoryColorInput(cfg?.color ?? suggestCategoryColor(selectedCategory));
+    setCategoryTextColorInput(cfg?.textColor ?? "#ffffff");
+    setCategoryTone(cfg?.tone ?? "soft");
+    setCategoryIconInput(cfg?.icon ?? "");
+    setCategoryMessage(null);
+  }, [selectedCategory, categoryConfigs]);
 
   const onSaveWeatherLocation = () => {
     setSaveError(null);
@@ -121,6 +175,60 @@ export const SettingsScreen = () => {
     } catch {
       setBlocksCssUploadError("Couldn't read that file. Try a plain .css file.");
     }
+  };
+
+  const onSelectCategory = (name: string) => {
+    setSelectedCategory(name);
+    setCategoryMessage(null);
+  };
+
+  const onStartNewCategory = () => {
+    setSelectedCategory("");
+    setCategoryNameInput("");
+    setCategoryColorInput("#6366f1");
+    setCategoryTextColorInput("#ffffff");
+    setCategoryTone("soft");
+    setCategoryIconInput("");
+    setCategoryMessage(null);
+  };
+
+  const onSaveCategoryStyle = () => {
+    const trimmed = categoryNameInput.trim();
+    if (!trimmed) {
+      setCategoryMessage("Enter a category name.");
+      return;
+    }
+    if (!/^#([0-9a-fA-F]{6})$/.test(categoryColorInput.trim())) {
+      setCategoryMessage("Primary color must be a 6-digit hex value.");
+      return;
+    }
+    if (
+      categoryTextColorInput.trim() &&
+      !/^#([0-9a-fA-F]{6})$/.test(categoryTextColorInput.trim())
+    ) {
+      setCategoryMessage("Text color must be a 6-digit hex value.");
+      return;
+    }
+    setOrUpdateCategoryConfig({
+      name: trimmed,
+      color: categoryColorInput.trim(),
+      textColor: categoryTextColorInput.trim() || undefined,
+      tone: categoryTone,
+      icon: categoryIconInput.trim() || undefined,
+    });
+    setSelectedCategory(trimmed);
+    setCategoryMessage("Category style saved.");
+  };
+
+  const onDeleteCategoryStyle = () => {
+    const trimmed = (selectedCategory || categoryNameInput).trim();
+    if (!trimmed) {
+      setCategoryMessage("Select a category to delete.");
+      return;
+    }
+    removeCategoryConfigByName(trimmed);
+    onStartNewCategory();
+    setCategoryMessage("Category style removed.");
   };
 
   return (
@@ -227,6 +335,155 @@ export const SettingsScreen = () => {
               className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-50"
             >
               Use device location
+            </button>
+          </div>
+        </section>
+
+        <section className="max-w-3xl rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm md:col-span-2">
+          <h2 className="font-display text-lg font-semibold text-zinc-900">
+            Category styles
+          </h2>
+          <p className="mt-1 text-sm text-zinc-500">
+            Customize how categories look across calendar task items.
+          </p>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <select
+              value={selectedCategory}
+              onChange={(e) => onSelectCategory(e.target.value)}
+              className="min-w-[220px] rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-400 focus:ring-2"
+            >
+              <option value="">Select category…</option>
+              {availableCategories.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={onStartNewCategory}
+              className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-50"
+            >
+              New style
+            </button>
+          </div>
+          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+            <label className="flex flex-col gap-1">
+              <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                Category name
+              </span>
+              <input
+                type="text"
+                value={categoryNameInput}
+                onChange={(e) => {
+                  setCategoryNameInput(e.target.value);
+                  setCategoryMessage(null);
+                }}
+                placeholder="Work, School, Fitness…"
+                className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-zinc-900 outline-none ring-zinc-400 focus:ring-2"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                Tone
+              </span>
+              <select
+                value={categoryTone}
+                onChange={(e) => setCategoryTone(e.target.value as CategoryTone)}
+                className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-zinc-900 outline-none ring-zinc-400 focus:ring-2"
+              >
+                <option value="soft">Soft</option>
+                <option value="solid">Solid</option>
+              </select>
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                Color (hex)
+              </span>
+              <input
+                type="text"
+                value={categoryColorInput}
+                onChange={(e) => {
+                  setCategoryColorInput(e.target.value);
+                  setCategoryMessage(null);
+                }}
+                placeholder="#6366f1"
+                className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-zinc-900 outline-none ring-zinc-400 focus:ring-2"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                Text color (hex)
+              </span>
+              <input
+                type="text"
+                value={categoryTextColorInput}
+                onChange={(e) => {
+                  setCategoryTextColorInput(e.target.value);
+                  setCategoryMessage(null);
+                }}
+                placeholder="#ffffff"
+                className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-zinc-900 outline-none ring-zinc-400 focus:ring-2"
+              />
+            </label>
+            <label className="flex flex-col gap-1 md:col-span-2">
+              <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                Icon (optional, emoji or short text)
+              </span>
+              <input
+                type="text"
+                value={categoryIconInput}
+                onChange={(e) => {
+                  setCategoryIconInput(e.target.value);
+                  setCategoryMessage(null);
+                }}
+                placeholder="💼"
+                className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-zinc-900 outline-none ring-zinc-400 focus:ring-2"
+              />
+            </label>
+          </div>
+          <div className="mt-4 rounded-lg border border-zinc-200 bg-zinc-50 p-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+              Preview
+            </p>
+            <span
+              className="mt-2 inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-wide"
+              style={{
+                backgroundColor:
+                  categoryTone === "solid"
+                    ? categoryColorInput
+                    : `${categoryColorInput}2e`,
+                color:
+                  categoryTone === "solid"
+                    ? categoryTextColorInput || "#ffffff"
+                    : categoryTextColorInput || categoryColorInput,
+                borderColor:
+                  categoryTone === "solid"
+                    ? `${categoryColorInput}aa`
+                    : `${categoryColorInput}6f`,
+              }}
+            >
+              {categoryIconInput.trim() ? <span>{categoryIconInput.trim()}</span> : null}
+              <span>{categoryNameInput.trim() || "Category"}</span>
+            </span>
+          </div>
+          {categoryMessage ? (
+            <p className="mt-3 text-sm text-zinc-700">{categoryMessage}</p>
+          ) : null}
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={onSaveCategoryStyle}
+              className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+            >
+              Save category style
+            </button>
+            <button
+              type="button"
+              onClick={onDeleteCategoryStyle}
+              className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-50"
+            >
+              Delete style
             </button>
           </div>
         </section>
