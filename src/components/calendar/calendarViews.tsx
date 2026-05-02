@@ -1,6 +1,6 @@
 import { LayoutGroup, motion } from "motion/react";
 import { DateTime } from "luxon";
-import { useEffect, useRef, useState, type MouseEvent } from "react";
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import type { Task } from "../../types/task";
 import {
   buildMonthGrid,
@@ -10,8 +10,9 @@ import {
 } from "../../lib/calendarUtils";
 import { resolveCategoryVisual } from "../../lib/taskCategories";
 import { formatTaskDue } from "../../lib/taskDates";
+import { useContextMenu } from "../../providers/ContextMenuProvider";
 import BottomSheet from "../../ui/BottomSheet";
-import { IoAdd, IoCheckmarkDone } from "react-icons/io5";
+import { IoAdd, IoCheckmarkDone, IoClose, IoDocument } from "react-icons/io5";
 
 const cellEase = [0.25, 0.1, 0.25, 1] as const;
 
@@ -44,14 +45,22 @@ type TaskListProps = {
   items: CalendarTaskRow[];
   onToggle: (id: string) => void;
   onEditTask?: (task: Task) => void;
+  onDeleteTask?: (taskId: string) => void;
   compact?: boolean;
 };
 
-function TaskDueList({ items, onToggle, onEditTask, compact }: TaskListProps) {
+function TaskDueList({
+  items,
+  onToggle,
+  onEditTask,
+  onDeleteTask,
+  compact,
+}: TaskListProps) {
   const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const { openMenu } = useContextMenu();
 
-  const openTask = (task: Task, e: MouseEvent) => {
+  const openTask = (task: Task, e: ReactMouseEvent) => {
     e.stopPropagation();
     setSelectedTask(task);
     setBottomSheetOpen(true);
@@ -81,6 +90,34 @@ function TaskDueList({ items, onToggle, onEditTask, compact }: TaskListProps) {
                 <button
                   type="button"
                   onClick={(e) => openTask(task, e)}
+                  onContextMenu={(e) =>
+                    openMenu(e, [
+                      ...(onEditTask
+                        ? [
+                            {
+                              id: `edit-${task.id}`,
+                              label: "Edit task…",
+                              onSelect: () => onEditTask(task),
+                            } as const,
+                          ]
+                        : []),
+                      {
+                        id: `toggle-${task.id}`,
+                        label: task.done ? "Mark not done" : "Mark done",
+                        onSelect: () => onToggle(task.id),
+                      },
+                      ...(onDeleteTask
+                        ? [
+                            {
+                              id: `delete-${task.id}`,
+                              label: "Delete",
+                              onSelect: () => onDeleteTask(task.id),
+                              destructive: true,
+                            } as const,
+                          ]
+                        : []),
+                    ])
+                  }
                   className={`w-full rounded-lg border px-2 py-1.5 text-left text-xs font-medium transition-colors hover:bg-white/60 dark:hover:bg-white/10 ${
                     task.critical
                       ? "border-red-500/80 bg-red-500/5"
@@ -144,6 +181,34 @@ function TaskDueList({ items, onToggle, onEditTask, compact }: TaskListProps) {
                 <button
                   type="button"
                   onClick={(e) => openTask(task, e)}
+                  onContextMenu={(e) =>
+                    openMenu(e, [
+                      ...(onEditTask
+                        ? [
+                            {
+                              id: `edit-${task.id}`,
+                              label: "Edit task…",
+                              onSelect: () => onEditTask(task),
+                            } as const,
+                          ]
+                        : []),
+                      {
+                        id: `toggle-${task.id}`,
+                        label: task.done ? "Mark not done" : "Mark done",
+                        onSelect: () => onToggle(task.id),
+                      },
+                      ...(onDeleteTask
+                        ? [
+                            {
+                              id: `delete-${task.id}`,
+                              label: "Delete",
+                              onSelect: () => onDeleteTask(task.id),
+                              destructive: true,
+                            } as const,
+                          ]
+                        : []),
+                    ])
+                  }
                   className="w-full rounded-xl  px-3 py-2 text-left font-medium  transition-colors hover:bg-white/60 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
                 >
                   {task.priority && !task.critical ? (
@@ -261,6 +326,7 @@ type MonthGridProps = {
   tasks: Task[];
   onToggleTask: (id: string) => void;
   onEditTask?: (task: Task) => void;
+  onDeleteTask?: (taskId: string) => void;
   onPickDay: (day: DateTime) => void;
 };
 
@@ -269,6 +335,7 @@ export function MonthGridView({
   tasks,
   onToggleTask,
   onEditTask,
+  onDeleteTask,
   onPickDay,
 }: MonthGridProps) {
   const gridStart = month.startOf("month").startOf("week");
@@ -335,6 +402,7 @@ export function MonthGridView({
                     items={dayTasks.slice(0, 3)}
                     onToggle={onToggleTask}
                     onEditTask={onEditTask}
+                    onDeleteTask={onDeleteTask}
                     compact
                   />
                   {dayTasks.length > 3 ? (
@@ -357,6 +425,7 @@ type DayViewProps = {
   tasks: Task[];
   onToggleTask: (id: string) => void;
   onEditTask?: (task: Task) => void;
+  onDeleteTask?: (taskId: string) => void;
   onAddTaskForDay?: (day: DateTime) => void;
 };
 
@@ -365,6 +434,7 @@ export function DayAgendaView({
   tasks,
   onToggleTask,
   onEditTask,
+  onDeleteTask,
   onAddTaskForDay,
 }: DayViewProps) {
   const byDay = tasksByDueDateKeyInRange(
@@ -432,6 +502,7 @@ export function DayAgendaView({
           items={dayTasks}
           onToggle={onToggleTask}
           onEditTask={onEditTask}
+          onDeleteTask={onDeleteTask}
         />
       </div>
     </motion.div>
@@ -443,6 +514,7 @@ type ThreeDayProps = {
   tasks: Task[];
   onToggleTask: (id: string) => void;
   onEditTask?: (task: Task) => void;
+  onDeleteTask?: (taskId: string) => void;
   onPickDay: (day: DateTime) => void;
   onAddTaskForDay?: (day: DateTime) => void;
 };
@@ -450,9 +522,12 @@ type ThreeDayProps = {
 type WeekViewProps = {
   startDay: DateTime;
   tasks: Task[];
+  onToggleTask: (id: string) => void;
+  onDeleteTask?: (taskId: string) => void;
   onPickDay: (day: DateTime) => void;
   onAddTaskForDay?: (day: DateTime) => void;
   onCreateTimedTask?: (start: DateTime, end: DateTime) => void;
+  onQuickAddTimedTask?: (title: string, start: DateTime, end: DateTime) => void;
   onUpdateTaskSchedule?: (
     taskId: string,
     dueDate: Date,
@@ -466,6 +541,16 @@ type WeekDragSelection = {
   day: DateTime;
   startMinuteOfDay: number;
   endMinuteOfDay: number;
+};
+
+type WeekQuickAddDraft = {
+  start: DateTime;
+  end: DateTime;
+};
+
+type WeekQuickAddAnchor = {
+  left: number;
+  top: number;
 };
 
 type WeekEditTarget = {
@@ -584,6 +669,34 @@ function resolveCreatePreviewRange(
   };
 }
 
+function resolveCreateRangeFromDragSelection(selection: WeekDragSelection): {
+  start: DateTime;
+  end: DateTime;
+} {
+  const minMinute = Math.min(
+    selection.startMinuteOfDay,
+    selection.endMinuteOfDay,
+  );
+  const maxMinute = Math.max(
+    selection.startMinuteOfDay,
+    selection.endMinuteOfDay,
+  );
+  const start = selection.day.set({
+    hour: Math.floor(minMinute / 60),
+    minute: minMinute % 60,
+    second: 0,
+    millisecond: 0,
+  });
+  const endMinuteExclusive = Math.min(maxMinute + 15, 24 * 60 - 1);
+  const end = selection.day.set({
+    hour: Math.floor(endMinuteExclusive / 60),
+    minute: endMinuteExclusive % 60,
+    second: 0,
+    millisecond: 0,
+  });
+  return { start, end };
+}
+
 type MinuteRange = {
   startMinute: number;
   endMinuteExclusive: number;
@@ -621,12 +734,16 @@ function resolveRowMinuteRange(row: CalendarTaskRow): MinuteRange {
 export function WeekView({
   startDay,
   tasks,
+  onToggleTask,
+  onDeleteTask,
   onPickDay,
   onAddTaskForDay,
   onCreateTimedTask,
+  onQuickAddTimedTask,
   onUpdateTaskSchedule,
   onEditTask,
 }: WeekViewProps) {
+  const { openMenu } = useContextMenu();
   const weekStart = startDay.startOf("week");
   const weekEnd = weekStart.plus({ days: 6 }).endOf("day");
   const byDay = tasksByDueDateKeyInRange(
@@ -647,6 +764,12 @@ export function WeekView({
   const [editTarget, setEditTarget] = useState<WeekEditTarget | null>(null);
   const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [quickAddDraft, setQuickAddDraft] = useState<WeekQuickAddDraft | null>(
+    null,
+  );
+  const [quickAddAnchor, setQuickAddAnchor] =
+    useState<WeekQuickAddAnchor | null>(null);
+  const [quickAddTitle, setQuickAddTitle] = useState("");
   const editPreviewRange = resolvePreviewRange(editInteraction, editTarget);
   const createPreviewRange = resolveCreatePreviewRange(dragSelection);
   const previewRange = editPreviewRange ?? createPreviewRange;
@@ -661,31 +784,66 @@ export function WeekView({
     setSelectedTask(null);
   };
 
-  const finishCreateDrag = () => {
+  const clearQuickAdd = () => {
+    setQuickAddDraft(null);
+    setQuickAddAnchor(null);
+    setQuickAddTitle("");
+  };
+
+  const getWeekTaskContextMenuItems = (task: Task) => [
+    ...(onEditTask
+      ? [
+          {
+            id: `edit-${task.id}`,
+            label: "Edit task…",
+            onSelect: () => onEditTask(task),
+          } as const,
+        ]
+      : []),
+    {
+      id: `toggle-${task.id}`,
+      label: task.done ? "Mark not done" : "Mark done",
+      onSelect: () => onToggleTask(task.id),
+    },
+    ...(onDeleteTask
+      ? [
+          {
+            id: `delete-${task.id}`,
+            label: "Delete",
+            onSelect: () => onDeleteTask(task.id),
+            destructive: true,
+          } as const,
+        ]
+      : []),
+  ];
+
+  const resolveQuickAddAnchor = (clientX?: number, clientY?: number) => {
+    if (typeof window === "undefined") {
+      return { left: 360, top: 260 };
+    }
+    const rawX = clientX ?? window.innerWidth / 2;
+    const rawY = clientY ?? window.innerHeight / 2;
+    const width = Math.min(560, window.innerWidth * 0.92);
+    const halfWidth = width / 2;
+    const panelHeight = 220;
+    const margin = 12;
+    const left = Math.min(
+      window.innerWidth - halfWidth - margin,
+      Math.max(halfWidth + margin, rawX),
+    );
+    const top = Math.min(
+      window.innerHeight - margin,
+      Math.max(panelHeight + margin, rawY - 10),
+    );
+    return { left, top };
+  };
+
+  const finishCreateDrag = (clientX?: number, clientY?: number) => {
     if (!dragSelection) return;
+    const range = resolveCreateRangeFromDragSelection(dragSelection);
     if (onCreateTimedTask) {
-      const minMinute = Math.min(
-        dragSelection.startMinuteOfDay,
-        dragSelection.endMinuteOfDay,
-      );
-      const maxMinute = Math.max(
-        dragSelection.startMinuteOfDay,
-        dragSelection.endMinuteOfDay,
-      );
-      const start = dragSelection.day.set({
-        hour: Math.floor(minMinute / 60),
-        minute: minMinute % 60,
-        second: 0,
-        millisecond: 0,
-      });
-      const endMinuteExclusive = Math.min(maxMinute + 15, 24 * 60 - 1);
-      const end = dragSelection.day.set({
-        hour: Math.floor(endMinuteExclusive / 60),
-        minute: endMinuteExclusive % 60,
-        second: 0,
-        millisecond: 0,
-      });
-      onCreateTimedTask(start, end);
+      setQuickAddDraft(range);
+      setQuickAddAnchor(resolveQuickAddAnchor(clientX, clientY));
     } else {
       onPickDay(dragSelection.day);
     }
@@ -694,7 +852,7 @@ export function WeekView({
 
   useEffect(() => {
     if (!dragSelection && !editInteraction) return;
-    const onMouseUp = () => {
+    const onMouseUp = (event: globalThis.MouseEvent) => {
       if (editInteraction && editTarget && onUpdateTaskSchedule) {
         const targetStart = slotDateTime(
           editTarget.day,
@@ -741,7 +899,7 @@ export function WeekView({
           );
         }
       } else if (dragSelection) {
-        finishCreateDrag();
+        finishCreateDrag(event.clientX, event.clientY);
       }
       setEditInteraction(null);
       setEditTarget(null);
@@ -777,6 +935,24 @@ export function WeekView({
                 key={key}
                 type="button"
                 onClick={() => onPickDay(day)}
+                onContextMenu={(e) =>
+                  openMenu(e, [
+                    ...(onAddTaskForDay
+                      ? [
+                          {
+                            id: `add-day-${key}`,
+                            label: "Add task for this day…",
+                            onSelect: () => onAddTaskForDay(day),
+                          } as const,
+                        ]
+                      : []),
+                    {
+                      id: `open-day-${key}`,
+                      label: "Open day view",
+                      onSelect: () => onPickDay(day),
+                    },
+                  ])
+                }
                 className={`sticky top-0 z-30 border-b border-r border-zinc-200/80 px-2 py-2 text-left backdrop-blur transition-colors hover:bg-white/80 dark:border-white/10 dark:hover:bg-white/5 ${
                   isToday
                     ? "bg-sky-100/90 dark:bg-sky-900/60"
@@ -823,6 +999,9 @@ export function WeekView({
                       key={row.rowKey}
                       type="button"
                       onClick={() => openTaskSheet(row.task)}
+                      onContextMenu={(e) =>
+                        openMenu(e, getWeekTaskContextMenuItems(row.task))
+                      }
                       className={`truncate rounded-md px-1.5 py-1 text-left text-[10px] font-semibold ${
                         row.task.critical
                           ? "bg-red-500/20 text-red-700 dark:bg-red-500/30 dark:text-red-200"
@@ -858,6 +1037,29 @@ export function WeekView({
                 minuteOfDay={minuteOfDay}
                 days={days}
                 byDay={byDay}
+                onSlotContextMenu={(e, day, slotMinuteOfDay) => {
+                  const start = day.startOf("day").plus({ minutes: slotMinuteOfDay });
+                  const end = start.plus({ minutes: 15 });
+                  openMenu(e, [
+                    ...(onCreateTimedTask
+                      ? [
+                          {
+                            id: `add-slot-${day.toISODate()}-${slotMinuteOfDay}`,
+                            label: `Add task at ${start.toFormat("h:mm a")}…`,
+                            onSelect: () => onCreateTimedTask(start, end),
+                          } as const,
+                        ]
+                      : []),
+                    {
+                      id: `open-day-${day.toISODate()}`,
+                      label: "Open day view",
+                      onSelect: () => onPickDay(day),
+                    },
+                  ]);
+                }}
+                onEventContextMenu={(e, row) => {
+                  openMenu(e, getWeekTaskContextMenuItems(row.task));
+                }}
                 onSlotMouseDown={(day, slotMinuteOfDay) => {
                   if (editInteraction) return;
                   const dayIso = day.toISODate() ?? "";
@@ -938,6 +1140,68 @@ export function WeekView({
           </LayoutGroup>
         </div>
       </div>
+      {quickAddDraft ? (
+        <div
+          className="fixed z-50 w-[min(92vw,560px)] bg-white origin-top-left shadow-lg border border-zinc-200/80 p-4 -translate-x-1/2 -translate-y-full rounded-2xl "
+          style={{
+            left: quickAddAnchor?.left ?? undefined,
+            top: quickAddAnchor?.top ?? undefined,
+          }}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm text-zinc-600 dark:text-zinc-300">
+                {quickAddDraft.start.toFormat("EEE d MMM")} ·{" "}
+                {quickAddDraft.start.toFormat("h:mm a")}-
+                {quickAddDraft.end.toFormat("h:mm a")}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={clearQuickAdd}
+              className="rounded-md px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-zinc-500/10 dark:text-zinc-400 dark:hover:bg-white/10"
+            >
+              <IoClose />
+            </button>
+          </div>
+          <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+            <input
+              type="text"
+              value={quickAddTitle}
+              onChange={(e) => setQuickAddTitle(e.target.value)}
+              placeholder="Task title..."
+              className="min-w-0 flex-1 rounded-lg border border-zinc-300/80 bg-white/90 px-3 py-2 text-sm text-zinc-900 outline-none ring-sky-400/40 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100"
+            />
+            <button
+              type="button"
+              disabled={!quickAddTitle.trim() || !onQuickAddTimedTask}
+              onClick={() => {
+                const title = quickAddTitle.trim();
+                if (!title || !onQuickAddTimedTask) return;
+                onQuickAddTimedTask(
+                  title,
+                  quickAddDraft.start,
+                  quickAddDraft.end,
+                );
+                clearQuickAdd();
+              }}
+              className="rounded-lg flex flex-row items-center justify-center gap-2 bg-zinc-900 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
+            >
+              <IoAdd /> Quick Add
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                onCreateTimedTask?.(quickAddDraft.start, quickAddDraft.end);
+                clearQuickAdd();
+              }}
+              className="rounded-lg border flex flex-row items-center justify-center gap-2 border-zinc-300/80 bg-white/80 px-3 py-2 text-sm font-medium text-zinc-800 transition-colors hover:bg-white dark:border-zinc-700 dark:bg-zinc-900/60 dark:text-zinc-100 dark:hover:bg-zinc-900"
+            >
+              <IoDocument /> Editor
+            </button>
+          </div>
+        </div>
+      ) : null}
       <BottomSheet
         open={bottomSheetOpen}
         onClose={closeTaskSheet}
@@ -972,6 +1236,16 @@ export function WeekView({
             <button
               type="button"
               onClick={() => {
+                onToggleTask(selectedTask.id);
+                closeTaskSheet();
+              }}
+              className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm font-semibold text-zinc-900 hover:bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
+            >
+              {selectedTask.done ? "Mark not done" : "Mark done"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
                 onEditTask?.(selectedTask);
                 closeTaskSheet();
               }}
@@ -979,6 +1253,18 @@ export function WeekView({
             >
               Edit
             </button>
+            {onDeleteTask ? (
+              <button
+                type="button"
+                onClick={() => {
+                  onDeleteTask(selectedTask.id);
+                  closeTaskSheet();
+                }}
+                className="rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-rose-500"
+              >
+                Delete
+              </button>
+            ) : null}
           </div>
         ) : null}
       </BottomSheet>
@@ -990,6 +1276,15 @@ type FragmentQuarterRowProps = {
   minuteOfDay: number;
   days: DateTime[];
   byDay: Map<string, CalendarTaskRow[]>;
+  onSlotContextMenu: (
+    e: ReactMouseEvent<HTMLDivElement>,
+    day: DateTime,
+    minuteOfDay: number,
+  ) => void;
+  onEventContextMenu: (
+    e: ReactMouseEvent<HTMLButtonElement>,
+    row: CalendarTaskRow,
+  ) => void;
   onSlotMouseDown: (day: DateTime, minuteOfDay: number) => void;
   onSlotMouseEnter: (day: DateTime, minuteOfDay: number) => void;
   onEventMoveStart: (
@@ -1011,6 +1306,8 @@ function FragmentQuarterRow({
   minuteOfDay,
   days,
   byDay,
+  onSlotContextMenu,
+  onEventContextMenu,
   onSlotMouseDown,
   onSlotMouseEnter,
   onEventMoveStart,
@@ -1081,6 +1378,7 @@ function FragmentQuarterRow({
               onSlotMouseDown(day, minuteOfDay);
               e.preventDefault();
             }}
+            onContextMenu={(e) => onSlotContextMenu(e, day, minuteOfDay)}
             onMouseEnter={() => onSlotMouseEnter(day, minuteOfDay)}
           >
             {inPreview ? (
@@ -1158,6 +1456,10 @@ function FragmentQuarterRow({
                         }
                         onEventClick(row);
                       }}
+                      onContextMenu={(e) => {
+                        e.stopPropagation();
+                        onEventContextMenu(e, row);
+                      }}
                       className={`relative h-full min-h-[24px] w-full truncate border-l-2 border-l-zinc-400/35 px-1.5 py-0.5 text-left text-[10px] leading-tight shadow-sm ${
                         row.task.critical
                           ? "bg-red-500/20 text-red-700 dark:bg-red-500/30 dark:text-red-200"
@@ -1223,6 +1525,7 @@ export function ThreeDayView({
   tasks,
   onToggleTask,
   onEditTask,
+  onDeleteTask,
   onPickDay,
   onAddTaskForDay,
 }: ThreeDayProps) {
@@ -1313,6 +1616,7 @@ export function ThreeDayView({
                   items={dayTasks}
                   onToggle={onToggleTask}
                   onEditTask={onEditTask}
+                  onDeleteTask={onDeleteTask}
                   compact
                 />
               </div>

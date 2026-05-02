@@ -28,11 +28,12 @@ const modes: { id: CalendarMode; label: string }[] = [
 
 export default function CalendarScreen() {
   const { open: openPopup, close: closePopup } = usePopup();
-  const { tasks, toggleTask, addTask, setTaskSchedule, updateTask } =
+  const { tasks, toggleTask, removeTask, addTask, setTaskSchedule, updateTask } =
     useTasksStore(
       useShallow((s) => ({
         tasks: s.tasks,
         toggleTask: s.toggleTask,
+        removeTask: s.removeTask,
         addTask: s.addTask,
         setTaskSchedule: s.setTaskSchedule,
         updateTask: s.updateTask,
@@ -67,6 +68,17 @@ export default function CalendarScreen() {
       );
     },
     [openPopup, closePopup, addTask],
+  );
+
+  const quickAddTaskForRange = useCallback(
+    (title: string, start: DateTime, end: DateTime) => {
+      addTask({
+        title,
+        dueDate: start.toJSDate(),
+        endDate: end.toJSDate(),
+      });
+    },
+    [addTask],
   );
 
   const openTaskEditor = useCallback(
@@ -204,6 +216,7 @@ export default function CalendarScreen() {
                   tasks={tasks}
                   onToggleTask={toggleTask}
                   onEditTask={openTaskEditor}
+                  onDeleteTask={removeTask}
                   onPickDay={handlePickDay}
                 />
               </div>
@@ -214,6 +227,7 @@ export default function CalendarScreen() {
                 tasks={tasks}
                 onToggleTask={toggleTask}
                 onEditTask={openTaskEditor}
+                onDeleteTask={removeTask}
                 onAddTaskForDay={openAddTaskForDay}
               />
             ) : null}
@@ -222,9 +236,12 @@ export default function CalendarScreen() {
                 <WeekView
                   startDay={focus}
                   tasks={tasks}
+                  onToggleTask={toggleTask}
+                  onDeleteTask={removeTask}
                   onPickDay={handlePickDay}
                   onAddTaskForDay={openAddTaskForDay}
                   onCreateTimedTask={openAddTaskForRange}
+                  onQuickAddTimedTask={quickAddTaskForRange}
                   onUpdateTaskSchedule={(taskId, dueDate, endDate) =>
                     setTaskSchedule(taskId, dueDate, endDate)
                   }
@@ -238,6 +255,7 @@ export default function CalendarScreen() {
                 tasks={tasks}
                 onToggleTask={toggleTask}
                 onEditTask={openTaskEditor}
+                onDeleteTask={removeTask}
                 onPickDay={handlePickDay}
                 onAddTaskForDay={openAddTaskForDay}
               />

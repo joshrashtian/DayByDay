@@ -92,7 +92,9 @@ const BlockScreen = () => {
   const [editorEndTime, setEditorEndTime] = useState("12:00");
   const [editorCustomCss, setEditorCustomCss] = useState("");
   const editorBlockKey = blockKeyFromName(
-    editorMode === "edit" ? (editingBlockName ?? editorBlockName) : editorBlockName,
+    editorMode === "edit"
+      ? (editingBlockName ?? editorBlockName)
+      : editorBlockName,
   );
 
   useLayoutEffect(() => {
@@ -137,7 +139,9 @@ const BlockScreen = () => {
     const inBlock = tasks.filter(
       (task) => task.block?.trim().toLowerCase() === normalizedName,
     );
-    const config = blockConfigs.find((cfg) => cfg.name.toLowerCase() === normalizedName);
+    const config = blockConfigs.find(
+      (cfg) => cfg.name.toLowerCase() === normalizedName,
+    );
     const openTitles = inBlock
       .filter((task) => !task.done)
       .map((task) => task.title)
@@ -187,7 +191,9 @@ const BlockScreen = () => {
 
   const saveEditor = () => {
     const rawName =
-      editorMode === "edit" ? editingBlockName ?? editorBlockName : editorBlockName;
+      editorMode === "edit"
+        ? (editingBlockName ?? editorBlockName)
+        : editorBlockName;
     const trimmed = rawName.trim();
     if (!trimmed) return;
     const startMinutes = parseTimeInputToMinutes(editorStartTime);
@@ -241,8 +247,8 @@ const BlockScreen = () => {
                 No blocks yet
               </h2>
               <p className="block-screen__row--description text-zinc-500">
-                Create your own block with custom timing to start segmenting your
-                day.
+                Create your own block with custom timing to start segmenting
+                your day.
               </p>
               <p className="block-screen__row--description text-zinc-500">
                 Suggested names: {TIME_BLOCK_SUGGESTIONS.join(", ")},{" "}
@@ -364,8 +370,8 @@ const BlockScreen = () => {
             </p>
             {editorBlockKey ? (
               <p className="mb-2 text-[11px] text-zinc-500 dark:text-zinc-400">
-                Variable hooks: <code>{`--blocks-${editorBlockKey}-bg`}</code> and{" "}
-                <code>{`--blocks-${editorBlockKey}-bg-dark`}</code>
+                Variable hooks: <code>{`--blocks-${editorBlockKey}-bg`}</code>{" "}
+                and <code>{`--blocks-${editorBlockKey}-bg-dark`}</code>
               </p>
             ) : null}
             <textarea
