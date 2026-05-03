@@ -64,13 +64,13 @@ export const HomeScreen = () => {
         <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-10">
           <div className="flex min-w-0 flex-col items-stretch gap-5">
             <div
-              className={`p-4 px-8 -rotate-3 font-bold text-left flex flex-row justify-start w-fit -skew-x-12 items-start gap-2 ${blockAccentClass}`}
+              className={`p-8 px-12 -rotate-3 font-bold text-left flex flex-row justify-start w-fit -skew-x-12 items-start gap-2 ${blockAccentClass}`}
             >
-              <h1 className="skew-x-12 text-2xl font-quantify rotate-3">
+              <h1 className="skew-x-12 text-4xl font-quantify rotate-3">
                 {activeBlockName ?? "Anytime"}
               </h1>
               {activeBlockConfig ? (
-                <p className="skew-x-12 mt-1 text-xs font-medium opacity-70">
+                <p className="skew-x-12 mt-1 text-sm font-medium opacity-70">
                   {formatMinutesAsTimeInput(activeBlockConfig.startMinutes)}-
                   {formatMinutesAsTimeInput(activeBlockConfig.endMinutes)}
                 </p>

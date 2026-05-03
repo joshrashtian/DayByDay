@@ -17,13 +17,14 @@ import {
 import { usePopup } from "../providers/PopupProvider";
 import { useTasksStore } from "../stores/tasksStore";
 
-type CalendarMode = "month" | "week" | "day" | "three";
+type CalendarMode = "month" | "week" | "day" | "three" | "custom";
 
 const modes: { id: CalendarMode; label: string }[] = [
   { id: "month", label: "Grid" },
   { id: "week", label: "Week" },
   { id: "day", label: "Day" },
   { id: "three", label: "3 days" },
+  { id: "custom", label: "Custom" },
 ];
 
 export default function CalendarScreen() {
@@ -42,6 +43,7 @@ export default function CalendarScreen() {
 
   const [mode, setMode] = useState<CalendarMode>("month");
   const [focus, setFocus] = useState(() => DateTime.local().startOf("day"));
+  const [customDayCount, setCustomDayCount] = useState(7);
 
   const openAddTaskForDay = useCallback(
     (day: DateTime) => {
@@ -98,12 +100,19 @@ export default function CalendarScreen() {
       return `Week ${weekStart.weekNumber} · ${weekStart.toFormat("d MMM")}–${weekEnd.toFormat("d MMM yyyy")}`;
     }
     if (mode === "day") return focus.toFormat("cccc, d MMMM yyyy");
+    if (mode === "custom") {
+      const end = focus.plus({ days: Math.max(1, customDayCount) - 1 });
+      if (focus.month !== end.month) {
+        return `${focus.toFormat("d MMM")} – ${end.toFormat("d MMM yyyy")}`;
+      }
+      return `${focus.toFormat("d")}–${end.toFormat("d MMM yyyy")} · ${customDayCount} days`;
+    }
     const end = focus.plus({ days: 2 });
     if (focus.month !== end.month) {
       return `${focus.toFormat("d MMM")} – ${end.toFormat("d MMM yyyy")}`;
     }
     return `${focus.toFormat("d")}–${end.toFormat("d MMM yyyy")}`;
-  }, [mode, focus, monthRef]);
+  }, [mode, focus, monthRef, customDayCount]);
 
   const goPrev = () => {
     setFocus((f) => {
@@ -111,6 +120,7 @@ export default function CalendarScreen() {
       if (mode === "month") return d.startOf("month").minus({ months: 1 });
       if (mode === "week") return d.minus({ weeks: 1 });
       if (mode === "day") return d.minus({ days: 1 });
+      if (mode === "custom") return d.minus({ days: customDayCount });
       return d.minus({ days: 3 });
     });
   };
@@ -121,6 +131,7 @@ export default function CalendarScreen() {
       if (mode === "month") return d.startOf("month").plus({ months: 1 });
       if (mode === "week") return d.plus({ weeks: 1 });
       if (mode === "day") return d.plus({ days: 1 });
+      if (mode === "custom") return d.plus({ days: customDayCount });
       return d.plus({ days: 3 });
     });
   };
@@ -130,7 +141,7 @@ export default function CalendarScreen() {
     setMode("day");
   };
 
-  const viewKey = `${mode}-${focus.toISODate()}-${monthRef.toISODate()}`;
+  const viewKey = `${mode}-${focus.toISODate()}-${monthRef.toISODate()}-${customDayCount}`;
 
   return (
     <main className="relative flex h-screen min-h-screen flex-col overflow-hidden bg-zinc-50 dark:bg-zinc-950">
@@ -143,7 +154,7 @@ export default function CalendarScreen() {
         aria-hidden
       />
 
-      <div className="relative z-10 mx-auto flex h-full w-full max-w-[1400px] flex-col gap-4 px-4 pb-4 pt-3 sm:px-6">
+      <div className="relative z-10 mx-auto flex h-full w-full max-w-none flex-col gap-4 px-4 pb-4 pt-3 sm:px-6">
         <div className="fixed bottom-8 w-3/5 left-1/2 -translate-x-1/2 z-40 flex flex-col gap-4 pb-1 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex w-full flex-wrap items-center justify-between gap-2 rounded-2xl border border-white/60 bg-white/70 p-1.5 shadow-[0_8px_24px_rgba(15,23,42,0.06)] ring-1 ring-white/40 backdrop-blur-xl dark:border-white/15 dark:bg-zinc-900/70 dark:ring-white/10">
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/70 bg-white/35 px-4 py-3 ring-1 ring-white/30 backdrop-blur-xl dark:border-white/15 dark:bg-zinc-900/35 dark:ring-white/10">
@@ -161,6 +172,25 @@ export default function CalendarScreen() {
                   {label}
                 </button>
               ))}
+              {mode === "custom" ? (
+                <label className="ml-1 flex items-center gap-2 rounded-xl border border-white/70 bg-white/60 px-2 py-1 text-xs font-semibold text-zinc-700 dark:border-white/15 dark:bg-zinc-900/50 dark:text-zinc-200">
+                  Days
+                  <input
+                    type="number"
+                    min={1}
+                    max={14}
+                    step={1}
+                    value={customDayCount}
+                    onChange={(e) => {
+                      const parsed = Number.parseInt(e.target.value, 10);
+                      if (Number.isNaN(parsed)) return;
+                      setCustomDayCount(Math.max(1, Math.min(14, parsed)));
+                    }}
+                    className="w-14 rounded-md border border-zinc-300/80 bg-white/90 px-2 py-1 text-xs font-bold text-zinc-900 outline-none ring-sky-400/40 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100"
+                    aria-label="Custom day count"
+                  />
+                </label>
+              ) : null}
             </div>
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/70 bg-white/35 px-4 py-3 ring-1 ring-white/30 backdrop-blur-xl dark:border-white/15 dark:bg-zinc-900/35 dark:ring-white/10">
               <div className="min-w-0 flex-1">
@@ -258,7 +288,32 @@ export default function CalendarScreen() {
                 onDeleteTask={removeTask}
                 onPickDay={handlePickDay}
                 onAddTaskForDay={openAddTaskForDay}
+                onCreateTimedTask={openAddTaskForRange}
+                onQuickAddTimedTask={quickAddTaskForRange}
+                onUpdateTaskSchedule={(taskId, dueDate, endDate) =>
+                  setTaskSchedule(taskId, dueDate, endDate)
+                }
               />
+            ) : null}
+            {mode === "custom" ? (
+              <div className="h-full min-h-0">
+                <WeekView
+                  startDay={focus}
+                  tasks={tasks}
+                  onToggleTask={toggleTask}
+                  onDeleteTask={removeTask}
+                  onPickDay={handlePickDay}
+                  onAddTaskForDay={openAddTaskForDay}
+                  onCreateTimedTask={openAddTaskForRange}
+                  onQuickAddTimedTask={quickAddTaskForRange}
+                  onUpdateTaskSchedule={(taskId, dueDate, endDate) =>
+                    setTaskSchedule(taskId, dueDate, endDate)
+                  }
+                  onEditTask={openTaskEditor}
+                  dayCount={customDayCount}
+                  anchorToWeekStart={false}
+                />
+              </div>
             ) : null}
           </motion.div>
         </AnimatePresence>

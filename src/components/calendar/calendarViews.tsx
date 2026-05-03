@@ -16,22 +16,6 @@ import { IoAdd, IoCheckmarkDone, IoClose, IoDocument } from "react-icons/io5";
 
 const cellEase = [0.25, 0.1, 0.25, 1] as const;
 
-function useMdUp() {
-  const [mdUp, setMdUp] = useState(
-    () =>
-      typeof window !== "undefined" &&
-      window.matchMedia("(min-width: 768px)").matches,
-  );
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 768px)");
-    const sync = () => setMdUp(mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
-  }, []);
-  return mdUp;
-}
-
 const cellVariants = {
   hidden: { opacity: 0, y: 6 },
   show: (i: number) => ({
@@ -517,6 +501,13 @@ type ThreeDayProps = {
   onDeleteTask?: (taskId: string) => void;
   onPickDay: (day: DateTime) => void;
   onAddTaskForDay?: (day: DateTime) => void;
+  onCreateTimedTask?: (start: DateTime, end: DateTime) => void;
+  onQuickAddTimedTask?: (title: string, start: DateTime, end: DateTime) => void;
+  onUpdateTaskSchedule?: (
+    taskId: string,
+    dueDate: Date,
+    endDate?: Date,
+  ) => void;
 };
 
 type WeekViewProps = {
@@ -534,6 +525,8 @@ type WeekViewProps = {
     endDate?: Date,
   ) => void;
   onEditTask?: (task: Task) => void;
+  dayCount?: number;
+  anchorToWeekStart?: boolean;
 };
 
 type WeekDragSelection = {
@@ -742,20 +735,26 @@ export function WeekView({
   onQuickAddTimedTask,
   onUpdateTaskSchedule,
   onEditTask,
+  dayCount = 7,
+  anchorToWeekStart = true,
 }: WeekViewProps) {
   const { openMenu } = useContextMenu();
-  const weekStart = startDay.startOf("week");
-  const weekEnd = weekStart.plus({ days: 6 }).endOf("day");
+  const safeDayCount = Math.max(1, Math.min(14, dayCount));
+  const rangeStart = anchorToWeekStart
+    ? startDay.startOf("week")
+    : startDay.startOf("day");
+  const rangeEnd = rangeStart.plus({ days: safeDayCount - 1 }).endOf("day");
   const byDay = tasksByDueDateKeyInRange(
     tasks,
-    weekStart.startOf("day"),
-    weekEnd,
+    rangeStart.startOf("day"),
+    rangeEnd,
   );
-  const days = Array.from({ length: 7 }, (_, i) =>
-    weekStart.plus({ days: i }).startOf("day"),
+  const days = Array.from({ length: safeDayCount }, (_, i) =>
+    rangeStart.plus({ days: i }).startOf("day"),
   );
   const today = DateTime.local().startOf("day");
   const quarterSlots = Array.from({ length: 60 }, (_, i) => 7 * 60 + i * 15);
+  const showWeekMeta = anchorToWeekStart && safeDayCount === 7;
   const [dragSelection, setDragSelection] = useState<WeekDragSelection | null>(
     null,
   );
@@ -913,16 +912,21 @@ export function WeekView({
     <div className="flex h-full min-h-0 flex-col gap-4">
       <div className="flex items-end justify-between gap-3">
         <p className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-          W{weekStart.weekNumber}
+          {showWeekMeta ? `W${rangeStart.weekNumber}` : `${safeDayCount} Day View`}
         </p>
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          {weekStart.toFormat("d MMM")} -{" "}
-          {weekStart.plus({ days: 6 }).toFormat("d MMM yyyy")}
+          {rangeStart.toFormat("d MMM")} - {rangeEnd.toFormat("d MMM yyyy")}
         </p>
       </div>
 
       <div className="min-h-0 flex-1 overflow-auto rounded-2xl border border-zinc-200/70 bg-white/75 shadow-[0_8px_30px_rgba(15,23,42,0.06)] ring-1 ring-white/60 dark:border-white/15 dark:bg-zinc-900/45 dark:ring-white/10">
-        <div className="grid min-w-[920px] grid-cols-[74px_repeat(7,minmax(116px,1fr))]">
+        <div
+          className="grid"
+          style={{
+            gridTemplateColumns: `74px repeat(${safeDayCount}, minmax(116px, 1fr))`,
+            minWidth: `${74 + safeDayCount * 116}px`,
+          }}
+        >
           <div className="sticky top-0 z-30 border-b border-r border-zinc-200/80 bg-zinc-50/95 px-2 py-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-500 backdrop-blur dark:border-white/10 dark:bg-zinc-900/95 dark:text-zinc-400">
             Time
           </div>
@@ -1528,102 +1532,24 @@ export function ThreeDayView({
   onDeleteTask,
   onPickDay,
   onAddTaskForDay,
+  onCreateTimedTask,
+  onQuickAddTimedTask,
+  onUpdateTaskSchedule,
 }: ThreeDayProps) {
-  const mdUp = useMdUp();
-  const rangeStart = startDay.startOf("day");
-  const rangeEnd = startDay.plus({ days: 2 }).endOf("day");
-  const byDay = tasksByDueDateKeyInRange(tasks, rangeStart, rangeEnd);
-  const days = [0, 1, 2].map((i) => startDay.plus({ days: i }).startOf("day"));
-  const today = DateTime.local().startOf("day");
-
-  const slantEase = [0.25, 0.1, 0.25, 1] as const;
-
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.22 }}
-      className="md:perspective-[1400px] md:perspective-origin-x-center"
-    >
-      <div className="grid gap-3 md:grid-cols-3 md:gap-1 md:px-2 md:pb-3 md:pt-1">
-        {days.map((day, col) => {
-          const key = day.toISODate() ?? "";
-          const dayTasks = byDay.get(key) ?? [];
-          const isToday = day.hasSame(today, "day");
-
-          const rotateY = mdUp && col === 0 ? 9 : mdUp && col === 2 ? -9 : 0;
-          const transformOrigin =
-            col === 0
-              ? ("right center" as const)
-              : col === 2
-                ? ("left center" as const)
-                : ("center center" as const);
-
-          return (
-            <motion.div
-              key={key}
-              initial={{
-                opacity: 0,
-                y: 14,
-                rotateY: mdUp ? rotateY * 0.35 : 0,
-              }}
-              animate={{ opacity: 1, y: 0, rotateY }}
-              transition={{
-                delay: col * 0.06,
-                duration: 0.36,
-                ease: slantEase,
-              }}
-              style={{
-                transformStyle: "preserve-3d",
-                transformOrigin: mdUp ? transformOrigin : "center center",
-              }}
-              className={`flex flex-col rounded-2xl border border-white/70 bg-white/40 p-4 shadow-[0_4px_24px_rgba(15,15,15,0.06)] ring-1 backdrop-blur-xl dark:border-white/15 dark:bg-zinc-900/35 ${
-                isToday
-                  ? "ring-2 ring-sky-400/60 dark:ring-sky-500/45"
-                  : "ring-white/30 dark:ring-white/10"
-              } ${mdUp ? "md:z-1 md:shadow-[0_12px_40px_rgba(15,15,15,0.12)] dark:md:shadow-[0_16px_48px_rgba(0,0,0,0.35)]" : ""}`}
-            >
-              <div className="flex items-start justify-between gap-2">
-                <button
-                  type="button"
-                  onClick={() => onPickDay(day)}
-                  className="min-w-0 flex-1 text-left"
-                >
-                  <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                    {day.toFormat("ccc")}
-                  </p>
-                  <p className="mt-0.5 font-fava text-xl font-black text-zinc-900 dark:text-zinc-50">
-                    {day.toFormat("d MMM")}
-                  </p>
-                </button>
-                {onAddTaskForDay ? (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onAddTaskForDay(day);
-                    }}
-                    className="shrink-0 rounded-lg border border-sky-500/35 bg-sky-500/15 px-2.5 py-1 text-[11px] font-semibold text-sky-800 hover:bg-sky-500/25 dark:border-sky-400/30 dark:bg-sky-500/20 dark:text-sky-100 dark:hover:bg-sky-500/30"
-                    aria-label={`Add task for ${day.toFormat("d MMM")}`}
-                  >
-                    + Task
-                  </button>
-                ) : null}
-              </div>
-              <div className="mt-4 min-h-[120px] flex-1">
-                <TaskDueList
-                  items={dayTasks}
-                  onToggle={onToggleTask}
-                  onEditTask={onEditTask}
-                  onDeleteTask={onDeleteTask}
-                  compact
-                />
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
-    </motion.div>
+    <WeekView
+      startDay={startDay}
+      tasks={tasks}
+      onToggleTask={onToggleTask}
+      onDeleteTask={onDeleteTask}
+      onPickDay={onPickDay}
+      onAddTaskForDay={onAddTaskForDay}
+      onCreateTimedTask={onCreateTimedTask}
+      onQuickAddTimedTask={onQuickAddTimedTask}
+      onUpdateTaskSchedule={onUpdateTaskSchedule}
+      onEditTask={onEditTask}
+      dayCount={3}
+      anchorToWeekStart={false}
+    />
   );
 }

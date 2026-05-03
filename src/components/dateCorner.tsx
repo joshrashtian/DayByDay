@@ -2,14 +2,18 @@ import { useRef, useState, type PointerEvent } from "react";
 import { WeatherBadge } from "./WeatherBadge";
 import { useWeather } from "../hooks/useWeather";
 import { useStyle } from "../providers/StyleProvider";
+import { useContextMenu } from "../providers/ContextMenuProvider";
+import { IoSunnyOutline } from "react-icons/io5";
+import { IoMdClock } from "react-icons/io";
 
 type Props = {
   variant?: string;
   rootClassName?: string;
 };
 
-export const DateCorner = ({ variant, rootClassName }: Props) => {
+export const DateCorner = ({ rootClassName }: Props) => {
   const today = new Date();
+  const [variant, setVariant] = useState<string | undefined>(undefined);
   const { style, getClockStyle } = useStyle();
   const resolvedVariant = variant ?? style ?? "minimal";
   const stylePrototype = getClockStyle(resolvedVariant);
@@ -18,7 +22,7 @@ export const DateCorner = ({ variant, rootClassName }: Props) => {
   const [isDragging, setIsDragging] = useState(false);
   const dragStartY = useRef(0);
   const dragStartScale = useRef(1);
-
+  const context = useContextMenu();
   const clampScale = (value: number) => Math.min(2, Math.max(0.65, value));
 
   const onResizeStart = (event: PointerEvent<HTMLButtonElement>) => {
@@ -52,10 +56,68 @@ export const DateCorner = ({ variant, rootClassName }: Props) => {
     isDragging ? "" : stylePrototype.wrapperIdleClassName
   }`;
 
+  const onContextMenu = (e: React.MouseEvent<HTMLDivElement>) =>
+    context.openMenu(e, [
+      {
+        id: "Header1",
+        type: "header",
+        header: "Clock Styles",
+      },
+      {
+        id: "Default",
+        label: "Default",
+        onSelect: () => setVariant("minimal"),
+        icon: <IoMdClock />,
+        type: "item",
+      },
+
+      {
+        id: "P5",
+        label: "Persona 5 Style",
+        onSelect: () => setVariant("p5"),
+        type: "item",
+      },
+      {
+        id: "Minimal",
+        label: "Minimal",
+        onSelect: () => setVariant("basic"),
+        icon: <IoSunnyOutline />,
+        type: "item",
+      },
+      {
+        id: "Break1",
+        type: "break",
+      },
+      {
+        id: "Header2",
+        type: "header",
+        header: "Clock Size",
+      },
+      {
+        id: "Small",
+        label: "Small",
+        onSelect: () => setScale(0.65),
+        type: "item",
+      },
+      {
+        id: "Medium",
+        label: "Medium",
+        onSelect: () => setScale(1),
+        type: "item",
+      },
+      {
+        id: "Large",
+        label: "Large",
+        onSelect: () => setScale(1.5),
+        type: "item",
+      },
+    ]);
+
   if (stylePrototype.template === "p5") {
     return (
       <div className={root}>
         <div
+          onContextMenu={onContextMenu}
           className={wrapperClassName}
           style={{
             transform: `scale(${scale})`,
@@ -66,7 +128,9 @@ export const DateCorner = ({ variant, rootClassName }: Props) => {
             <div className={stylePrototype.dateRowCardClassName}>
               <div className={stylePrototype.dateRowCardInnerClassName}>
                 <span className={stylePrototype.dateTextClassName}>
-                  <span className={stylePrototype.monthClassName}>{month}/</span>
+                  <span className={stylePrototype.monthClassName}>
+                    {month}/
+                  </span>
                   <span className={stylePrototype.dayClassName}>{day}</span>
                 </span>
               </div>
@@ -98,7 +162,7 @@ export const DateCorner = ({ variant, rootClassName }: Props) => {
   }
 
   return (
-    <div className={root}>
+    <div className={root} onContextMenu={onContextMenu}>
       <div
         className={wrapperClassName}
         style={{
@@ -117,9 +181,7 @@ export const DateCorner = ({ variant, rootClassName }: Props) => {
           </span>
         </div>
         <div className={stylePrototype.weekdayRowClassName}>
-          <h3 className={stylePrototype.weekdayClassName}>
-            {weekday}
-          </h3>
+          <h3 className={stylePrototype.weekdayClassName}>{weekday}</h3>
           <WeatherBadge
             weather={weather}
             compact
