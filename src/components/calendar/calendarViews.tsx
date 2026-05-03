@@ -1,6 +1,11 @@
 import { LayoutGroup, motion } from "motion/react";
 import { DateTime } from "luxon";
-import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+} from "react";
 import type { Task } from "../../types/task";
 import {
   buildMonthGrid,
@@ -912,7 +917,9 @@ export function WeekView({
     <div className="flex h-full min-h-0 flex-col gap-4">
       <div className="flex items-end justify-between gap-3">
         <p className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-          {showWeekMeta ? `W${rangeStart.weekNumber}` : `${safeDayCount} Day View`}
+          {showWeekMeta
+            ? `W${rangeStart.weekNumber}`
+            : `${safeDayCount} Day View`}
         </p>
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
           {rangeStart.toFormat("d MMM")} - {rangeEnd.toFormat("d MMM yyyy")}
@@ -1042,7 +1049,9 @@ export function WeekView({
                 days={days}
                 byDay={byDay}
                 onSlotContextMenu={(e, day, slotMinuteOfDay) => {
-                  const start = day.startOf("day").plus({ minutes: slotMinuteOfDay });
+                  const start = day
+                    .startOf("day")
+                    .plus({ minutes: slotMinuteOfDay });
                   const end = start.plus({ minutes: 15 });
                   openMenu(e, [
                     ...(onCreateTimedTask
@@ -1464,11 +1473,11 @@ function FragmentQuarterRow({
                         e.stopPropagation();
                         onEventContextMenu(e, row);
                       }}
-                      className={`relative h-full min-h-[24px] w-full truncate border-l-2 border-l-zinc-400/35 px-1.5 py-0.5 text-left text-[10px] leading-tight shadow-sm ${
+                      className={`relative h-full min-h-[24px] w-full truncate border-l-2 border-dashed border-l-zinc-400/35 px-1.5 py-0.5 text-left text-sm leading-tight  ${
                         row.task.critical
                           ? "bg-red-500/20 text-red-700 dark:bg-red-500/30 dark:text-red-200"
                           : "bg-white/90 text-zinc-800 dark:bg-white/15 dark:text-zinc-100"
-                      } ${isStartSlot ? "rounded-t-md" : ""} ${isEndSlot ? "rounded-b-md" : ""}`}
+                      } ${isStartSlot ? "rounded-t-md" : ""} ${isEndSlot ? "rounded-b-md shadow-xl" : ""}`}
                       style={
                         row.task.critical
                           ? undefined

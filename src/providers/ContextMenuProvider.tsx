@@ -157,7 +157,7 @@ export default function ContextMenuProvider({
               return (
                 <div
                   key={item.id}
-                  className="px-3 py-2 text-left text-sm font-medium"
+                  className="px-3 py-2 text-left text-lg font-bold"
                 >
                   {item.header}
                 </div>
