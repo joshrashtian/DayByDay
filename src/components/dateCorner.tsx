@@ -3,19 +3,16 @@ import { WeatherBadge } from "./WeatherBadge";
 import { useWeather } from "../hooks/useWeather";
 import { useStyle } from "../providers/StyleProvider";
 
-type DateCornerVariant = "minimal" | "p5";
-
 type Props = {
-  variant?: DateCornerVariant;
+  variant?: string;
   rootClassName?: string;
 };
 
-const defaultRoot = "fixed right-4 top-4 z-10 select-none";
-
 export const DateCorner = ({ variant, rootClassName }: Props) => {
   const today = new Date();
-  const { style } = useStyle();
-  const resolvedVariant: DateCornerVariant = variant ?? style ?? "minimal";
+  const { style, getClockStyle } = useStyle();
+  const resolvedVariant = variant ?? style ?? "minimal";
+  const stylePrototype = getClockStyle(resolvedVariant);
   const weather = useWeather();
   const [scale, setScale] = useState(1);
   const [isDragging, setIsDragging] = useState(false);
@@ -50,41 +47,45 @@ export const DateCorner = ({ variant, rootClassName }: Props) => {
   const month = today.getMonth() + 1;
   const day = today.getDate().toString().padStart(2, "0");
 
-  const root = rootClassName ?? defaultRoot;
+  const root = rootClassName ?? stylePrototype.rootClassName;
+  const wrapperClassName = `${stylePrototype.wrapperClassName} ${
+    isDragging ? "" : stylePrototype.wrapperIdleClassName
+  }`;
 
-  if (resolvedVariant === "p5") {
+  if (stylePrototype.template === "p5") {
     return (
       <div className={root}>
         <div
-          className={`group relative inline-flex flex-col items-end ${
-            isDragging ? "" : "transition-transform duration-150"
-          }`}
-          style={{ transform: `scale(${scale})`, transformOrigin: "top right" }}
+          className={wrapperClassName}
+          style={{
+            transform: `scale(${scale})`,
+            transformOrigin: stylePrototype.transformOrigin,
+          }}
         >
-          <div className="relative inline-flex items-center">
-            <div className="relative -skew-x-12 bg-blue-600 px-5 py-3 shadow-[0_16px_30px_rgba(37,99,235,0.55)]">
-              <div className="skew-x-12">
-                <span className="flex items-baseline gap-1 font-fava text-white">
-                  <span className="text-2xl leading-none">{month}/</span>
-                  <span className="text-5xl leading-none">{day}</span>
+          <div className={stylePrototype.dateRowClassName}>
+            <div className={stylePrototype.dateRowCardClassName}>
+              <div className={stylePrototype.dateRowCardInnerClassName}>
+                <span className={stylePrototype.dateTextClassName}>
+                  <span className={stylePrototype.monthClassName}>{month}/</span>
+                  <span className={stylePrototype.dayClassName}>{day}</span>
                 </span>
               </div>
             </div>
           </div>
-          <div className="mt-0.5 -ml-2 inline-flex max-w-full flex-nowrap items-center gap-3 -rotate-2 bg-black px-3 py-1 font-baron text-sm tracking-[0.18em] text-white shadow-[0_10px_20px_rgba(0,0,0,0.4)]">
-            <span className="shrink-0">{weekday}</span>
+          <div className={stylePrototype.weekdayRowClassName}>
+            <span className={stylePrototype.weekdayClassName}>{weekday}</span>
             <WeatherBadge
               weather={weather}
               compact
-              className="shrink-0 -skew-x-12 items-center text-white"
-              iconClassName="text-zinc-900"
-              temperatureClassName="font-quantify text-xl font-black tabular-nums tracking-wide text-white"
+              className={stylePrototype.weatherClassName}
+              iconClassName={stylePrototype.weatherIconClassName}
+              temperatureClassName={stylePrototype.weatherTemperatureClassName}
             />
           </div>
 
           <button
             type="button"
-            className="absolute -bottom-1 -left-1 h-3 w-3 cursor-nesw-resize rounded-full border border-blue-600/80 bg-blue-500/90 opacity-40 shadow-sm transition-all duration-150 hover:scale-125 hover:opacity-100 group-hover:opacity-70"
+            className={stylePrototype.resizeHandleClassName}
             aria-label="Resize date corner"
             onPointerDown={onResizeStart}
             onPointerMove={onResizeMove}
@@ -99,37 +100,38 @@ export const DateCorner = ({ variant, rootClassName }: Props) => {
   return (
     <div className={root}>
       <div
-        className={`group relative inline-flex flex-col items-end gap-0.5 ${
-          isDragging ? "" : "transition-transform duration-150"
-        }`}
-        style={{ transform: `scale(${scale})`, transformOrigin: "top right" }}
+        className={wrapperClassName}
+        style={{
+          transform: `scale(${scale})`,
+          transformOrigin: stylePrototype.transformOrigin,
+        }}
       >
-        <div className="relative inline-flex items-baseline gap-1 px-6 py-3">
+        <div className={stylePrototype.dateRowClassName}>
           <span
-            className="pointer-events-none absolute inset-0 -z-10 -skew-x-12 rounded-sm bg-blue-600 shadow-md dark:bg-blue-500"
+            className={stylePrototype.dateRowOverlayClassName}
             aria-hidden
           />
-          <span className="flex font-quantify font-light tracking-wide text-white">
-            <span className="rotate-15 text-3xl">{month}/</span>
-            <span className="font-display text-6xl font-bold">{day}</span>
+          <span className={stylePrototype.dateTextClassName}>
+            <span className={stylePrototype.monthClassName}>{month}/</span>
+            <span className={stylePrototype.dayClassName}>{day}</span>
           </span>
         </div>
-        <div className="flex w-full flex-nowrap items-baseline justify-end gap-3 pr-0.5">
-          <h3 className="shrink-0 text-right font-quantify text-2xl font-black leading-none tracking-wide text-zinc-900 sm:text-3xl">
+        <div className={stylePrototype.weekdayRowClassName}>
+          <h3 className={stylePrototype.weekdayClassName}>
             {weekday}
           </h3>
           <WeatherBadge
             weather={weather}
             compact
-            className="shrink-0 -skew-x-12 bg-zinc-200/70 px-3 p-1 items-baseline text-zinc-900"
-            iconClassName="text-zinc-900"
-            temperatureClassName="font-quantify skew-x-12 text-2xl font-black tabular-nums tracking-wide text-zinc-900 sm:text-3xl"
+            className={stylePrototype.weatherClassName}
+            iconClassName={stylePrototype.weatherIconClassName}
+            temperatureClassName={stylePrototype.weatherTemperatureClassName}
           />
         </div>
 
         <button
           type="button"
-          className="absolute -bottom-1 -left-1 h-3 w-3 cursor-nesw-resize rounded-full border border-blue-600/80 bg-blue-500/90 opacity-40 shadow-sm transition-all duration-150 hover:scale-125 hover:opacity-100 group-hover:opacity-70"
+          className={stylePrototype.resizeHandleClassName}
           aria-label="Resize date corner"
           onPointerDown={onResizeStart}
           onPointerMove={onResizeMove}
