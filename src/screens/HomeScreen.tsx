@@ -80,7 +80,7 @@ export const HomeScreen = () => {
             <TasksFrontPage activeBlockName={activeBlockName} />
           </div>
           <aside className="flex justify-end lg:shrink-0 lg:justify-end">
-            <DateCorner variant="basic" />
+            <DateCorner variant="p5" />
           </aside>
         </div>
       </main>
