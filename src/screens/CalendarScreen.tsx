@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useDragControls } from "motion/react";
 import { DateTime } from "luxon";
 import { useShallow } from "zustand/react/shallow";
 import { useSearchParams } from "react-router-dom";
@@ -19,6 +19,7 @@ import { usePopup } from "../providers/PopupProvider";
 import { useTasksStore } from "../stores/tasksStore";
 
 type CalendarMode = "month" | "week" | "day" | "three" | "custom";
+type ControlsDock = "top" | "bottom" | "right";
 
 const modes: { id: CalendarMode; label: string }[] = [
   { id: "month", label: "Grid" },
@@ -30,6 +31,7 @@ const modes: { id: CalendarMode; label: string }[] = [
 
 export default function CalendarScreen() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const controlsDrag = useDragControls();
   const { open: openPopup, close: closePopup } = usePopup();
   const {
     tasks,
@@ -50,6 +52,8 @@ export default function CalendarScreen() {
   );
 
   const [mode, setMode] = useState<CalendarMode>("month");
+  const [controlsDock, setControlsDock] = useState<ControlsDock>("bottom");
+  const [isDraggingControls, setIsDraggingControls] = useState(false);
   const focus = useMemo(() => {
     const day = searchParams.get("day");
     const parsed = day
@@ -58,6 +62,14 @@ export default function CalendarScreen() {
     return parsed.isValid ? parsed : DateTime.local().startOf("day");
   }, [searchParams]);
   const [customDayCount, setCustomDayCount] = useState(7);
+  const isSideDock = controlsDock === "right";
+
+  const controlsDockClass =
+    controlsDock === "top"
+      ? "top-3 left-1/2 -translate-x-1/2 w-[min(92vw,980px)]"
+      : controlsDock === "right"
+        ? "right-6 top-1/2 -translate-y-1/2 w-80"
+        : "bottom-24 left-1/2 -translate-x-1/2 w-[min(92vw,980px)]";
 
   const setFocus = useCallback(
     (next: DateTime | ((current: DateTime) => DateTime)) => {
@@ -171,6 +183,18 @@ export default function CalendarScreen() {
 
   const viewKey = `${mode}-${focus.toISODate()}-${monthRef.toISODate()}-${customDayCount}`;
 
+  const snapControlsDock = (x: number, y: number) => {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const distances: Array<{ dock: ControlsDock; d: number }> = [
+      { dock: "right", d: Math.max(0, w - x) },
+      { dock: "top", d: y },
+      { dock: "bottom", d: Math.max(0, h - y) },
+    ];
+    distances.sort((a, b) => a.d - b.d);
+    setControlsDock(distances[0]?.dock ?? "bottom");
+  };
+
   return (
     <main className="relative flex h-screen min-h-screen flex-col overflow-hidden bg-zinc-50 dark:bg-zinc-950">
       <div
@@ -183,9 +207,55 @@ export default function CalendarScreen() {
       />
 
       <div className="relative z-10 mx-auto flex h-full w-full max-w-none flex-col gap-4 px-4 pb-4 pt-3 sm:px-6">
-        <div className="fixed bottom-24 w-3/5 left-1/2 -translate-x-1/2 z-40 flex flex-col gap-4 pb-1 sm:bottom-22 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex w-full flex-wrap items-center justify-between gap-2 rounded-2xl border border-white/60 bg-white/70 p-1.5 shadow-[0_8px_24px_rgba(15,23,42,0.06)] ring-1 ring-white/40 backdrop-blur-xl dark:border-white/15 dark:bg-zinc-900/70 dark:ring-white/10">
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/70 bg-white/35 px-4 py-3 ring-1 ring-white/30 backdrop-blur-xl dark:border-white/15 dark:bg-zinc-900/35 dark:ring-white/10">
+        <motion.div
+          layout
+          drag
+          dragListener={false}
+          dragControls={controlsDrag}
+          dragMomentum={false}
+          dragElastic={0.15}
+          dragSnapToOrigin
+          whileDrag={{ scale: 1.015 }}
+          transition={{ type: "spring", stiffness: 300, damping: 32, mass: 0.7 }}
+          onDragStart={() => {
+            setIsDraggingControls(true);
+            document.body.style.userSelect = "none";
+          }}
+          onDragEnd={(_, info) => {
+            snapControlsDock(info.point.x, info.point.y);
+            setIsDraggingControls(false);
+            document.body.style.userSelect = "";
+          }}
+          className={`fixed z-40 flex flex-col gap-2 transition-all duration-300 ease-out ${controlsDockClass}`}
+        >
+          <div
+            onPointerDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              controlsDrag.start(e);
+            }}
+            className={`mx-auto flex w-full select-none justify-center ${
+              isDraggingControls ? "cursor-grabbing" : "cursor-grab"
+            }`}
+            style={{ touchAction: "none" }}
+            title="Drag to dock top, right, or bottom"
+          >
+            <span className="h-1.5 w-16 rounded-full bg-zinc-300/90 shadow-sm dark:bg-zinc-600/90" />
+          </div>
+          <div
+            className={`flex w-full gap-2 rounded-2xl border border-white/60 bg-white/70 p-1.5 shadow-[0_8px_24px_rgba(15,23,42,0.06)] ring-1 ring-white/40 backdrop-blur-xl dark:border-white/15 dark:bg-zinc-900/70 dark:ring-white/10 ${
+              isSideDock
+                ? "flex-col items-stretch"
+                : "flex-wrap items-center justify-between"
+            }`}
+          >
+            <div
+              className={`flex rounded-2xl border border-white/70 bg-white/35 px-4 py-3 ring-1 ring-white/30 backdrop-blur-xl dark:border-white/15 dark:bg-zinc-900/35 dark:ring-white/10 ${
+                isSideDock
+                  ? "flex-col items-stretch gap-2"
+                  : "flex-wrap items-center justify-between gap-3"
+              }`}
+            >
               {modes.map(({ id, label }) => (
                 <button
                   key={id}
@@ -220,13 +290,23 @@ export default function CalendarScreen() {
                 </label>
               ) : null}
             </div>
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/70 bg-white/35 px-4 py-3 ring-1 ring-white/30 backdrop-blur-xl dark:border-white/15 dark:bg-zinc-900/35 dark:ring-white/10">
+            <div
+              className={`flex rounded-2xl border border-white/70 bg-white/35 px-4 py-3 ring-1 ring-white/30 backdrop-blur-xl dark:border-white/15 dark:bg-zinc-900/35 dark:ring-white/10 ${
+                isSideDock
+                  ? "flex-col items-stretch gap-3"
+                  : "flex-wrap items-center justify-between gap-3"
+              }`}
+            >
               <div className="min-w-0 flex-1">
                 <p className="truncate font-quantify text-lg font-semibold text-zinc-800 dark:text-zinc-100">
                   {title}
                 </p>
               </div>
-              <div className="flex items-center gap-1">
+              <div
+                className={`flex ${
+                  isSideDock ? "justify-center gap-2" : "items-center gap-1"
+                }`}
+              >
                 <motion.button
                   type="button"
                   whileTap={{ scale: 0.94 }}
@@ -256,7 +336,7 @@ export default function CalendarScreen() {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         <AnimatePresence mode="wait">
           <motion.div
