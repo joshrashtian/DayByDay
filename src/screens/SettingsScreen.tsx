@@ -38,13 +38,13 @@ function SectionCard({
   return (
     <section
       id={id}
-      className="scroll-mt-24 rounded-2xl border border-zinc-200/80 bg-white/70 p-5 shadow-sm backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/60"
+      className="scroll-mt-24 rounded-2xl bg-zinc-50 p-5  backdrop-blur dark:bg-zinc-900/60"
     >
-      <h2 className="font-display text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+      <h2 className="font-display text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
         {title}
       </h2>
       {subtitle ? (
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="mt-1 text-base text-zinc-600 dark:text-zinc-400">
           {subtitle}
         </p>
       ) : null}
@@ -293,7 +293,7 @@ export const SettingsScreen = () => {
           damping: 20,
         }}
       >
-        <IoSettings className="text-6xl text-zinc-900" />
+        <IoSettings className="text-6xl hover:animate-spin text-zinc-900" />
       </motion.div>
       <motion.p
         initial={{ opacity: 0, y: 10 }}
@@ -320,12 +320,6 @@ export const SettingsScreen = () => {
         ))}
       </motion.p>
 
-      <p className="max-w-3xl text-sm text-zinc-600 dark:text-zinc-400">
-        Personalize behavior and visual styling for weather, task category
-        chips, and the Blocks screen. Most changes apply immediately on this
-        device.
-      </p>
-
       <div className="w-full overflow-x-auto pb-1 lg:hidden">
         <div className="flex min-w-max gap-2">
           {settingsSections.map((section) => (
@@ -333,7 +327,7 @@ export const SettingsScreen = () => {
               key={section.id}
               type="button"
               onClick={() => scrollToSection(section.id)}
-              className="rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:border-blue-700/60 dark:hover:bg-blue-950/40 dark:hover:text-blue-300"
+              className="rounded-full  px-3 py-1.5 text-xs font-semibold text-zinc-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:border-blue-700/60 dark:hover:bg-blue-950/40 dark:hover:text-blue-300"
             >
               {section.label}
             </button>
@@ -345,7 +339,7 @@ export const SettingsScreen = () => {
         <div className="w-full max-w-3xl flex-1 space-y-5">
           <SectionCard
             id="weather-location"
-            title="Weather location"
+            title="Weather Settings"
             subtitle="Use a fixed location when you want consistent forecast data across sessions."
           >
             <div className="rounded-xl border border-blue-100 bg-blue-50/70 p-3 text-sm text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200">
@@ -388,16 +382,16 @@ export const SettingsScreen = () => {
             ) : null}
             {savedFlash ? (
               <p className="mt-3 text-sm text-emerald-600">
-                Saved. Weather will refresh.
+                Weather settings saved. Weather will refresh.
               </p>
             ) : null}
             <div className="mt-5 flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={onSaveWeatherLocation}
-                className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium  text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
               >
-                Save coordinates
+                Save Coordinates
               </button>
               <button
                 type="button"
@@ -411,7 +405,7 @@ export const SettingsScreen = () => {
 
           <SectionCard
             id="category-styles"
-            title="Category styles"
+            title="Category Styles"
             subtitle="Customize how task categories appear across calendar and task views."
           >
             <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
@@ -555,21 +549,21 @@ export const SettingsScreen = () => {
                 onClick={onSaveCategoryStyle}
                 className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
               >
-                Save category style
+                Save Category Styles
               </button>
               <button
                 type="button"
                 onClick={onDeleteCategoryStyle}
                 className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
               >
-                Delete style
+                Delete Category Styles
               </button>
             </div>
           </SectionCard>
 
           <SectionCard
             id="blocks-custom-css"
-            title="Blocks custom CSS"
+            title="Blocks CSS"
             subtitle="Add optional CSS rules for the Blocks screen. Rules are saved locally on this device."
           >
             <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">

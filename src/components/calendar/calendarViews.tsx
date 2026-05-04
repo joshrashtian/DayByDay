@@ -20,6 +20,11 @@ import BottomSheet from "../../ui/BottomSheet";
 import { IoAdd, IoCheckmarkDone, IoClose, IoDocument } from "react-icons/io5";
 
 const cellEase = [0.25, 0.1, 0.25, 1] as const;
+const completedCheckeredStyle = {
+  backgroundImage:
+    "linear-gradient(45deg, rgba(16,185,129,0.2) 25%, transparent 25%, transparent 50%, rgba(16,185,129,0.2) 50%, rgba(16,185,129,0.2) 75%, transparent 75%, transparent)",
+  backgroundSize: "12px 12px",
+};
 
 const cellVariants = {
   hidden: { opacity: 0, y: 6 },
@@ -108,10 +113,13 @@ function TaskDueList({
                     ])
                   }
                   className={`w-full rounded-lg border px-2 py-1.5 text-left text-xs font-medium transition-colors hover:bg-white/60 dark:hover:bg-white/10 ${
-                    task.critical
+                    task.done
+                      ? "border-emerald-500/60 bg-emerald-500/15 text-emerald-900 shadow-[0_0_0_1px_rgba(16,185,129,0.15)] dark:bg-emerald-500/20 dark:text-emerald-100"
+                      : task.critical
                       ? "border-red-500/80 bg-red-500/5"
                       : "border-white/30 bg-white/30 dark:border-white/15 dark:bg-white/5"
                   }`}
+                  style={task.done ? completedCheckeredStyle : undefined}
                 >
                   <div className="mb-1 flex items-center justify-between gap-2">
                     {task.critical ? (
@@ -134,17 +142,23 @@ function TaskDueList({
                       </span>
                     ) : null}
                     {task.done ? (
-                      <IoCheckmarkDone
-                        className={`${task.critical ? "text-red-500" : "text-blue-500"}`}
-                      />
+                      <span className="inline-flex items-center justify-center rounded-full bg-emerald-500/20 p-0.5 text-emerald-700 dark:bg-emerald-400/25 dark:text-emerald-100">
+                        <IoCheckmarkDone />
+                      </span>
                     ) : null}
                   </div>
-                  <span className="line-clamp-2 font-black leading-snug">
+                  <span
+                    className={`line-clamp-2 font-black leading-snug ${task.done ? "line-through opacity-80" : ""}`}
+                  >
                     {task.title}
                   </span>
                   <time
                     dateTime={displayDueDate.toISOString()}
-                    className="mt-1 block truncate text-[10px] text-zinc-500 dark:text-zinc-400"
+                    className={`mt-1 block truncate text-[10px] ${
+                      task.done
+                        ? "text-emerald-700/80 dark:text-emerald-200/90"
+                        : "text-zinc-500 dark:text-zinc-400"
+                    }`}
                   >
                     {formatTaskDue(displayDueDate)}
                   </time>
@@ -198,7 +212,12 @@ function TaskDueList({
                         : []),
                     ])
                   }
-                  className="w-full rounded-xl  px-3 py-2 text-left font-medium  transition-colors hover:bg-white/60 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+                  className={`w-full rounded-xl px-3 py-2 text-left font-medium transition-colors hover:bg-white/60 dark:border-white/10 dark:hover:bg-white/10 ${
+                    task.done
+                      ? "border border-emerald-500/40 bg-emerald-500/10 dark:bg-emerald-500/15"
+                      : "dark:bg-white/5"
+                  }`}
+                  style={task.done ? completedCheckeredStyle : undefined}
                 >
                   {task.priority && !task.critical ? (
                     <span className="block text-lg font-display italic text-zinc-500">
@@ -240,10 +259,20 @@ function TaskDueList({
                     ) : null}
                   </div>
                   <span
-                    className={`line-clamp-2 text-3xl font-black leading-tight ${task.done ? "line-through" : ""}`}
+                    className={`line-clamp-2 text-3xl font-black leading-tight ${
+                      task.done
+                        ? "line-through text-zinc-500 dark:text-zinc-400"
+                        : ""
+                    }`}
                   >
                     {task.title}
                   </span>
+                  {task.done ? (
+                    <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-800 dark:bg-emerald-400/25 dark:text-emerald-100">
+                      <IoCheckmarkDone className="text-sm" />
+                      Completed
+                    </span>
+                  ) : null}
                 </button>
               </li>
             );
@@ -1014,12 +1043,17 @@ export function WeekView({
                         openMenu(e, getWeekTaskContextMenuItems(row.task))
                       }
                       className={`truncate rounded-md px-1.5 py-1 text-left text-[10px] font-semibold ${
-                        row.task.critical
+                        row.task.done
+                          ? "bg-emerald-500/25 text-emerald-900 dark:bg-emerald-500/30 dark:text-emerald-100"
+                          : row.task.critical
                           ? "bg-red-500/20 text-red-700 dark:bg-red-500/30 dark:text-red-200"
                           : "bg-zinc-500/15 text-zinc-700 dark:bg-zinc-500/25 dark:text-zinc-200"
                       }`}
+                      style={row.task.done ? completedCheckeredStyle : undefined}
                     >
-                      {row.task.title}
+                      <span className={row.task.done ? "line-through" : ""}>
+                        {row.task.title}
+                      </span>
                     </button>
                   ))}
                   {allDayItems.length > 2 ? (
@@ -1473,15 +1507,19 @@ function FragmentQuarterRow({
                         e.stopPropagation();
                         onEventContextMenu(e, row);
                       }}
-                      className={`relative h-full min-h-[24px] w-full truncate border-l-2 border-dashed border-l-zinc-400/35 px-1.5 py-0.5 text-left text-sm leading-tight  ${
-                        row.task.critical
+                      className={`relative h-full min-h-[24px] w-full truncate border-l-2 border-dashed border-l-zinc-400/35 px-1.5 py-0.5 text-left text-sm leading-tight ${
+                        row.task.done
+                          ? "bg-emerald-500/20 text-emerald-900 line-through dark:bg-emerald-500/25 dark:text-emerald-100"
+                          : row.task.critical
                           ? "bg-red-500/20 text-red-700 dark:bg-red-500/30 dark:text-red-200"
                           : "bg-white/90 text-zinc-800 dark:bg-white/15 dark:text-zinc-100"
                       } ${isStartSlot ? "rounded-t-md" : ""} ${isEndSlot ? "rounded-b-md shadow-xl" : ""}`}
                       style={
-                        row.task.critical
-                          ? undefined
-                          : categoryVisual
+                        row.task.done
+                          ? completedCheckeredStyle
+                          : row.task.critical
+                            ? undefined
+                            : categoryVisual
                             ? {
                                 backgroundColor: categoryVisual.bg,
                                 color: categoryVisual.text,

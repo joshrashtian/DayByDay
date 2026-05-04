@@ -29,17 +29,23 @@ const modes: { id: CalendarMode; label: string }[] = [
 
 export default function CalendarScreen() {
   const { open: openPopup, close: closePopup } = usePopup();
-  const { tasks, toggleTask, removeTask, addTask, setTaskSchedule, updateTask } =
-    useTasksStore(
-      useShallow((s) => ({
-        tasks: s.tasks,
-        toggleTask: s.toggleTask,
-        removeTask: s.removeTask,
-        addTask: s.addTask,
-        setTaskSchedule: s.setTaskSchedule,
-        updateTask: s.updateTask,
-      })),
-    );
+  const {
+    tasks,
+    toggleTask,
+    removeTask,
+    addTask,
+    setTaskSchedule,
+    updateTask,
+  } = useTasksStore(
+    useShallow((s) => ({
+      tasks: s.tasks,
+      toggleTask: s.toggleTask,
+      removeTask: s.removeTask,
+      addTask: s.addTask,
+      setTaskSchedule: s.setTaskSchedule,
+      updateTask: s.updateTask,
+    })),
+  );
 
   const [mode, setMode] = useState<CalendarMode>("month");
   const [focus, setFocus] = useState(() => DateTime.local().startOf("day"));
