@@ -10,6 +10,7 @@ import TasksScreen from "./screens/TasksScreen";
 import CalendarScreen from "./screens/CalendarScreen";
 import HelpScreen from "./screens/HelpScreen";
 import BlockScreen from "./screens/BlockScreen";
+import { TaskCalendarCommandBar } from "./components/global/TaskCalendarCommandBar";
 
 export default function App() {
   const location = useLocation();
@@ -75,6 +76,7 @@ export default function App() {
               />
             </Routes>
           </AnimatePresence>
+          <TaskCalendarCommandBar />
         </div>
       </div>
     </>

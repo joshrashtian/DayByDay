@@ -22,7 +22,7 @@ const TasksScreen = () => (
     <TasksWorkspace
       topPadding="none"
       contentWidth="wide"
-      composerLayout="bottomChat"
+      composerLayout="none"
     />
   </div>
 );

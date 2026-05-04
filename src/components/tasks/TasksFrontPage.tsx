@@ -26,21 +26,37 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
     setRotationOffset(0);
   }, [showFinished]);
 
-  const visibleTasks = useMemo(
+  const nowMs = Date.now();
+  const tasksInBlock = useMemo(
     () =>
-      [...tasks]
-        .filter((task) => {
-          if (!activeBlockName) return true;
-          return (
-            task.block?.trim().toLowerCase() === activeBlockName.toLowerCase()
-          );
-        })
-        .sort(
-          (a, b) => (b.dueDate?.getTime() ?? 0) - (a.dueDate?.getTime() ?? 0),
-        )
-        .filter((task) => (showFinished ? task.done : !task.done)),
-    [tasks, activeBlockName, showFinished],
+      tasks.filter((task) => {
+        if (!activeBlockName) return true;
+        return task.block?.trim().toLowerCase() === activeBlockName.toLowerCase();
+      }),
+    [tasks, activeBlockName],
   );
+
+  const activeTasksInBlock = useMemo(
+    () => tasksInBlock.filter((task) => !task.done),
+    [tasksInBlock],
+  );
+
+  const overdueTasksInBlock = useMemo(
+    () =>
+      activeTasksInBlock.filter(
+        (task) => task.dueDate != null && task.dueDate.getTime() < nowMs,
+      ),
+    [activeTasksInBlock, nowMs],
+  );
+
+  const visibleTasks = useMemo(() => {
+    const source = showFinished
+      ? tasksInBlock.filter((task) => task.done)
+      : overdueTasksInBlock;
+    return [...source].sort(
+      (a, b) => (a.dueDate?.getTime() ?? Number.MAX_SAFE_INTEGER) - (b.dueDate?.getTime() ?? Number.MAX_SAFE_INTEGER),
+    );
+  }, [tasksInBlock, overdueTasksInBlock, showFinished]);
 
   useEffect(() => {
     if (visibleTasks.length === 0) {
@@ -82,9 +98,13 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
           Task Stack
         </h1>
         <p className="text-md font-display text-zinc-500 dark:text-zinc-400">
-          {activeBlockName
-            ? `${activeBlockName} ${showFinished ? "finished" : "active"} tasks: ${stack.length}`
-            : `${showFinished ? "Finished" : "Active"} tasks in this block: ${stack.length}`}
+          {showFinished
+            ? activeBlockName
+              ? `${activeBlockName} finished tasks: ${stack.length}`
+              : `Finished tasks in this block: ${stack.length}`
+            : activeTasksInBlock.length === 0
+              ? "You're free this afternoon."
+              : `Overdue tasks: ${stack.length}`}
         </p>
         <button
           type="button"
@@ -108,7 +128,9 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
           >
             {showFinished
               ? "No finished tasks in this block yet."
-              : "No active tasks yet — add one from Tasks."}
+              : activeTasksInBlock.length === 0
+                ? "You're free this afternoon."
+                : "Nothing overdue right now."}
           </div>
         ) : (
           stack.map((task, index) => {

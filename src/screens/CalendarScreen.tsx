@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { DateTime } from "luxon";
 import { useShallow } from "zustand/react/shallow";
+import { useSearchParams } from "react-router-dom";
 import {
   DayAgendaView,
   MonthGridView,
@@ -28,6 +29,7 @@ const modes: { id: CalendarMode; label: string }[] = [
 ];
 
 export default function CalendarScreen() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { open: openPopup, close: closePopup } = usePopup();
   const {
     tasks,
@@ -48,8 +50,28 @@ export default function CalendarScreen() {
   );
 
   const [mode, setMode] = useState<CalendarMode>("month");
-  const [focus, setFocus] = useState(() => DateTime.local().startOf("day"));
+  const focus = useMemo(() => {
+    const day = searchParams.get("day");
+    const parsed = day
+      ? DateTime.fromISO(day, { zone: "local" }).startOf("day")
+      : DateTime.local().startOf("day");
+    return parsed.isValid ? parsed : DateTime.local().startOf("day");
+  }, [searchParams]);
   const [customDayCount, setCustomDayCount] = useState(7);
+
+  const setFocus = useCallback(
+    (next: DateTime | ((current: DateTime) => DateTime)) => {
+      const resolved = typeof next === "function" ? next(focus) : next;
+      const normalized = resolved.startOf("day");
+      const iso = normalized.toISODate();
+      if (!iso) return;
+      if (searchParams.get("day") === iso) return;
+      const updated = new URLSearchParams(searchParams);
+      updated.set("day", iso);
+      setSearchParams(updated, { replace: true });
+    },
+    [focus, searchParams, setSearchParams],
+  );
 
   const openAddTaskForDay = useCallback(
     (day: DateTime) => {
@@ -161,7 +183,7 @@ export default function CalendarScreen() {
       />
 
       <div className="relative z-10 mx-auto flex h-full w-full max-w-none flex-col gap-4 px-4 pb-4 pt-3 sm:px-6">
-        <div className="fixed bottom-8 w-3/5 left-1/2 -translate-x-1/2 z-40 flex flex-col gap-4 pb-1 sm:flex-row sm:items-center sm:justify-between">
+        <div className="fixed bottom-24 w-3/5 left-1/2 -translate-x-1/2 z-40 flex flex-col gap-4 pb-1 sm:bottom-22 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex w-full flex-wrap items-center justify-between gap-2 rounded-2xl border border-white/60 bg-white/70 p-1.5 shadow-[0_8px_24px_rgba(15,23,42,0.06)] ring-1 ring-white/40 backdrop-blur-xl dark:border-white/15 dark:bg-zinc-900/70 dark:ring-white/10">
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/70 bg-white/35 px-4 py-3 ring-1 ring-white/30 backdrop-blur-xl dark:border-white/15 dark:bg-zinc-900/35 dark:ring-white/10">
               {modes.map(({ id, label }) => (

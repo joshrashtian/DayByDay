@@ -21,7 +21,7 @@ import {
 type Props = {
   topPadding?: "header" | "comfortable" | "none";
   contentWidth?: "narrow" | "wide";
-  composerLayout?: "inline" | "bottomChat";
+  composerLayout?: "inline" | "bottomChat" | "none";
 };
 
 function taskMatchesSearch(task: Task, query: string): boolean {
@@ -203,7 +203,7 @@ export function TasksWorkspace({
 
   return (
     <main
-      className={`relative flex w-full ${mainClass} overflow-hidden bg-linear-to-br from-zinc-100 via-zinc-50 to-sky-100/40 dark:from-zinc-950 dark:via-zinc-900 dark:to-sky-950/30`}
+      className={`relative pb-40 flex w-full ${mainClass} overflow-hidden bg-linear-to-br from-zinc-100 via-zinc-50 to-sky-100/40 dark:from-zinc-950 dark:via-zinc-900 dark:to-sky-950/30`}
     >
       <div
         className="pointer-events-none absolute -right-24 top-1/4 h-80 w-80 rounded-full bg-sky-200/35 blur-3xl dark:bg-sky-900/25"

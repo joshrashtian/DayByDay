@@ -82,6 +82,7 @@ export function TaskCreator({
         ...(parsed.category ? { category: parsed.category } : {}),
         ...(parsed.tags?.length ? { tags: parsed.tags } : {}),
         ...(parsed.dueDate ? { dueDate: parsed.dueDate } : {}),
+        ...(parsed.endDate ? { endDate: parsed.endDate } : {}),
       });
     } else {
       const dueDate = parseDueLocalInput(dueLocal);
