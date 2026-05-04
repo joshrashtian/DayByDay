@@ -1,5 +1,10 @@
 import { useCallback, useMemo, useState } from "react";
 import { AnimatePresence, motion, useDragControls } from "motion/react";
+import {
+  getLocalTimeZone,
+  parseDate,
+  type DateValue,
+} from "@internationalized/date";
 import { DateTime } from "luxon";
 import { useShallow } from "zustand/react/shallow";
 import { useSearchParams } from "react-router-dom";
@@ -17,6 +22,7 @@ import {
 } from "../lib/taskDates";
 import { usePopup } from "../providers/PopupProvider";
 import { useTasksStore } from "../stores/tasksStore";
+import { DatePicker } from "../components/application/date-picker/date-picker";
 
 type CalendarMode = "month" | "week" | "day" | "three" | "custom";
 type ControlsDock = "top" | "bottom" | "right";
@@ -131,6 +137,15 @@ export default function CalendarScreen() {
   );
 
   const monthRef = useMemo(() => focus.startOf("month"), [focus]);
+  const pickerValue = useMemo(() => {
+    const iso = focus.toISODate();
+    if (!iso) return undefined;
+    try {
+      return parseDate(iso);
+    } catch {
+      return undefined;
+    }
+  }, [focus]);
 
   const title = useMemo(() => {
     if (mode === "month") return monthRef.toFormat("MMMM yyyy");
@@ -216,7 +231,12 @@ export default function CalendarScreen() {
           dragElastic={0.15}
           dragSnapToOrigin
           whileDrag={{ scale: 1.015 }}
-          transition={{ type: "spring", stiffness: 300, damping: 32, mass: 0.7 }}
+          transition={{
+            type: "spring",
+            stiffness: 300,
+            damping: 32,
+            mass: 0.7,
+          }}
           onDragStart={() => {
             setIsDraggingControls(true);
             document.body.style.userSelect = "none";
@@ -302,6 +322,17 @@ export default function CalendarScreen() {
                   {title}
                 </p>
               </div>
+              <DatePicker
+                value={pickerValue}
+                onChange={(value: DateValue | null) => {
+                  if (!value) return;
+                  const next = DateTime.fromJSDate(
+                    value.toDate(getLocalTimeZone()),
+                  ).startOf("day");
+                  setFocus(next);
+                }}
+                size="sm"
+              />
               <div
                 className={`flex ${
                   isSideDock ? "justify-center gap-2" : "items-center gap-1"
