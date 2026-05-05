@@ -1,11 +1,13 @@
 import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { IoSettings } from "react-icons/io5";
+import { IconPicker } from "../components/base/input/icon-picker";
 import {
   clearBlocksUserCss,
   getBlocksUserCss,
   setBlocksUserCss,
 } from "../lib/blocksUserCss";
+import { getCategoryIconOption, renderCategoryIcon } from "../lib/categoryIcons";
 import {
   clearManualWeatherCoords,
   getManualWeatherCoords,
@@ -495,21 +497,24 @@ export const SettingsScreen = () => {
                   className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
                 />
               </label>
-              <label className="flex flex-col gap-1 md:col-span-2">
+              <div className="md:col-span-2">
                 <span className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                  Icon (optional, emoji or short text)
+                  Icon (optional)
                 </span>
-                <input
-                  type="text"
-                  value={categoryIconInput}
-                  onChange={(e) => {
-                    setCategoryIconInput(e.target.value);
-                    setCategoryMessage(null);
-                  }}
-                  placeholder="💼"
-                  className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-                />
-              </label>
+                <div className="mt-1">
+                  <IconPicker
+                    value={categoryIconInput}
+                    onChange={(next) => {
+                      setCategoryIconInput(next);
+                      setCategoryMessage(null);
+                    }}
+                    onClear={() => {
+                      setCategoryIconInput("");
+                      setCategoryMessage(null);
+                    }}
+                  />
+                </div>
+              </div>
             </div>
             <div className="mt-4 rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-900">
               <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
@@ -533,10 +538,21 @@ export const SettingsScreen = () => {
                 }}
               >
                 {categoryIconInput.trim() ? (
-                  <span>{categoryIconInput.trim()}</span>
+                  <span className="inline-flex items-center">
+                    {renderCategoryIcon(categoryIconInput.trim(), "h-3.5 w-3.5")}
+                  </span>
                 ) : null}
                 <span>{categoryNameInput.trim() || "Category"}</span>
               </span>
+              {categoryIconInput.trim() ? (
+                <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+                  Icon key:{" "}
+                  <span className="font-semibold text-zinc-700 dark:text-zinc-200">
+                    {getCategoryIconOption(categoryIconInput.trim())?.label ??
+                      categoryIconInput.trim()}
+                  </span>
+                </p>
+              ) : null}
             </div>
             {categoryMessage ? (
               <p className="mt-3 text-sm text-zinc-700 dark:text-zinc-300">

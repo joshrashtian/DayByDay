@@ -1,5 +1,7 @@
 import { motion } from "motion/react";
 import { IoClose, IoCreateOutline, IoRepeatOutline } from "react-icons/io5";
+import { renderCategoryIcon } from "../../lib/categoryIcons";
+import { resolveCategoryVisual } from "../../lib/taskCategories";
 import { formatTaskDue, taskDueToIso } from "../../lib/taskDates";
 import { useContextMenu } from "../../providers/ContextMenuProvider";
 import {
@@ -37,6 +39,7 @@ export function TaskItem({
 }: Props) {
   const { openMenu } = useContextMenu();
   const tags = task.tags ?? [];
+  const categoryVisual = resolveCategoryVisual(task.category);
 
   const removeTag = (label: string) => {
     if (!onSetTags) return;
@@ -180,8 +183,16 @@ export function TaskItem({
               </span>
             ) : null}
             {task.category ? (
-              <span className="min-w-0 max-w-full wrap-break-word text-zinc-600 dark:text-zinc-400">
-                {task.category}
+              <span
+                className="inline-flex min-w-0 max-w-full items-center gap-1 rounded-full border px-2 py-0.5"
+                style={{
+                  backgroundColor: categoryVisual.bg,
+                  color: categoryVisual.text,
+                  borderColor: categoryVisual.border,
+                }}
+              >
+                {categoryVisual.icon ? renderCategoryIcon(categoryVisual.icon) : null}
+                <span className="wrap-break-word">{task.category}</span>
               </span>
             ) : null}
             {task.dueDate ? (

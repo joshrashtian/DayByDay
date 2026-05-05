@@ -13,6 +13,7 @@ import {
   tasksByDueDateKeyInRange,
   weekdayLabelsShort,
 } from "../../lib/calendarUtils";
+import { getCategoryIconOption, renderCategoryIcon } from "../../lib/categoryIcons";
 import { resolveCategoryVisual } from "../../lib/taskCategories";
 import { formatTaskDue } from "../../lib/taskDates";
 import { useContextMenu } from "../../providers/ContextMenuProvider";
@@ -25,6 +26,12 @@ const completedCheckeredStyle = {
     "linear-gradient(45deg, rgba(16,185,129,0.2) 25%, transparent 25%, transparent 50%, rgba(16,185,129,0.2) 50%, rgba(16,185,129,0.2) 75%, transparent 75%, transparent)",
   backgroundSize: "12px 12px",
 };
+
+function categoryIconTitlePrefix(icon: string | undefined): string {
+  if (!icon) return "";
+  if (getCategoryIconOption(icon)) return "";
+  return `${icon} `;
+}
 
 const cellVariants = {
   hidden: { opacity: 0, y: 6 },
@@ -136,7 +143,9 @@ function TaskDueList({
                         }}
                       >
                         {categoryVisual.icon ? (
-                          <span>{categoryVisual.icon}</span>
+                          <span className="inline-flex items-center">
+                            {renderCategoryIcon(categoryVisual.icon)}
+                          </span>
                         ) : null}
                         <span className="truncate">{task.category}</span>
                       </span>
@@ -252,7 +261,9 @@ function TaskDueList({
                         }}
                       >
                         {categoryVisual.icon ? (
-                          <span>{categoryVisual.icon}</span>
+                          <span className="inline-flex items-center">
+                            {renderCategoryIcon(categoryVisual.icon)}
+                          </span>
                         ) : null}
                         {task.category}
                       </span>
@@ -1541,7 +1552,7 @@ function FragmentQuarterRow({
                         />
                       ) : null}
                       {isStartSlot
-                        ? `${categoryVisual?.icon ? `${categoryVisual.icon} ` : ""}${DateTime.fromJSDate(row.displayDueDate).toFormat("h:mm a")} ${row.task.title}`
+                        ? `${categoryIconTitlePrefix(categoryVisual?.icon)}${DateTime.fromJSDate(row.displayDueDate).toFormat("h:mm a")} ${row.task.title}`
                         : ""}
                       {isEndSlot ? (
                         <span

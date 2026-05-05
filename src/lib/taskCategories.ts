@@ -48,7 +48,7 @@ function normalizeIcon(raw: unknown): string | undefined {
   if (typeof raw !== "string") return undefined;
   const trimmed = raw.trim();
   if (!trimmed) return undefined;
-  return [...trimmed].slice(0, 2).join("");
+  return trimmed.slice(0, 64);
 }
 
 function normalizeCategoryConfig(raw: unknown): CategoryConfig | undefined {
