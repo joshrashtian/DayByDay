@@ -18,18 +18,17 @@ fn main() {
                 .text("close", "Close")
                 .build()?;
 
-            let view_menu = SubmenuBuilder::new(app, "View")
+            let go_menu = SubmenuBuilder::new(app, "Go")
                 .text("home", "Home")
                 .text("calendar", "Calendar")
                 .text("tasks", "Tasks")
                 .text("blocks", "Blocks")
-                .text("help", "Help")
                 .build()?;
 
             let menu = MenuBuilder::new(app)
                 .item(&app_menu)
                 .item(&actions_menu)
-                .item(&view_menu)
+                .item(&go_menu)
                 .build()?;
 
             app.set_menu(menu)?;
