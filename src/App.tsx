@@ -12,10 +12,12 @@ import HelpScreen from "./screens/HelpScreen";
 import BlockScreen from "./screens/BlockScreen";
 import { TaskCalendarCommandBar } from "./components/global/TaskCalendarCommandBar";
 import { useMenuNavigation } from "./hooks/useMenuNavigation";
+import { useCreateTaskAction } from "./hooks/useCreateTaskAction";
 
 export default function App() {
   const location = useLocation();
   useMenuNavigation();
+  useCreateTaskAction();
   const [sidebarOffset, setSidebarOffset] = useState(64);
 
   return (

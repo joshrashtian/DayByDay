@@ -211,7 +211,7 @@ export default function CalendarScreen() {
   };
 
   return (
-    <main className="relative flex h-screen min-h-screen flex-col overflow-hidden bg-zinc-50 dark:bg-zinc-950">
+    <main className="relative w-full flex h-screen min-h-screen flex-col overflow-hidden bg-zinc-50 dark:bg-zinc-950">
       <div
         className="pointer-events-none absolute -right-24 top-1/4 h-80 w-80 rounded-full bg-sky-200/35 blur-3xl dark:bg-sky-900/25"
         aria-hidden
@@ -221,7 +221,7 @@ export default function CalendarScreen() {
         aria-hidden
       />
 
-      <div className="relative z-10 mx-auto flex h-full w-full max-w-none flex-col gap-4 px-4 pb-4 pt-3 sm:px-6">
+      <div className="relative z-10 flex h-full w-full min-h-0 flex-col">
         <motion.div
           layout
           drag
@@ -379,7 +379,7 @@ export default function CalendarScreen() {
             className="min-h-0 flex-1"
           >
             {mode === "month" ? (
-              <div className="h-full overflow-auto rounded-2xl border border-white/70 bg-white/40 p-4 shadow-[0_4px_24px_rgba(15,15,15,0.06)] ring-1 ring-white/30 backdrop-blur-xl sm:p-6 dark:border-white/15 dark:bg-zinc-900/35 dark:ring-white/10">
+              <div className="h-full overflow-auto">
                 <MonthGridView
                   month={monthRef}
                   tasks={tasks}

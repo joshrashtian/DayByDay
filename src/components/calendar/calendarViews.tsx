@@ -798,7 +798,7 @@ export function WeekView({
     rangeStart.plus({ days: i }).startOf("day"),
   );
   const today = DateTime.local().startOf("day");
-  const quarterSlots = Array.from({ length: 60 }, (_, i) => 7 * 60 + i * 15);
+  const quarterSlots = Array.from({ length: 96 }, (_, i) => i * 15);
   const showWeekMeta = anchorToWeekStart && safeDayCount === 7;
   const [dragSelection, setDragSelection] = useState<WeekDragSelection | null>(
     null,
@@ -1453,6 +1453,7 @@ function FragmentQuarterRow({
                   isPreviewStart ? "rounded-t-md" : ""
                 } ${isPreviewEnd ? "rounded-b-md" : ""}`}
               >
+                
                 {isPreviewStart ? (
                   <motion.span
                     initial={{ opacity: 0, x: -2 }}
@@ -1551,9 +1552,20 @@ function FragmentQuarterRow({
                           }}
                         />
                       ) : null}
-                      {isStartSlot
-                        ? `${categoryIconTitlePrefix(categoryVisual?.icon)}${DateTime.fromJSDate(row.displayDueDate).toFormat("h:mm a")} ${row.task.title}`
-                        : ""}
+                      {isStartSlot ? (
+                        <span className="inline-flex max-w-full items-center gap-1 truncate">
+                          {categoryVisual?.icon ? (
+                            <span className="inline-flex items-center">
+                              {renderCategoryIcon(categoryVisual.icon)}
+                            </span>
+                          ) : null}
+                          <span className="truncate">
+                            {`${categoryIconTitlePrefix(
+                              categoryVisual?.icon,
+                            )}${DateTime.fromJSDate(row.displayDueDate).toFormat("h:mm a")} ${row.task.title}`}
+                          </span>
+                        </span>
+                      ) : null}
                       {isEndSlot ? (
                         <span
                           className="absolute inset-x-1 bottom-0 h-1 cursor-ns-resize rounded-full bg-transparent"
