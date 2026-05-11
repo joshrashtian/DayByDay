@@ -22,9 +22,8 @@ import { IoAdd, IoCheckmarkDone, IoClose, IoDocument } from "react-icons/io5";
 
 const cellEase = [0.25, 0.1, 0.25, 1] as const;
 const completedCheckeredStyle = {
-  backgroundImage:
-    "linear-gradient(45deg, rgba(16,185,129,0.2) 25%, transparent 25%, transparent 50%, rgba(16,185,129,0.2) 50%, rgba(16,185,129,0.2) 75%, transparent 75%, transparent)",
-  backgroundSize: "12px 12px",
+  backgroundImage: "none",
+  backgroundSize: "auto",
 };
 
 function categoryIconTitlePrefix(icon: string | undefined): string {
@@ -487,7 +486,7 @@ export function DayAgendaView({
           .split("")
           .map((part, index) => (
             <motion.p
-              key={part}
+              key={`${part}-${index}`}
               initial={{ opacity: 0, x: 16 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -16 }}
@@ -498,7 +497,7 @@ export function DayAgendaView({
               }}
               className="font-quantify text-6xl font-black tracking-wide text-zinc-900 dark:text-zinc-50"
             >
-              {part}
+              {part === " " ? "\u00A0" : part}
             </motion.p>
           ))}
       </div>
@@ -1476,9 +1475,11 @@ function FragmentQuarterRow({
                 ) : null}
               </motion.div>
             ) : null}
-            <div className="flex h-full flex-col gap-0">
-              {slotTasks.slice(0, 2).map((row) =>
+            <div className="flex h-full flex-col gap-0.5">
+              <div className="flex min-h-0 flex-1 gap-0.5">
+                {slotTasks.slice(0, 2).map((row) =>
                 (() => {
+                  const hasOverlap = slotTasks.length > 1;
                   const range = resolveRowMinuteRange(row);
                   const isStartSlot = range.startMinute === minuteOfDay;
                   const isEndSlot =
@@ -1519,7 +1520,9 @@ function FragmentQuarterRow({
                         e.stopPropagation();
                         onEventContextMenu(e, row);
                       }}
-                      className={`relative h-full min-h-[24px] w-full truncate border-l-2 border-dashed border-l-zinc-400/35 px-1.5 py-0.5 text-left text-sm leading-tight ${
+                      className={`relative min-h-[24px] ${
+                        hasOverlap ? "min-w-0 flex-1" : "w-full"
+                      } truncate border-l-2 border-dashed border-l-zinc-400/35 px-1.5 py-0.5 text-left text-sm leading-tight ${
                         row.task.done
                           ? "bg-emerald-500/20 text-emerald-900 line-through dark:bg-emerald-500/25 dark:text-emerald-100"
                           : row.task.critical
@@ -1581,6 +1584,7 @@ function FragmentQuarterRow({
                   );
                 })(),
               )}
+              </div>
               {slotTasks.length > 2 ? (
                 <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
                   +{slotTasks.length - 2} more

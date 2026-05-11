@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { isTaskDueToday } from "../../lib/taskDates";
+import {
+  isCompletedTaskFromPreviousDay,
+  isTaskDueToday,
+} from "../../lib/taskDates";
 import { collectTaskBlocks } from "../../lib/taskBlocks";
 import { TaskCreator } from "./TaskCreator";
 import { taskCreatorPopupContent } from "./taskCreatorPopupContent";
@@ -131,6 +134,7 @@ export function TasksWorkspace({
   const visibleTasks = useMemo(
     () =>
       tasks.filter((t) => {
+        if (isCompletedTaskFromPreviousDay(t)) return false;
         if (!taskMatchesSearch(t, taskSearch)) return false;
         if (!taskMatchesBlock(t, blockFilter)) return false;
         if (!taskMatchesCategory(t, categoryFilter)) return false;

@@ -10,7 +10,7 @@ import TasksScreen from "./screens/TasksScreen";
 import CalendarScreen from "./screens/CalendarScreen";
 import HelpScreen from "./screens/HelpScreen";
 import BlockScreen from "./screens/BlockScreen";
-import { TaskCalendarCommandBar } from "./components/global/TaskCalendarCommandBar";
+import CognitionBar from "./ui/CognitionBar";
 import { useMenuNavigation } from "./hooks/useMenuNavigation";
 import { useCreateTaskAction } from "./hooks/useCreateTaskAction";
 
@@ -80,7 +80,7 @@ export default function App() {
               />
             </Routes>
           </AnimatePresence>
-          <TaskCalendarCommandBar />
+          <CognitionBar />
         </div>
       </div>
     </>

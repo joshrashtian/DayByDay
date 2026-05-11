@@ -46,6 +46,11 @@ type ParsedDueToken =
   | { kind: "date"; date: DateTime; label: string }
   | { kind: "datetime"; dateTime: DateTime; label: string };
 
+type ParsedDueRangeToken = {
+  start: ParsedDueToken;
+  end: ParsedDueToken;
+};
+
 type DueParts = {
   date?: DateTime;
   time?: { hour: number; minute: number };
@@ -148,6 +153,34 @@ function parseDueTokenArg(arg: string): ParsedDueToken | undefined {
     }
     const date = iso.startOf("day");
     return { kind: "date", date, label: `Date: ${date.toFormat("EEE d MMM")}` };
+  }
+
+  return undefined;
+}
+
+function parseInlineDueRangeArg(arg: string): ParsedDueRangeToken | undefined {
+  const trimmed = arg.trim();
+  if (!trimmed) return undefined;
+
+  const parseSplit = (leftRaw: string, rightRaw: string) => {
+    const left = leftRaw.trim();
+    const right = rightRaw.trim();
+    if (!left || !right) return undefined;
+    const start = parseDueTokenArg(left);
+    const end = parseDueTokenArg(right);
+    if (!start || !end) return undefined;
+    return { start, end };
+  };
+
+  if (trimmed.includes("->")) {
+    const [left, right, ...rest] = trimmed.split("->");
+    if (rest.length === 0 && left && right) return parseSplit(left, right);
+  }
+
+  for (let i = 1; i < trimmed.length - 1; i++) {
+    if (trimmed[i] !== "-") continue;
+    const parsed = parseSplit(trimmed.slice(0, i), trimmed.slice(i + 1));
+    if (parsed) return parsed;
   }
 
   return undefined;
@@ -358,7 +391,29 @@ export function parseTaskChatInput(raw: string): TaskChatParse {
     }
 
     // Category: @@label (must run before single @)
+    // Supports quoted custom values for spaces:
+    // - @@"Deep Work"
+    // - @@'Deep Work'
     if (work.startsWith("@@")) {
+      const quoted = work.match(
+        /^@@\s*(?:"([^"]+)"|'([^']+)'|“([^”]+)”|‘([^’]+)’)(\s|$)/,
+      );
+      if (quoted) {
+        const value = (
+          quoted[1] ??
+          quoted[2] ??
+          quoted[3] ??
+          quoted[4] ??
+          ""
+        ).trim();
+        if (value) {
+          category = value;
+          work = work.slice(quoted[0].length);
+          hints.push({ key: "category", label: `Category: ${category}` });
+          return true;
+        }
+      }
+
       const m = work.match(/^@@([\w.-]+)(\s|$)/);
       if (m) {
         category = m[1];
@@ -386,6 +441,18 @@ export function parseTaskChatInput(raw: string): TaskChatParse {
       const m = work.match(/^@(\S+)/);
       if (m) {
         const arg = m[1];
+        if (!parsingRangeEnd) {
+          const parsedRange = parseInlineDueRangeArg(arg);
+          if (parsedRange) {
+            startDueParts = applyDueToken(startDueParts, parsedRange.start);
+            endDueParts = applyDueToken(endDueParts, parsedRange.end);
+            hints.push({ key: "due", label: parsedRange.start.label });
+            hints.push({ key: "due", label: `End ${parsedRange.end.label}` });
+            work = work.slice(m[0].length);
+            parsingRangeEnd = true;
+            return true;
+          }
+        }
         const parsed = parseDueTokenArg(arg);
         if (parsed) {
           if (parsingRangeEnd) {

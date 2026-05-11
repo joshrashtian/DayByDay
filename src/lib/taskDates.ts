@@ -111,3 +111,20 @@ export function isTaskDueToday(d: Date | undefined): boolean {
   const today = DateTime.now().startOf("day");
   return due.equals(today);
 }
+
+export function isTaskOverdue(d: Date | undefined): boolean {
+  if (!d) return false;
+  const due = DateTime.fromJSDate(d).startOf("day");
+  const today = DateTime.now().startOf("day");
+  return due < today;
+}
+
+export function isCompletedTaskFromPreviousDay(task: {
+  done: boolean;
+  dueDate?: Date;
+}): boolean {
+  if (!task.done || !task.dueDate) return false;
+  const due = DateTime.fromJSDate(task.dueDate).startOf("day");
+  const today = DateTime.now().startOf("day");
+  return due < today;
+}

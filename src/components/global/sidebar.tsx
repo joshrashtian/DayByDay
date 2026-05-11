@@ -27,7 +27,7 @@ const defaultNavItems: SidebarNavItem[] = [
   { label: "Help", icon: <IoHelpCircleOutline />, link: "/help" },
 ];
 
-const MIN_SIDEBAR_WIDTH = 64;
+const MIN_SIDEBAR_WIDTH = 90;
 const MAX_SIDEBAR_WIDTH = 260;
 const DEFAULT_SIDEBAR_WIDTH = 190;
 const LABEL_REVEAL_WIDTH = 140;
@@ -113,13 +113,13 @@ const SideBar = ({ onWidthChange }: SideBarProps) => {
   }, [isResizing]);
 
   return (
-    <div className="fixed bottom-0 left-2 top-0 z-50 flex items-stretch">
+    <div className="fixed bottom-0 left-0 top-0 z-50 flex items-stretch">
       <AnimatePresence mode="wait">
         {bottomSheetOpen ? (
           <motion.nav
             key="sidebar-nav"
             aria-label="Primary navigation"
-            className="relative my-6 font-quantify flex flex-col justify-between rounded-2xl border border-zinc-200/80 bg-white shadow-lg backdrop-blur-sm"
+            className="relative mt-6 px-3 font-black flex flex-col justify-between rounded-2xl border border-zinc-200/80 bg-white shadow-lg backdrop-blur-sm"
             style={{ width: sidebarWidth }}
             initial={{ x: -100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
@@ -191,14 +191,14 @@ const SideBar = ({ onWidthChange }: SideBarProps) => {
                 </span>
               </button>
             </div>
-            <button
-              type="button"
+            <div
               aria-label="Resize sidebar"
               onPointerDown={(event) => {
                 event.preventDefault();
                 setIsResizing(true);
               }}
-              className="absolute right-0 top-0 h-full w-3 translate-x-1/2 cursor-ew-resize rounded-r-xl bg-transparent"
+              className="absolute right-0 top-0 
+               h-full w-3 translate-x-1/2 cursor-e-resize  bg-transparent"
             />
           </motion.nav>
         ) : (

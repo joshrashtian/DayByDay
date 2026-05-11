@@ -20,6 +20,16 @@ fn main() {
                 .item(&create_task_item)
                 .build()?;
 
+            let edit_menu = SubmenuBuilder::new(app, "Edit")
+                .undo()
+                .redo()
+                .separator()
+                .cut()
+                .copy()
+                .paste()
+                .select_all()
+                .build()?;
+
             let go_menu = SubmenuBuilder::new(app, "Go")
                 .text("home", "Home")
                 .text("calendar", "Calendar")
@@ -29,6 +39,7 @@ fn main() {
 
             let menu = MenuBuilder::new(app)
                 .item(&app_menu)
+                .item(&edit_menu)
                 .item(&task_menu)
                 .item(&go_menu)
                 .build()?;

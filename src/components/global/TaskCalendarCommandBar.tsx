@@ -1,10 +1,18 @@
-import { useMemo, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 import { DateTime } from "luxon";
 import { useLocation, useNavigate } from "react-router-dom";
 import { IoArrowUp } from "react-icons/io5";
 import { useShallow } from "zustand/react/shallow";
 import { parseTaskChatInput } from "../tasks/functions/parseTokens";
 import { useTasksStore } from "../../stores/tasksStore";
+import { getActiveBlockNameAt } from "../../lib/taskBlocks";
 
 type Mode = "task" | "calendar";
 type Feedback = { tone: "neutral" | "success" | "error"; text: string };
@@ -39,20 +47,59 @@ function includesNormalized(haystack: string, needle: string): boolean {
   return haystack.toLowerCase().includes(needle.trim().toLowerCase());
 }
 
+function parseCategoryPartialLabel(label: string): string {
+  const m = label.match(/^Category:\s*(.*)\.\.\.$/);
+  if (!m) return "";
+  return m[1]?.trim() ?? "";
+}
+
+function sanitizeCategoryValue(value: string): string {
+  return value
+    .trim()
+    .replace(/^[“‘"'`]+|[”’"'`]+$/g, "")
+    .replace(/\s+/g, " ");
+}
+
+function formatCategoryToken(value: string): string {
+  const cleaned = sanitizeCategoryValue(value);
+  if (!cleaned) return "";
+  if (/\s/.test(cleaned)) {
+    return `@@"${cleaned.replace(/"/g, "")}"`;
+  }
+  return `@@${cleaned}`;
+}
+
+function extractInlineCategoryQuery(raw: string): string | null {
+  // If user already ended the token with whitespace, treat category entry as done.
+  if (!raw || /\s$/.test(raw)) return null;
+
+  const m = raw.match(
+    /(?:^|\s)@@(?:"([^"]*)"?|'([^']*)'?|“([^”]*)”?|‘([^’]*)’?|([^\s]*))$/,
+  );
+  if (!m) return null;
+
+  const value = m[1] ?? m[2] ?? m[3] ?? m[4] ?? m[5] ?? "";
+  return sanitizeCategoryValue(value);
+}
+
 export function TaskCalendarCommandBar() {
   const location = useLocation();
   const navigate = useNavigate();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [raw, setRaw] = useState("");
+  const [manualMode, setManualMode] = useState<Mode | null>(null);
+  const [categoryDraft, setCategoryDraft] = useState("");
+  const [highlightedCategoryIndex, setHighlightedCategoryIndex] = useState(0);
   const [feedback, setFeedback] = useState<Feedback>({
     tone: "neutral",
     text: "Type a task or command. Use /help.",
   });
 
-  const mode: Mode | null = useMemo(() => {
+  const routeMode: Mode = useMemo(() => {
     if (location.pathname.startsWith("/calendar")) return "calendar";
-    if (location.pathname.startsWith("/tasks")) return "task";
-    return null;
+    return "task";
   }, [location.pathname]);
+  const mode: Mode = manualMode ?? routeMode;
 
   const { tasks, addTask, toggleTask, removeTask } = useTasksStore(
     useShallow((s) => ({
@@ -78,7 +125,93 @@ export function TaskCalendarCommandBar() {
     return parseTaskChatInput(input);
   }, [raw]);
 
-  if (!mode) return null;
+  const knownCategories = useMemo(() => {
+    const byLower = new Map<string, string>();
+    for (const task of tasks) {
+      const c = task.category?.trim();
+      if (!c) continue;
+      if (!byLower.has(c.toLowerCase())) byLower.set(c.toLowerCase(), c);
+    }
+    return [...byLower.values()].sort((a, b) =>
+      a.localeCompare(b, undefined, { sensitivity: "base" }),
+    );
+  }, [tasks]);
+
+  const activeCategoryQuery = useMemo(() => {
+    const inline = extractInlineCategoryQuery(raw);
+    if (inline !== null) return inline;
+
+    const hint = taskParsePreview?.hints.find(
+      (h) => h.key === "category" && h.partial,
+    );
+    if (!hint) return null;
+    return parseCategoryPartialLabel(hint.label);
+  }, [raw, taskParsePreview]);
+
+  const categorySuggestions = useMemo(() => {
+    if (activeCategoryQuery === null) return [];
+    const query = sanitizeCategoryValue(activeCategoryQuery);
+    if (!query) return knownCategories.slice(0, 6);
+    return knownCategories
+      .filter((c) => c.toLowerCase().includes(query.toLowerCase()))
+      .slice(0, 6);
+  }, [knownCategories, activeCategoryQuery]);
+
+  const categoryOptionRows = useMemo(() => {
+    const rows: Array<{ label: string; value: string; isCreate?: boolean }> =
+      [];
+    const draftValue = sanitizeCategoryValue(categoryDraft);
+    const hasExactMatch = draftValue
+      ? categorySuggestions.some(
+          (c) => c.toLowerCase() === draftValue.toLowerCase(),
+        )
+      : false;
+    if (draftValue && !hasExactMatch) {
+      rows.push({
+        label: `Use "${draftValue}"`,
+        value: draftValue,
+        isCreate: true,
+      });
+    }
+    rows.push(...categorySuggestions.map((c) => ({ label: c, value: c })));
+    return rows;
+  }, [categorySuggestions, categoryDraft]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey)) return;
+      if (event.shiftKey || event.altKey) return;
+      if (event.key.toLowerCase() !== "k") return;
+
+      event.preventDefault();
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, []);
+
+  useEffect(() => {
+    setManualMode(null);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (activeCategoryQuery === null) return;
+    setCategoryDraft(sanitizeCategoryValue(activeCategoryQuery));
+  }, [activeCategoryQuery]);
+
+  useEffect(() => {
+    if (!categoryOptionRows.length) {
+      setHighlightedCategoryIndex(-1);
+      return;
+    }
+    setHighlightedCategoryIndex((prev) =>
+      prev >= 0 && prev < categoryOptionRows.length ? prev : 0,
+    );
+  }, [categoryOptionRows]);
 
   const setCalendarDay = (nextDay: DateTime) => {
     const params = new URLSearchParams(location.search);
@@ -110,12 +243,21 @@ export function TaskCalendarCommandBar() {
       mode === "calendar" && !parsed.dueDate
         ? calendarDay.endOf("day").toJSDate()
         : undefined;
+    const effectiveDueDate = parsed.dueDate ?? fallbackDueDate;
+    const blockMinuteSource = effectiveDueDate ?? new Date();
+    const minuteOfDay =
+      blockMinuteSource.getHours() * 60 + blockMinuteSource.getMinutes();
+    const autoBlockName = getActiveBlockNameAt(minuteOfDay);
 
     addTask({
       title: parsed.title.trim(),
       ...(parsed.priority ? { priority: parsed.priority } : {}),
       ...(parsed.critical ? { critical: true } : {}),
-      ...(parsed.block ? { block: parsed.block } : {}),
+      ...(parsed.block
+        ? { block: parsed.block }
+        : autoBlockName
+          ? { block: autoBlockName }
+          : {}),
       ...(parsed.category ? { category: parsed.category } : {}),
       ...(parsed.tags ? { tags: parsed.tags } : {}),
       ...(parsed.dueDate ? { dueDate: parsed.dueDate } : {}),
@@ -160,10 +302,7 @@ export function TaskCalendarCommandBar() {
     if (command === "help") {
       setFeedback({
         tone: "neutral",
-        text:
-          mode === "calendar"
-            ? "Commands: /done <task>, /undo <task>, /delete <task>, /day <today|tomorrow|YYYY-MM-DD>, /next, /prev"
-            : "Commands: /done <task>, /undo <task>, /delete <task>",
+        text: "Commands: /done <task>, /undo <task>, /delete <task>, /day <today|tomorrow|YYYY-MM-DD>, /next, /prev. Time: @9am or @9am-11am",
       });
       return;
     }
@@ -210,13 +349,6 @@ export function TaskCalendarCommandBar() {
       command === "next" ||
       command === "prev"
     ) {
-      if (mode !== "calendar") {
-        setFeedback({
-          tone: "error",
-          text: "Calendar commands only work on Calendar.",
-        });
-        return;
-      }
       if (command === "today") {
         setCalendarDay(DateTime.local().startOf("day"));
         setFeedback({ tone: "success", text: "Moved to today." });
@@ -264,24 +396,195 @@ export function TaskCalendarCommandBar() {
     else submitTask(input);
   };
 
+  const modes: { id: Mode; label: string }[] = [
+    { id: "task", label: "Task" },
+    { id: "calendar", label: "Calendar" },
+  ];
+
+  const selectMode = (nextMode: Mode) => {
+    setManualMode(nextMode);
+  };
+
+  const applyCategoryToken = (value: string) => {
+    const token = formatCategoryToken(value);
+    if (!token) return;
+
+    setRaw((prev) => {
+      const replaceTail = /@@(?:"[^"]*"?|'[^']*'?|“[^”]*”?|‘[^’]*’?|[^\s]*)$/;
+      const maybeReplaced = prev.replace(replaceTail, token);
+      if (maybeReplaced !== prev) return `${maybeReplaced} `;
+      const spacer = prev.trimEnd().length > 0 ? " " : "";
+      return `${prev.trimEnd()}${spacer}${token} `;
+    });
+    inputRef.current?.focus();
+  };
+
+  const onCategoryDraftKeyDown = (
+    event: ReactKeyboardEvent<HTMLInputElement>,
+  ) => {
+    if (!categoryOptionRows.length) {
+      if (event.key === "Enter" || event.key === "Tab") {
+        const fallback = sanitizeCategoryValue(categoryDraft);
+        if (fallback) {
+          event.preventDefault();
+          applyCategoryToken(fallback);
+        }
+      }
+      return;
+    }
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setHighlightedCategoryIndex((prev) =>
+        Math.min(prev + 1, categoryOptionRows.length - 1),
+      );
+      return;
+    }
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setHighlightedCategoryIndex((prev) => Math.max(prev - 1, 0));
+      return;
+    }
+    if (event.key === "Tab") {
+      event.preventDefault();
+      const option =
+        categoryOptionRows[highlightedCategoryIndex] ?? categoryOptionRows[0];
+      if (option) setCategoryDraft(option.value);
+      return;
+    }
+    if (event.key === "Enter") {
+      event.preventDefault();
+      const option =
+        categoryOptionRows[highlightedCategoryIndex] ?? categoryOptionRows[0];
+      if (option) applyCategoryToken(option.value);
+      return;
+    }
+  };
+
+  const onMainInputKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
+    if (activeCategoryQuery === null || !categoryOptionRows.length) return;
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setHighlightedCategoryIndex((prev) =>
+        Math.min(prev + 1, categoryOptionRows.length - 1),
+      );
+      return;
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setHighlightedCategoryIndex((prev) => Math.max(prev - 1, 0));
+      return;
+    }
+
+    if (event.key === "Tab") {
+      event.preventDefault();
+      const option =
+        categoryOptionRows[highlightedCategoryIndex] ?? categoryOptionRows[0];
+      if (!option) return;
+      setCategoryDraft(option.value);
+      applyCategoryToken(option.value);
+      return;
+    }
+
+    if (event.key === "Enter") {
+      event.preventDefault();
+      const option =
+        categoryOptionRows[highlightedCategoryIndex] ?? categoryOptionRows[0];
+      if (option) applyCategoryToken(option.value);
+    }
+  };
+
   return (
     <div className="pointer-events-none fixed bottom-3 left-1/2 z-50 w-[min(92vw,760px)] -translate-x-1/2">
       <form
         onSubmit={onSubmit}
-        className="pointer-events-auto rounded-2xl border border-zinc-200/90 bg-white/90 p-2 shadow-[0_8px_36px_rgba(15,15,15,0.14)] ring-1 ring-black/5 backdrop-blur-xl dark:border-zinc-700/70 dark:bg-zinc-900/90 dark:ring-white/10"
+        className="pointer-events-auto relative -skew-x-12 bg-white/90 p-2 px-6 shadow-[0_8px_36px_rgba(15,15,15,0.14)] ring-1 ring-black/5 backdrop-blur-xl dark:border-zinc-700/70 dark:bg-zinc-900/90 dark:ring-white/10"
       >
-        <div className="flex items-center gap-2">
-          <span className="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
-            {mode}
-          </span>
+        {activeCategoryQuery !== null ? (
+          <div className="absolute left-3 right-3 top-0 -translate-y-full rounded-xl border border-zinc-200/80 bg-white/95  skew-x-12 shadow-lg dark:border-zinc-700 dark:bg-zinc-900/95">
+            <div className="mb-2 flex items-center gap-2 p-2">
+              <span className="shrink-0 text-[11px] font-semibold font-quantify -skew-x-12 uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                Category
+              </span>
+              <input
+                type="text"
+                value={categoryDraft}
+                onChange={(e) => setCategoryDraft(e.target.value)}
+                onKeyDown={onCategoryDraftKeyDown}
+                placeholder="Type category..."
+                className="min-w-0 flex-1 rounded-md border -skew-x-12 border-zinc-300/70 bg-white px-2 py-1 text-xs text-zinc-900 outline-none focus:border-zinc-400 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+              />
+            </div>
+            {categoryOptionRows.length ? (
+              <ul className="max-h-36 overflow-y-auto rounded-md border border-zinc-200/80 bg-white/80 dark:border-zinc-700 dark:bg-zinc-900/70">
+                {categoryOptionRows.map((row, index) => (
+                  <li key={`${row.value}-${index}`}>
+                    <button
+                      type="button"
+                      onMouseEnter={() => setHighlightedCategoryIndex(index)}
+                      onClick={() => applyCategoryToken(row.value)}
+                      className={`flex w-full items-center justify-between px-2 py-1.5 text-left text-xs ${
+                        highlightedCategoryIndex === index
+                          ? "bg-sky-100 text-sky-900 dark:bg-sky-900/40 dark:text-sky-200"
+                          : "text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                      }`}
+                    >
+                      <span className="truncate">{row.label}</span>
+                      {row.isCreate ? (
+                        <span className="ml-2 shrink-0 text-[10px] uppercase font-display tracking-wide text-zinc-500 dark:text-zinc-400">
+                          New Category
+                        </span>
+                      ) : null}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                Start typing a category value.
+              </p>
+            )}
+            <p className="mt-1 text-[10px] text-zinc-500 dark:text-zinc-400">
+              Arrow keys to navigate, Tab to autocomplete, Enter to apply.
+            </p>
+          </div>
+        ) : null}
+        <div className="flex skew-x-12 items-center gap-2">
+          <div className="group/mode relative">
+            <button
+              type="button"
+              className="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"
+              aria-haspopup="menu"
+              aria-label="Select command mode"
+            >
+              {mode}
+            </button>
+            <div className="pointer-events-none absolute bottom-full left-1/2 mb-2 flex min-w-max -translate-x-1/2 translate-y-0 flex-col gap-1 opacity-0 transition-all duration-200 group-hover/mode:pointer-events-auto group-hover/mode:translate-y-0 group-hover/mode:opacity-100 group-focus-within/mode:pointer-events-auto group-focus-within/mode:translate-y-0 group-focus-within/mode:opacity-100">
+              {modes.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => selectMode(m.id)}
+                  className={`rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-wide shadow-sm transition-colors ${
+                    mode === m.id
+                      ? "border-zinc-900 bg-zinc-900 text-white dark:border-white dark:bg-white dark:text-zinc-900"
+                      : "border-zinc-200 bg-white/95 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800/95 dark:text-zinc-200 dark:hover:bg-zinc-700"
+                  }`}
+                  aria-current={mode === m.id ? "true" : undefined}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+          </div>
           <input
+            ref={inputRef}
             value={raw}
             onChange={(e) => setRaw(e.target.value)}
-            placeholder={
-              mode === "calendar"
-                ? "Type task or command... (/day today, /next)"
-                : "Type task or command... (/done, /delete)"
-            }
+            onKeyDown={onMainInputKeyDown}
+            placeholder="Type task or command... (@9am, @9am-11am, /day today, /done)"
             className="min-w-0 flex-1 bg-transparent px-1.5 py-2 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 dark:text-zinc-100 dark:placeholder:text-zinc-500"
             aria-label="Global command input"
           />

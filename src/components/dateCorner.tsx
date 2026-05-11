@@ -9,13 +9,22 @@ import { IoMdClock } from "react-icons/io";
 type Props = {
   variant?: string;
   rootClassName?: string;
+  scale?: number;
+  onScaleChange?: (nextScale: number) => void;
+  onVariantChange?: (nextVariant: string) => void;
 };
 
-export const DateCorner = ({ rootClassName }: Props) => {
+export const DateCorner = ({
+  variant: variantOverride,
+  rootClassName,
+  scale: scaleOverride,
+  onScaleChange,
+  onVariantChange,
+}: Props) => {
   const today = new Date();
   const [variant, setVariant] = useState<string | undefined>(undefined);
   const { style, getClockStyle } = useStyle();
-  const resolvedVariant = variant ?? style ?? "minimal";
+  const resolvedVariant = variantOverride ?? variant ?? style ?? "minimal";
   const stylePrototype = getClockStyle(resolvedVariant);
   const weather = useWeather();
   const [scale, setScale] = useState(1);
@@ -24,11 +33,23 @@ export const DateCorner = ({ rootClassName }: Props) => {
   const dragStartScale = useRef(1);
   const context = useContextMenu();
   const clampScale = (value: number) => Math.min(2, Math.max(0.65, value));
+  const resolvedScale = scaleOverride ?? scale;
+
+  const applyScale = (nextScale: number) => {
+    const clamped = clampScale(nextScale);
+    if (scaleOverride === undefined) setScale(clamped);
+    onScaleChange?.(clamped);
+  };
+
+  const applyVariant = (nextVariant: string) => {
+    if (variantOverride === undefined) setVariant(nextVariant);
+    onVariantChange?.(nextVariant);
+  };
 
   const onResizeStart = (event: PointerEvent<HTMLButtonElement>) => {
     event.preventDefault();
     dragStartY.current = event.clientY;
-    dragStartScale.current = scale;
+    dragStartScale.current = resolvedScale;
     setIsDragging(true);
     event.currentTarget.setPointerCapture(event.pointerId);
   };
@@ -36,7 +57,7 @@ export const DateCorner = ({ rootClassName }: Props) => {
   const onResizeMove = (event: PointerEvent<HTMLButtonElement>) => {
     if (!isDragging) return;
     const deltaY = event.clientY - dragStartY.current;
-    setScale(clampScale(dragStartScale.current + deltaY * 0.004));
+    applyScale(dragStartScale.current + deltaY * 0.004);
   };
 
   const onResizeEnd = (event: PointerEvent<HTMLButtonElement>) => {
@@ -66,7 +87,7 @@ export const DateCorner = ({ rootClassName }: Props) => {
       {
         id: "Default",
         label: "Default",
-        onSelect: () => setVariant("minimal"),
+        onSelect: () => applyVariant("minimal"),
         icon: <IoMdClock />,
         type: "item",
       },
@@ -74,13 +95,13 @@ export const DateCorner = ({ rootClassName }: Props) => {
       {
         id: "P5",
         label: "Persona 5 Style",
-        onSelect: () => setVariant("p5"),
+        onSelect: () => applyVariant("p5"),
         type: "item",
       },
       {
         id: "Minimal",
         label: "Minimal",
-        onSelect: () => setVariant("basic"),
+        onSelect: () => applyVariant("basic"),
         icon: <IoSunnyOutline />,
         type: "item",
       },
@@ -96,19 +117,19 @@ export const DateCorner = ({ rootClassName }: Props) => {
       {
         id: "Small",
         label: "Small",
-        onSelect: () => setScale(0.65),
+        onSelect: () => applyScale(0.65),
         type: "item",
       },
       {
         id: "Medium",
         label: "Medium",
-        onSelect: () => setScale(1),
+        onSelect: () => applyScale(1),
         type: "item",
       },
       {
         id: "Large",
         label: "Large",
-        onSelect: () => setScale(1.5),
+        onSelect: () => applyScale(1.5),
         type: "item",
       },
     ]);
@@ -120,7 +141,7 @@ export const DateCorner = ({ rootClassName }: Props) => {
           onContextMenu={onContextMenu}
           className={wrapperClassName}
           style={{
-            transform: `scale(${scale})`,
+            transform: `scale(${resolvedScale})`,
             transformOrigin: stylePrototype.transformOrigin,
           }}
         >
@@ -166,7 +187,7 @@ export const DateCorner = ({ rootClassName }: Props) => {
       <div
         className={wrapperClassName}
         style={{
-          transform: `scale(${scale})`,
+          transform: `scale(${resolvedScale})`,
           transformOrigin: stylePrototype.transformOrigin,
         }}
       >

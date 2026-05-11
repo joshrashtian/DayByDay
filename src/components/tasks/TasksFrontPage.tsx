@@ -2,8 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { useShallow } from "zustand/react/shallow";
 import { useTasksStore } from "../../stores/tasksStore";
-import { formatTaskDue } from "../../lib/taskDates";
-import { IoCheckmarkCircleOutline } from "react-icons/io5";
+import {
+  formatTaskDue,
+  isCompletedTaskFromPreviousDay,
+  isTaskOverdue,
+  isTaskDueToday,
+} from "../../lib/taskDates";
+import { IoCheckmarkCircleOutline, IoPencil } from "react-icons/io5";
 
 type Props = {
   activeBlockName?: string;
@@ -21,14 +26,6 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
   const [dragPointer, setDragPointer] = useState({ x: 0, y: 0 });
   const dropZoneRef = useRef<HTMLDivElement | null>(null);
 
-  const priorityRank = (task: (typeof tasks)[number]) => {
-    if (task.critical) return 0;
-    if (task.priority === "high") return 1;
-    if (task.priority === "medium") return 2;
-    if (task.priority === "low") return 3;
-    return 4;
-  };
-
   const tasksInBlock = useMemo(
     () =>
       tasks.filter((task) => {
@@ -42,19 +39,20 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
 
   const sortedTasks = useMemo(
     () =>
-      [...tasksInBlock].sort((a, b) => {
-        const doneDelta = Number(a.done) - Number(b.done);
-        if (doneDelta !== 0) return doneDelta;
+      [...tasksInBlock]
+        .filter((task) => {
+          if (isCompletedTaskFromPreviousDay(task)) return false;
+          if (!task.done) return true;
+          return isTaskDueToday(task.dueDate);
+        })
+        .sort((a, b) => {
+          const aDue = a.dueDate?.getTime() ?? Number.MAX_SAFE_INTEGER;
+          const bDue = b.dueDate?.getTime() ?? Number.MAX_SAFE_INTEGER;
 
-        const priorityDelta = priorityRank(a) - priorityRank(b);
-        if (priorityDelta !== 0) return priorityDelta;
+          if (aDue !== bDue) return aDue - bDue;
 
-        const aDue = a.dueDate?.getTime() ?? Number.MAX_SAFE_INTEGER;
-        const bDue = b.dueDate?.getTime() ?? Number.MAX_SAFE_INTEGER;
-        if (aDue !== bDue) return aDue - bDue;
-
-        return b.updatedAt.getTime() - a.updatedAt.getTime();
-      }),
+          return b.updatedAt.getTime() - a.updatedAt.getTime();
+        }),
     [tasksInBlock],
   );
 
@@ -144,7 +142,7 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
     <div className="rounded-2xl">
       {isPointerDragging && draggedTask ? (
         <motion.div
-          className="pointer-events-none fixed z-999 w-72 rounded-xl border border-zinc-300/90 bg-white/95 px-3 py-2 shadow-[0_18px_50px_-20px_rgba(15,23,42,0.55)] dark:border-zinc-600 dark:bg-zinc-900/90"
+          className="pointer-events-none fixed z-999 w-56 rounded-xl border border-zinc-300/90 bg-white/95 px-3 py-2 shadow-[0_18px_50px_-20px_rgba(15,23,42,0.55)] sm:w-72 dark:border-zinc-600 dark:bg-zinc-900/90"
           style={{
             left: dragPointer.x + 12,
             top: dragPointer.y + 12,
@@ -180,7 +178,7 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
           </p>
         </motion.div>
       ) : null}
-      <div className="flex min-h-120 flex-col gap-6">
+      <div className="flex min-h-120 flex-col gap-4 sm:gap-6">
         <div className="flex flex-col items-start gap-1.5">
           <p className="text-md font-display text-zinc-500 dark:text-zinc-400">
             {activeBlockName
@@ -191,7 +189,7 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
 
         <div
           ref={dropZoneRef}
-          className={`w-full  rounded-2xl  px-5 py-4  transition-colors  ${
+          className={`w-full rounded-2xl px-3 py-3 transition-colors sm:px-5 sm:py-4 ${
             isDropActive
               ? "border-sky-400 bg-sky-50/80 dark:border-sky-400 dark:bg-sky-950/30"
               : " "
@@ -200,18 +198,18 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
           {!visibleFocusedTask ? (
             <p className="text-base font-quantify text-zinc-500 dark:text-zinc-400"></p>
           ) : (
-            <div className="flex min-h-44 flex-col justify-between gap-4">
+            <div className="flex min-h-48 flex-col items-center justify-between gap-4 sm:min-h-44">
               <div>
-                <h2 className="text-3xl font-semibold text-zinc-900 dark:text-zinc-50 font-quantify">
+                <h2 className="wrap-break-word text-center text-3xl font-semibold font-quantify text-zinc-900 dark:text-zinc-50 sm:text-5xl">
                   {visibleFocusedTask.title}
                 </h2>
                 {visibleFocusedTask.description ? (
-                  <p className="mt-1.5 text-sm text-zinc-600 dark:text-zinc-300">
+                  <p className="mt-1.5 text-center text-sm text-zinc-600 dark:text-zinc-300">
                     {visibleFocusedTask.description}
                   </p>
                 ) : null}
-                <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium">
-                  <span className="rounded-md border border-zinc-300/80 bg-zinc-100 px-2 py-0.5 text-zinc-700 dark:border-zinc-600 dark:bg-zinc-700/70 dark:text-zinc-200">
+                <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs font-medium">
+                  <span className="rounded-md border-b border-blue-500 bg-zinc-100 px-2 py-0.5 font-quantify text-zinc-700 dark:border-zinc-600 dark:bg-zinc-700/70 dark:text-zinc-200">
                     {visibleFocusedTask.critical
                       ? "Critical"
                       : visibleFocusedTask.priority
@@ -219,29 +217,41 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
                           visibleFocusedTask.priority.slice(1)
                         : "No priority"}
                   </span>
-                  <span className="rounded-md border border-zinc-300/80 bg-zinc-100 px-2 py-0.5 text-zinc-700 dark:border-zinc-600 dark:bg-zinc-700/70 dark:text-zinc-200">
+                  <span className="rounded-md border-b font-quantify bg-zinc-100 px-2 py-0.5 text-zinc-700 dark:border-zinc-600 dark:bg-zinc-700/70 dark:text-zinc-200">
                     {visibleFocusedTask.dueDate
                       ? formatTaskDue(visibleFocusedTask.dueDate)
-                      : "No due date"}
+                      : "No Due Date"}
                   </span>
                 </div>
               </div>
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                  Drag any task card here to focus it.
-                </p>
-                <button
-                  onClick={() => toggleTask(visibleFocusedTask.id)}
-                  type="button"
-                  className="rounded-full bg-zinc-100 p-2 text-xl text-zinc-500 dark:bg-zinc-700/70 dark:text-zinc-300"
-                  title={
-                    visibleFocusedTask.done
-                      ? "Mark as active"
-                      : "Mark as complete"
-                  }
+              <div className="flex w-full flex-col items-center justify-between gap-3 sm:flex-row sm:gap-0">
+                <h3
+                  className={`text-center text-2xl font-display sm:text-3xl ${isTaskOverdue(visibleFocusedTask.dueDate) ? "text-red-500" : "text-zinc-500"}`}
                 >
-                  <IoCheckmarkCircleOutline />
-                </button>
+                  {isTaskOverdue(visibleFocusedTask.dueDate)
+                    ? "OVERDUE"
+                    : "DUE TODAY"}
+                </h3>
+                <ol className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    className="rounded-full bg-white p-2 text-3xl text-zinc-500 duration-500 hover:bg-yellow-600 hover:text-white sm:text-4xl dark:bg-zinc-700/70 dark:text-zinc-300"
+                  >
+                    <IoPencil />
+                  </button>
+                  <button
+                    onClick={() => toggleTask(visibleFocusedTask.id)}
+                    type="button"
+                    className="rounded-full bg-white p-2 text-3xl text-zinc-500 duration-500 hover:bg-green-600 hover:text-white sm:text-4xl dark:bg-zinc-700/70 dark:text-zinc-300"
+                    title={
+                      visibleFocusedTask.done
+                        ? "Mark as active"
+                        : "Mark as complete"
+                    }
+                  >
+                    <IoCheckmarkCircleOutline />
+                  </button>
+                </ol>
               </div>
             </div>
           )}
@@ -251,7 +261,7 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
           <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
             Task List
           </h3>
-          <div className="max-h-72 space-y-2 max-w-sm overflow-y-scroll pr-1 no-scrollbar">
+          <div className="max-h-72 max-w-none space-y-2 overflow-y-scroll pr-1 no-scrollbar sm:max-w-sm">
             {sortedTasks.map((task) => (
               <button
                 key={task.id}
