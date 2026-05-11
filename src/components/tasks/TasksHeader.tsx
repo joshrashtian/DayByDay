@@ -1,12 +1,14 @@
 import { IoCalendarOutline, IoSearch } from "react-icons/io5";
+import type { Selection } from "react-aria-components";
+import { MultiSelect, type MultiSelectItemType } from "../base/input/multi-select";
 
 export type TasksHeaderProps = {
   taskSearch: string;
   onTaskSearchChange: (value: string) => void;
-  blockFilter: "all" | string;
-  onBlockFilterChange: (value: "all" | string) => void;
-  categoryFilter: "all" | string;
-  onCategoryFilterChange: (value: "all" | string) => void;
+  blockFilters: Set<string>;
+  onBlockFiltersChange: (value: Set<string>) => void;
+  categoryFilters: Set<string>;
+  onCategoryFiltersChange: (value: Set<string>) => void;
   dueTodayOnly: boolean;
   onDueTodayOnlyChange: (value: boolean) => void;
   blocks: string[];
@@ -19,15 +21,34 @@ const shellInputClass =
 export function TasksHeader({
   taskSearch,
   onTaskSearchChange,
-  blockFilter,
-  onBlockFilterChange,
-  categoryFilter,
-  onCategoryFilterChange,
+  blockFilters,
+  onBlockFiltersChange,
+  categoryFilters,
+  onCategoryFiltersChange,
   dueTodayOnly,
   onDueTodayOnlyChange,
   blocks,
   categories,
 }: TasksHeaderProps) {
+  const blockItems: MultiSelectItemType[] = blocks.map((block) => ({
+    id: block,
+    label: block,
+    textValue: block,
+  }));
+  const categoryItems: MultiSelectItemType[] = categories.map((category) => ({
+    id: category,
+    label: category,
+    textValue: category,
+  }));
+
+  const selectionToSet = (selection: Selection, values: string[]): Set<string> => {
+    if (selection === "all") return new Set(values);
+    if (selection instanceof Set) {
+      return new Set(Array.from(selection, (value) => String(value)));
+    }
+    return new Set<string>();
+  };
+
   return (
     <header className="shrink-0 border-b border-white/40 bg-linear-to-b from-zinc-100/90 to-zinc-50/40 px-5 pb-4 pt-6 backdrop-blur-md dark:border-white/10 dark:from-zinc-950/90 dark:to-zinc-900/35 sm:px-8 sm:pb-5 sm:pt-8">
       <div className="mx-auto flex w-full max-w-3xl min-w-0 flex-col gap-5 xl:max-w-4xl">
@@ -49,47 +70,37 @@ export function TasksHeader({
           </label>
 
           <div className="flex min-w-0 flex-wrap items-center gap-2 sm:justify-end">
-            <label className="flex min-w-0 items-center gap-2">
-              <span className="sr-only">Filter By Block</span>
-              <select
-                value={blockFilter}
-                onChange={(e) =>
-                  onBlockFilterChange(
-                    e.target.value === "all" ? "all" : e.target.value,
-                  )
+            <div className="min-w-44 max-w-60">
+              <MultiSelect
+                items={blockItems}
+                selectedKeys={blockFilters}
+                onSelectionChange={(keys) =>
+                  onBlockFiltersChange(selectionToSet(keys, blocks))
                 }
-                className={`min-w-0 max-w-full h-full py-2.5 pl-3 pr-8 border px-3 rounded-2xl ${shellInputClass}`}
-                aria-label="Filter By Block"
-              >
-                <option value="all">All Blocks</option>
-                {blocks.map((b) => (
-                  <option key={b} value={b}>
-                    {b}
-                  </option>
-                ))}
-              </select>
-            </label>
+                placeholder="All blocks"
+                showFooter
+                size="sm"
+                selectedCountFormatter={(count) =>
+                  count === 1 ? "1 block" : `${count} blocks`
+                }
+              />
+            </div>
 
-            <label className="flex min-w-0 items-center gap-2">
-              <span className="sr-only">Filter By Category</span>
-              <select
-                value={categoryFilter}
-                onChange={(e) =>
-                  onCategoryFilterChange(
-                    e.target.value === "all" ? "all" : e.target.value,
-                  )
+            <div className="min-w-48 max-w-64">
+              <MultiSelect
+                items={categoryItems}
+                selectedKeys={categoryFilters}
+                onSelectionChange={(keys) =>
+                  onCategoryFiltersChange(selectionToSet(keys, categories))
                 }
-                className={`min-w-0 max-w-full h-full py-2.5 pl-3 pr-8 border px-3 rounded-2xl ${shellInputClass}`}
-                aria-label="Filter By Category"
-              >
-                <option value="all">All Categories</option>
-                {categories.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </label>
+                placeholder="All categories"
+                showFooter
+                size="sm"
+                selectedCountFormatter={(count) =>
+                  count === 1 ? "1 category" : `${count} categories`
+                }
+              />
+            </div>
 
             <button
               type="button"

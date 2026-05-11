@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { DateTime } from "luxon";
 import { useShallow } from "zustand/react/shallow";
 import {
   isCompletedTaskFromPreviousDay,
@@ -19,6 +20,7 @@ import {
   IoCheckmarkCircleOutline,
   IoGrid,
   IoList,
+  IoTimeOutline,
 } from "react-icons/io5";
 
 type Props = {
@@ -37,18 +39,26 @@ function taskMatchesSearch(task: Task, query: string): boolean {
   return false;
 }
 
-function taskMatchesBlock(task: Task, filter: "all" | string): boolean {
-  if (filter === "all") return true;
+function taskMatchesAnyBlock(task: Task, filters: Set<string>): boolean {
+  if (filters.size === 0) return true;
   const b = task.block?.trim();
   if (!b) return false;
-  return b.toLowerCase() === filter.toLowerCase();
+  const blockLower = b.toLowerCase();
+  for (const filter of filters) {
+    if (blockLower === filter.toLowerCase()) return true;
+  }
+  return false;
 }
 
-function taskMatchesCategory(task: Task, filter: "all" | string): boolean {
-  if (filter === "all") return true;
+function taskMatchesAnyCategory(task: Task, filters: Set<string>): boolean {
+  if (filters.size === 0) return true;
   const c = task.category?.trim();
   if (!c) return false;
-  return c.toLowerCase() === filter.toLowerCase();
+  const categoryLower = c.toLowerCase();
+  for (const filter of filters) {
+    if (categoryLower === filter.toLowerCase()) return true;
+  }
+  return false;
 }
 
 function normalizedBlockName(task: Task): string | undefined {
@@ -70,6 +80,15 @@ function collectCategories(tasks: Task[]): string[] {
   return [...byLower.values()].sort((a, b) =>
     a.localeCompare(b, undefined, { sensitivity: "base" }),
   );
+}
+
+function isHistoricalTask(task: Task): boolean {
+  if (task.dueDate) {
+    const due = DateTime.fromJSDate(task.dueDate).startOf("day");
+    const today = DateTime.now().startOf("day");
+    return due < today;
+  }
+  return task.done;
 }
 
 export function TasksWorkspace({
@@ -104,11 +123,11 @@ export function TasksWorkspace({
   );
 
   const [taskSearch, setTaskSearch] = useState("");
-  const [blockFilter, setBlockFilter] = useState<"all" | string>("all");
-  const [categoryFilter, setCategoryFilter] = useState<"all" | string>("all");
+  const [blockFilters, setBlockFilters] = useState<Set<string>>(new Set());
+  const [categoryFilters, setCategoryFilters] = useState<Set<string>>(new Set());
   const [dueTodayOnly, setDueTodayOnly] = useState(false);
   const [statusFilter, setStatusFilter] = useState<
-    "all" | "unfinished" | "completed"
+    "all" | "unfinished" | "completed" | "history"
   >("all");
   const [viewMode, setViewMode] = useState<"block" | "category">("block");
 
@@ -116,29 +135,44 @@ export function TasksWorkspace({
   const categories = useMemo(() => collectCategories(tasks), [tasks]);
 
   useEffect(() => {
-    if (blockFilter === "all") return;
-    const stillThere = blocks.some(
-      (b) => b.toLowerCase() === blockFilter.toLowerCase(),
-    );
-    if (!stillThere) setBlockFilter("all");
-  }, [blocks, blockFilter]);
+    setBlockFilters((current) => {
+      if (current.size === 0) return current;
+      const available = new Set(blocks.map((b) => b.toLowerCase()));
+      const next = new Set(
+        [...current].filter((value) => available.has(value.toLowerCase())),
+      );
+      return next.size === current.size ? current : next;
+    });
+  }, [blocks]);
 
   useEffect(() => {
-    if (categoryFilter === "all") return;
-    const stillThere = categories.some(
-      (c) => c.toLowerCase() === categoryFilter.toLowerCase(),
-    );
-    if (!stillThere) setCategoryFilter("all");
-  }, [categories, categoryFilter]);
+    setCategoryFilters((current) => {
+      if (current.size === 0) return current;
+      const available = new Set(categories.map((c) => c.toLowerCase()));
+      const next = new Set(
+        [...current].filter((value) => available.has(value.toLowerCase())),
+      );
+      return next.size === current.size ? current : next;
+    });
+  }, [categories]);
 
   const visibleTasks = useMemo(
     () =>
       tasks.filter((t) => {
-        if (isCompletedTaskFromPreviousDay(t)) return false;
+        if (statusFilter !== "history" && isCompletedTaskFromPreviousDay(t)) {
+          return false;
+        }
+        if (statusFilter === "history" && !isHistoricalTask(t)) return false;
         if (!taskMatchesSearch(t, taskSearch)) return false;
-        if (!taskMatchesBlock(t, blockFilter)) return false;
-        if (!taskMatchesCategory(t, categoryFilter)) return false;
-        if (dueTodayOnly && !isTaskDueToday(t.dueDate)) return false;
+        if (!taskMatchesAnyBlock(t, blockFilters)) return false;
+        if (!taskMatchesAnyCategory(t, categoryFilters)) return false;
+        if (
+          statusFilter !== "history" &&
+          dueTodayOnly &&
+          !isTaskDueToday(t.dueDate)
+        ) {
+          return false;
+        }
         if (statusFilter === "unfinished" && t.done) return false;
         if (statusFilter === "completed" && !t.done) return false;
         return true;
@@ -146,8 +180,8 @@ export function TasksWorkspace({
     [
       tasks,
       taskSearch,
-      blockFilter,
-      categoryFilter,
+      blockFilters,
+      categoryFilters,
       dueTodayOnly,
       statusFilter,
     ],
@@ -226,10 +260,10 @@ export function TasksWorkspace({
         <TasksHeader
           taskSearch={taskSearch}
           onTaskSearchChange={setTaskSearch}
-          blockFilter={blockFilter}
-          onBlockFilterChange={setBlockFilter}
-          categoryFilter={categoryFilter}
-          onCategoryFilterChange={setCategoryFilter}
+          blockFilters={blockFilters}
+          onBlockFiltersChange={setBlockFilters}
+          categoryFilters={categoryFilters}
+          onCategoryFiltersChange={setCategoryFilters}
           dueTodayOnly={dueTodayOnly}
           onDueTodayOnlyChange={setDueTodayOnly}
           blocks={blocks}
@@ -375,6 +409,24 @@ export function TasksWorkspace({
           }`}
         >
           <IoCheckmarkCircle className="h-5 w-5" aria-hidden />
+        </button>
+        <button
+          type="button"
+          title="History"
+          aria-label="History tasks"
+          aria-pressed={statusFilter === "history"}
+          onClick={() =>
+            setStatusFilter((current) =>
+              current === "history" ? "all" : "history",
+            )
+          }
+          className={`inline-flex h-11 w-11 items-center justify-center rounded-full transition-colors ${
+            statusFilter === "history"
+              ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/25"
+              : "bg-white/70 text-zinc-700 hover:bg-white dark:bg-zinc-900/70 dark:text-zinc-200 dark:hover:bg-zinc-900"
+          }`}
+        >
+          <IoTimeOutline className="h-5 w-5" aria-hidden />
         </button>
       </nav>
     </main>
