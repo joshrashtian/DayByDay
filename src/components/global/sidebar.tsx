@@ -119,7 +119,7 @@ const SideBar = ({ onWidthChange }: SideBarProps) => {
           <motion.nav
             key="sidebar-nav"
             aria-label="Primary navigation"
-            className="relative mt-6 px-3 font-black flex flex-col justify-between rounded-2xl border border-zinc-200/80 bg-white shadow-lg backdrop-blur-sm"
+            className="relative  px-3 font-black flex flex-col justify-between  border-zinc-200/80 bg-white shadow-lg backdrop-blur-sm"
             style={{ width: sidebarWidth }}
             initial={{ x: -100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
