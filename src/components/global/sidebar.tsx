@@ -1,16 +1,18 @@
-import { useEffect, useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
+  IoAdd,
   IoHomeOutline,
   IoListOutline,
   IoSettingsOutline,
   IoCalendarOutline,
   IoHelpCircleOutline,
   IoGrid,
-  IoChevronBack,
+  IoTodayOutline,
   IoMenu,
+  IoClose,
 } from "react-icons/io5";
-import { AnimatePresence, motion, Reorder, useSpring } from "motion/react";
+import { AnimatePresence, Reorder, motion } from "motion/react";
 
 type SidebarNavItem = {
   label: string;
@@ -18,79 +20,117 @@ type SidebarNavItem = {
   link: string;
 };
 
-const defaultNavItems: SidebarNavItem[] = [
+const primaryDefaultNavItems: SidebarNavItem[] = [
   { label: "Home", icon: <IoHomeOutline />, link: "/" },
   { label: "Tasks", icon: <IoListOutline />, link: "/tasks" },
   { label: "Calendar", icon: <IoCalendarOutline />, link: "/calendar" },
-  { label: "Settings", icon: <IoSettingsOutline />, link: "/settings" },
   { label: "Blocks", icon: <IoGrid />, link: "/blocks" },
+];
+
+const utilityNavItems: SidebarNavItem[] = [
+  { label: "Settings", icon: <IoSettingsOutline />, link: "/settings" },
   { label: "Help", icon: <IoHelpCircleOutline />, link: "/help" },
 ];
 
-const MIN_SIDEBAR_WIDTH = 90;
-const MAX_SIDEBAR_WIDTH = 260;
-const DEFAULT_SIDEBAR_WIDTH = 190;
-const LABEL_REVEAL_WIDTH = 140;
+const COLLAPSED_SIDEBAR_WIDTH = 72;
+const SNAP_WIDTHS = [220, 260] as const;
+const DEFAULT_SIDEBAR_WIDTH = SNAP_WIDTHS[0];
+const LABEL_REVEAL_WIDTH = 180;
+const MIN_EXPANDED_WIDTH = SNAP_WIDTHS[0] - 16;
+const MAX_EXPANDED_WIDTH = SNAP_WIDTHS[1] + 16;
+const SIDEBAR_STATE_KEY = "dbd-sidebar-state-v2";
 
 type SideBarProps = {
   onWidthChange?: (width: number) => void;
 };
 
-const clampWidth = (value: number) =>
-  Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, value));
+const clampExpandedWidth = (value: number) =>
+  Math.min(MAX_EXPANDED_WIDTH, Math.max(MIN_EXPANDED_WIDTH, value));
 
-const MagneticIcon = ({ icon }: { icon: React.ReactNode }) => {
-  const x = useSpring(0, { stiffness: 280, damping: 22, mass: 0.3 });
-  const y = useSpring(0, { stiffness: 280, damping: 22, mass: 0.3 });
-
-  const handleMove = (event: React.MouseEvent<HTMLDivElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    const dx = event.clientX - centerX;
-    const dy = event.clientY - centerY;
-    const distance = Math.hypot(dx, dy);
-    const radius = 90;
-
-    if (distance > radius) {
-      x.set(0);
-      y.set(0);
-      return;
-    }
-
-    const normalized = (radius - distance) / radius;
-    x.set((dx / radius) * 8 * normalized);
-    y.set((dy / radius) * 8 * normalized);
-  };
-
-  const resetPosition = () => {
-    x.set(0);
-    y.set(0);
-  };
-
-  return (
-    <div
-      onMouseMove={handleMove}
-      onMouseLeave={resetPosition}
-      className="flex h-10 w-10 items-center justify-center"
-    >
-      <motion.div style={{ x, y }}>{icon}</motion.div>
-    </div>
+const getNearestSnapWidth = (value: number) =>
+  SNAP_WIDTHS.reduce((closest, width) =>
+    Math.abs(width - value) < Math.abs(closest - value) ? width : closest,
   );
-};
 
 const SideBar = ({ onWidthChange }: SideBarProps) => {
   const location = useLocation();
-  const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
-  const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH);
-  const [items, setItems] = useState<SidebarNavItem[]>(() => [
-    ...defaultNavItems,
+  const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState<number>(
+    DEFAULT_SIDEBAR_WIDTH,
+  );
+  const [previewWidth, setPreviewWidth] = useState<number | null>(null);
+  const [primaryItems, setPrimaryItems] = useState<SidebarNavItem[]>(() => [
+    ...primaryDefaultNavItems,
   ]);
   const [isResizing, setIsResizing] = useState(false);
 
   useEffect(() => {
-    onWidthChange?.(bottomSheetOpen ? sidebarWidth : MIN_SIDEBAR_WIDTH);
-  }, [bottomSheetOpen, onWidthChange, sidebarWidth]);
+    try {
+      const raw = localStorage.getItem(SIDEBAR_STATE_KEY);
+      if (!raw) {
+        return;
+      }
+      const parsed = JSON.parse(raw) as {
+        open?: boolean;
+        width?: number;
+        primaryOrder?: string[];
+      };
+      if (typeof parsed.open === "boolean") {
+        setSidebarOpen(parsed.open);
+      }
+      if (typeof parsed.width === "number") {
+        setSidebarWidth(getNearestSnapWidth(parsed.width));
+      }
+      if (
+        Array.isArray(parsed.primaryOrder) &&
+        parsed.primaryOrder.length > 0
+      ) {
+        const map = new Map(
+          primaryDefaultNavItems.map((item) => [item.link, item] as const),
+        );
+        const restoredItems = parsed.primaryOrder
+          .map((link) => map.get(link))
+          .filter((item): item is SidebarNavItem => Boolean(item));
+        const missingItems = primaryDefaultNavItems.filter(
+          (item) => !parsed.primaryOrder?.includes(item.link),
+        );
+        if (restoredItems.length > 0) {
+          setPrimaryItems([...restoredItems, ...missingItems]);
+        }
+      }
+    } catch {
+      // Ignore invalid local storage payloads.
+    }
+  }, []);
+
+  useEffect(() => {
+    onWidthChange?.(sidebarOpen ? sidebarWidth : COLLAPSED_SIDEBAR_WIDTH);
+  }, [onWidthChange, sidebarOpen, sidebarWidth]);
+
+  useEffect(() => {
+    const statePayload = {
+      open: sidebarOpen,
+      width: sidebarWidth,
+      primaryOrder: primaryItems.map((item) => item.link),
+    };
+    localStorage.setItem(SIDEBAR_STATE_KEY, JSON.stringify(statePayload));
+  }, [primaryItems, sidebarOpen, sidebarWidth]);
+
+  useEffect(() => {
+    const handleShortcut = (event: KeyboardEvent) => {
+      if (event.key !== "\\") {
+        return;
+      }
+      if (!(event.metaKey || event.ctrlKey)) {
+        return;
+      }
+      event.preventDefault();
+      setSidebarOpen((prev) => !prev);
+    };
+    window.addEventListener("keydown", handleShortcut);
+    return () => window.removeEventListener("keydown", handleShortcut);
+  }, []);
 
   useEffect(() => {
     if (!isResizing) {
@@ -98,10 +138,16 @@ const SideBar = ({ onWidthChange }: SideBarProps) => {
     }
 
     const handlePointerMove = (event: PointerEvent) => {
-      setSidebarWidth(clampWidth(event.clientX - 8));
+      setPreviewWidth(clampExpandedWidth(event.clientX - 8));
     };
 
-    const handlePointerUp = () => setIsResizing(false);
+    const handlePointerUp = () => {
+      if (previewWidth !== null) {
+        setSidebarWidth(getNearestSnapWidth(previewWidth));
+      }
+      setPreviewWidth(null);
+      setIsResizing(false);
+    };
 
     window.addEventListener("pointermove", handlePointerMove);
     window.addEventListener("pointerup", handlePointerUp);
@@ -110,80 +156,108 @@ const SideBar = ({ onWidthChange }: SideBarProps) => {
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
     };
-  }, [isResizing]);
+  }, [isResizing, previewWidth]);
+
+  const resolvedWidth = previewWidth ?? sidebarWidth;
+
+  const todayLink = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    return `/calendar?date=${today}`;
+  }, []);
+
+  const renderNavItem = (item: SidebarNavItem) => {
+    const isActive =
+      item.link === "/"
+        ? location.pathname === "/"
+        : location.pathname.startsWith(item.link);
+    const showLabel = sidebarOpen && resolvedWidth >= LABEL_REVEAL_WIDTH;
+
+    return (
+      <NavLink
+        to={item.link}
+        draggable={false}
+        aria-label={item.label}
+        title={!sidebarOpen ? item.label : undefined}
+        className={`group relative flex h-12 items-center rounded-xl px-2 text-base transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${
+          isActive
+            ? "bg-blue-50 text-blue-700"
+            : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+        }`}
+      >
+        <span
+          className={`absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r transition-opacity duration-150 ${
+            isActive ? "bg-blue-600 opacity-100" : "opacity-0"
+          }`}
+          aria-hidden
+        />
+        <span className="flex h-9 w-9 items-center justify-center text-xl transition-transform duration-150 group-hover:translate-x-px">
+          {item.icon}
+        </span>
+        <span
+          className={`overflow-hidden whitespace-nowrap text-sm font-semibold transition-all duration-150 ${
+            showLabel
+              ? "ml-2 max-w-[160px] opacity-100"
+              : "ml-0 max-w-0 opacity-0"
+          }`}
+        >
+          {item.label}
+        </span>
+      </NavLink>
+    );
+  };
 
   return (
     <div className="fixed bottom-0 left-0 top-0 z-50 flex items-stretch">
-      <AnimatePresence mode="wait">
-        {bottomSheetOpen ? (
+      <AnimatePresence initial={false} mode="wait">
+        {sidebarOpen ? (
           <motion.nav
             key="sidebar-nav"
             aria-label="Primary navigation"
-            className="relative  px-3 font-black flex flex-col justify-between  border-zinc-200/80 bg-white shadow-lg backdrop-blur-sm"
-            style={{ width: sidebarWidth }}
-            initial={{ x: -100, opacity: 0 }}
+            className="relative flex flex-col justify-between border-r border-zinc-200/70 bg-white/85 px-3 py-3 shadow-lg backdrop-blur-sm"
+            style={{ width: resolvedWidth }}
+            initial={{ x: -24, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -100, opacity: 0 }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
+            exit={{ x: -24, opacity: 0 }}
+            transition={{ duration: 0.16, ease: "easeOut" }}
           >
-            <div className="flex flex-col items-stretch justify-center px-1 pt-2">
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-2"></div>
+
               <Reorder.Group
                 axis="y"
                 className="flex flex-col gap-1"
-                values={items}
-                onReorder={setItems}
+                values={primaryItems}
+                onReorder={setPrimaryItems}
               >
-                {items.map((item) => {
-                  const isActive =
-                    item.link === "/"
-                      ? location.pathname === "/"
-                      : location.pathname.startsWith(item.link);
-
-                  return (
-                    <Reorder.Item
-                      key={item.label}
-                      value={item}
-                      className="list-none"
-                    >
-                      <NavLink
-                        to={item.link}
-                        draggable={false}
-                        aria-label={item.label}
-                        className={`flex h-14 items-center rounded-xl px-2 text-2xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${
-                          isActive
-                            ? "bg-blue-50 text-blue-600"
-                            : "text-gray-600 hover:bg-zinc-100 hover:text-gray-900"
-                        }`}
-                      >
-                        <MagneticIcon icon={item.icon} />
-                        <span
-                          className={`overflow-hidden whitespace-nowrap text-sm font-medium transition-all duration-200 ${
-                            sidebarWidth >= LABEL_REVEAL_WIDTH
-                              ? "ml-2 max-w-[120px] opacity-100"
-                              : "ml-0 max-w-0 opacity-0"
-                          }`}
-                        >
-                          {item.label}
-                        </span>
-                      </NavLink>
-                    </Reorder.Item>
-                  );
-                })}
+                {primaryItems.map((item) => (
+                  <Reorder.Item
+                    key={item.label}
+                    value={item}
+                    className="list-none"
+                  >
+                    {renderNavItem(item)}
+                  </Reorder.Item>
+                ))}
               </Reorder.Group>
             </div>
-            <div className="flex flex-col items-stretch justify-center px-2 pb-2">
+
+            <div className="flex flex-col gap-1">
+              {utilityNavItems.map((item) => (
+                <div key={item.link}>{renderNavItem(item)}</div>
+              ))}
               <button
-                onClick={() => setBottomSheetOpen(false)}
                 type="button"
-                className="flex h-14 items-center rounded-xl px-2 text-2xl text-gray-600 transition-all duration-200 hover:bg-zinc-100 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                onClick={() => setSidebarOpen(false)}
+                title="Collapse sidebar (Cmd/Ctrl+\\)"
+                className="mt-1 flex h-12 items-center rounded-xl px-2 text-zinc-600 transition-all duration-150 hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
               >
-                <div className="flex h-10 w-10 items-center justify-center">
-                  <IoChevronBack className="h-6 w-6" />
+                <div className="flex h-9 w-9 items-center justify-center text-xl">
+                  <IoClose className="h-5 w-5" />
                 </div>
                 <span
-                  className={`overflow-hidden whitespace-nowrap text-sm font-medium transition-all duration-200 ${
-                    sidebarWidth >= LABEL_REVEAL_WIDTH
-                      ? "ml-2 max-w-[120px] opacity-100"
+                  className={`overflow-hidden whitespace-nowrap text-sm font-semibold transition-all duration-150 ${
+                    resolvedWidth >= LABEL_REVEAL_WIDTH
+                      ? "ml-2 max-w-[160px] opacity-100"
                       : "ml-0 max-w-0 opacity-0"
                   }`}
                 >
@@ -212,9 +286,10 @@ const SideBar = ({ onWidthChange }: SideBarProps) => {
           >
             <button
               type="button"
-              onClick={() => setBottomSheetOpen(true)}
-              className="rounded-xl p-2 text-gray-600 transition-colors hover:bg-zinc-100 hover:text-gray-900 dark:hover:bg-zinc-800"
-              aria-label="Open navigation"
+              onClick={() => setSidebarOpen(true)}
+              className="mt-4 ml-3 flex h-11 w-11 items-center justify-center rounded-2xl border border-zinc-200/80 bg-white/80 text-zinc-600 shadow-sm backdrop-blur transition-colors duration-150 hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+              aria-label="Open sidebar navigation"
+              title="Open sidebar (Cmd/Ctrl+\\)"
             >
               <IoMenu className="h-6 w-6" />
             </button>
