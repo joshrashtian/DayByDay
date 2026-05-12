@@ -1,16 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { NavLink, useLocation } from "react-router-dom";
 import {
-  IoAdd,
   IoHomeOutline,
   IoListOutline,
   IoSettingsOutline,
   IoCalendarOutline,
   IoHelpCircleOutline,
   IoGrid,
-  IoTodayOutline,
-  IoMenu,
-  IoClose,
 } from "react-icons/io5";
 import { AnimatePresence, Reorder, motion } from "motion/react";
 
@@ -32,13 +28,15 @@ const utilityNavItems: SidebarNavItem[] = [
   { label: "Help", icon: <IoHelpCircleOutline />, link: "/help" },
 ];
 
-const COLLAPSED_SIDEBAR_WIDTH = 72;
 const SNAP_WIDTHS = [220, 260] as const;
 const DEFAULT_SIDEBAR_WIDTH = SNAP_WIDTHS[0];
 const LABEL_REVEAL_WIDTH = 180;
 const MIN_EXPANDED_WIDTH = SNAP_WIDTHS[0] - 16;
 const MAX_EXPANDED_WIDTH = SNAP_WIDTHS[1] + 16;
 const SIDEBAR_STATE_KEY = "dbd-sidebar-state-v2";
+const SWIPE_CLOSE_THRESHOLD = 56;
+const EDGE_SWIPE_OPEN_THRESHOLD = 48;
+const EDGE_SWIPE_ZONE_WIDTH = 18;
 
 type SideBarProps = {
   onWidthChange?: (width: number) => void;
@@ -54,8 +52,7 @@ const getNearestSnapWidth = (value: number) =>
 
 const SideBar = ({ onWidthChange }: SideBarProps) => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarWidth, setSidebarWidth] = useState<number>(
     DEFAULT_SIDEBAR_WIDTH,
   );
@@ -64,6 +61,8 @@ const SideBar = ({ onWidthChange }: SideBarProps) => {
     ...primaryDefaultNavItems,
   ]);
   const [isResizing, setIsResizing] = useState(false);
+  const [swipeStartX, setSwipeStartX] = useState<number | null>(null);
+  const [edgeSwipeStartX, setEdgeSwipeStartX] = useState<number | null>(null);
 
   useEffect(() => {
     try {
@@ -105,7 +104,7 @@ const SideBar = ({ onWidthChange }: SideBarProps) => {
   }, []);
 
   useEffect(() => {
-    onWidthChange?.(sidebarOpen ? sidebarWidth : COLLAPSED_SIDEBAR_WIDTH);
+    onWidthChange?.(sidebarOpen ? sidebarWidth : 0);
   }, [onWidthChange, sidebarOpen, sidebarWidth]);
 
   useEffect(() => {
@@ -159,11 +158,6 @@ const SideBar = ({ onWidthChange }: SideBarProps) => {
   }, [isResizing, previewWidth]);
 
   const resolvedWidth = previewWidth ?? sidebarWidth;
-
-  const todayLink = useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10);
-    return `/calendar?date=${today}`;
-  }, []);
 
   const renderNavItem = (item: SidebarNavItem) => {
     const isActive =
@@ -219,6 +213,23 @@ const SideBar = ({ onWidthChange }: SideBarProps) => {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -24, opacity: 0 }}
             transition={{ duration: 0.16, ease: "easeOut" }}
+            onPointerDown={(event) => {
+              if (isResizing) {
+                return;
+              }
+              setSwipeStartX(event.clientX);
+            }}
+            onPointerUp={(event) => {
+              if (swipeStartX === null) {
+                return;
+              }
+              const deltaX = event.clientX - swipeStartX;
+              if (deltaX <= -SWIPE_CLOSE_THRESHOLD) {
+                setSidebarOpen(false);
+              }
+              setSwipeStartX(null);
+            }}
+            onPointerCancel={() => setSwipeStartX(null)}
           >
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2"></div>
@@ -245,25 +256,6 @@ const SideBar = ({ onWidthChange }: SideBarProps) => {
               {utilityNavItems.map((item) => (
                 <div key={item.link}>{renderNavItem(item)}</div>
               ))}
-              <button
-                type="button"
-                onClick={() => setSidebarOpen(false)}
-                title="Collapse sidebar (Cmd/Ctrl+\\)"
-                className="mt-1 flex h-12 items-center rounded-xl px-2 text-zinc-600 transition-all duration-150 hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-              >
-                <div className="flex h-9 w-9 items-center justify-center text-xl">
-                  <IoClose className="h-5 w-5" />
-                </div>
-                <span
-                  className={`overflow-hidden whitespace-nowrap text-sm font-semibold transition-all duration-150 ${
-                    resolvedWidth >= LABEL_REVEAL_WIDTH
-                      ? "ml-2 max-w-[160px] opacity-100"
-                      : "ml-0 max-w-0 opacity-0"
-                  }`}
-                >
-                  Collapse
-                </span>
-              </button>
             </div>
             <div
               aria-label="Resize sidebar"
@@ -277,22 +269,29 @@ const SideBar = ({ onWidthChange }: SideBarProps) => {
           </motion.nav>
         ) : (
           <motion.div
-            key="sidebar-menu"
-            className="flex items-start pt-6"
+            key="sidebar-edge-swipe-zone"
+            className="h-full"
             initial={{ opacity: 0, x: -12 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -12 }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
+            style={{ width: EDGE_SWIPE_ZONE_WIDTH }}
+            onPointerDown={(event) => {
+              setEdgeSwipeStartX(event.clientX);
+            }}
+            onPointerUp={(event) => {
+              if (edgeSwipeStartX === null) {
+                return;
+              }
+              const deltaX = event.clientX - edgeSwipeStartX;
+              if (deltaX >= EDGE_SWIPE_OPEN_THRESHOLD) {
+                setSidebarOpen(true);
+              }
+              setEdgeSwipeStartX(null);
+            }}
+            onPointerCancel={() => setEdgeSwipeStartX(null)}
           >
-            <button
-              type="button"
-              onClick={() => setSidebarOpen(true)}
-              className="mt-4 ml-3 flex h-11 w-11 items-center justify-center rounded-2xl border border-zinc-200/80 bg-white/80 text-zinc-600 shadow-sm backdrop-blur transition-colors duration-150 hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-              aria-label="Open sidebar navigation"
-              title="Open sidebar (Cmd/Ctrl+\\)"
-            >
-              <IoMenu className="h-6 w-6" />
-            </button>
+            <span className="sr-only">Swipe right from the left edge to open sidebar</span>
           </motion.div>
         )}
       </AnimatePresence>

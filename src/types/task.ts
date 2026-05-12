@@ -61,6 +61,8 @@ export type Task = {
   notes?: string;
   critical?: boolean;
   recurrence?: TaskRecurrence;
+  lastCompletedAt?: Date;
+  recurringSourceId?: string;
 };
 
 export type AddTaskPayload = {

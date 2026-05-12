@@ -1,4 +1,5 @@
 import { DateTime } from "luxon";
+import type { Task, TaskRecurrence } from "../types/task";
 
 const TIME_PARSE_FORMATS = ["h:mma", "h:mm a", "ha", "h a", "HH:mm", "H:mm"] as const;
 
@@ -127,4 +128,22 @@ export function isCompletedTaskFromPreviousDay(task: {
   const due = DateTime.fromJSDate(task.dueDate).startOf("day");
   const today = DateTime.now().startOf("day");
   return due < today;
+}
+
+export function advanceRecurrenceDate(
+  dueDate: Date,
+  recurrence: TaskRecurrence,
+): Date {
+  const dt = DateTime.fromJSDate(dueDate);
+  const { frequency, interval } = recurrence;
+  if (frequency === "daily") return dt.plus({ days: interval }).toJSDate();
+  if (frequency === "weekly") return dt.plus({ weeks: interval }).toJSDate();
+  return dt.plus({ months: interval }).toJSDate();
+}
+
+export function isRecurringTaskCompletedToday(task: Pick<Task, "lastCompletedAt">): boolean {
+  if (!task.lastCompletedAt) return false;
+  const completed = DateTime.fromJSDate(task.lastCompletedAt).startOf("day");
+  const today = DateTime.now().startOf("day");
+  return completed.equals(today);
 }

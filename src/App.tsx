@@ -18,7 +18,7 @@ export default function App() {
   const location = useLocation();
   useMenuNavigation();
   useCreateTaskAction();
-  const [sidebarOffset, setSidebarOffset] = useState(64);
+  const [sidebarOffset, setSidebarOffset] = useState(220);
 
   return (
     <>

@@ -40,6 +40,7 @@ export function TaskItem({
   const { openMenu } = useContextMenu();
   const tags = task.tags ?? [];
   const categoryVisual = resolveCategoryVisual(task.category);
+  const isDone = task.done;
 
   const removeTag = (label: string) => {
     if (!onSetTags) return;
@@ -71,7 +72,7 @@ export function TaskItem({
               : []),
             {
               id: "toggle",
-              label: task.done ? "Mark not done" : "Mark done",
+              label: isDone ? "Mark not done" : "Mark done",
               onSelect: onToggle,
             },
             ...(onDelete
@@ -126,13 +127,13 @@ export function TaskItem({
           <div className="flex min-w-0 items-center gap-3.5">
             <span
               className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors ${
-                task.done
+                isDone
                   ? "border-emerald-500/60 bg-emerald-500/25 text-emerald-800"
                   : "border-zinc-400/45 bg-white/50 group-hover:border-zinc-500/55 dark:border-zinc-500/40 dark:bg-white/10"
               }`}
               aria-hidden
             >
-              {task.done ? (
+              {isDone ? (
                 <svg
                   className="h-3 w-3"
                   viewBox="0 0 12 12"
@@ -151,7 +152,7 @@ export function TaskItem({
             </span>
             <span
               className={`min-w-0 flex-1 wrap-break-word text-lg font-medium tracking-tight text-zinc-900 transition-[color,opacity] dark:text-zinc-100 ${
-                task.done
+                isDone
                   ? "text-zinc-500 line-through opacity-70 dark:text-zinc-400"
                   : ""
               }`}

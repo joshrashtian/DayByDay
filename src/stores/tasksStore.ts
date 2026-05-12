@@ -8,6 +8,7 @@ import {
   type UpdateTaskPayload,
 } from "../types/task";
 import { normalizeTaskBlock } from "../lib/taskBlocks";
+import { advanceRecurrenceDate } from "../lib/taskDates";
 
 const STORAGE_KEY = "daybyday-tasks";
 
@@ -32,6 +33,7 @@ function reviveTask(raw: Record<string, unknown>): Task {
     updatedAt,
     dueDate,
     endDate,
+    lastCompletedAt,
     block: rawBlock,
     context: rawLegacyContext,
     category,
@@ -58,6 +60,7 @@ function reviveTask(raw: Record<string, unknown>): Task {
       | "category"
       | "recurrence"
       | "tags"
+      | "lastCompletedAt"
     >),
     createdAt: new Date(String(createdAt)),
     updatedAt: new Date(String(updatedAt)),
@@ -66,6 +69,9 @@ function reviveTask(raw: Record<string, unknown>): Task {
       : {}),
     ...(endDate != null && endDate !== ""
       ? { endDate: new Date(String(endDate)) }
+      : {}),
+    ...(lastCompletedAt != null && lastCompletedAt !== ""
+      ? { lastCompletedAt: new Date(String(lastCompletedAt)) }
       : {}),
     ...(typeof category === "string" && category.trim()
       ? { category: category.trim() }
@@ -76,6 +82,7 @@ function reviveTask(raw: Record<string, unknown>): Task {
   };
   return task;
 }
+
 
 function mergePersistedTasks(
   rawTasks: unknown[],
@@ -242,11 +249,45 @@ export const useTasksStore = create<TasksState>()(
         })),
 
       toggleTask: (id) =>
-        set((s) => ({
-          tasks: s.tasks.map((t) =>
-            t.id === id ? { ...t, done: !t.done, updatedAt: new Date() } : t,
-          ),
-        })),
+        set((s) => {
+          const task = s.tasks.find((t) => t.id === id);
+          if (!task) return s;
+          const now = new Date();
+          if (!task.done && task.recurrence && task.dueDate) {
+            const durationMs = task.endDate
+              ? task.endDate.getTime() - task.dueDate.getTime()
+              : undefined;
+            const nextDue = advanceRecurrenceDate(task.dueDate, task.recurrence);
+            // Flash done for 600ms, then reset to undone for the next occurrence.
+            setTimeout(() => {
+              set((s2) => ({
+                tasks: s2.tasks.map((t) =>
+                  t.id === id && t.done ? { ...t, done: false } : t,
+                ),
+              }));
+            }, 600);
+            return {
+              tasks: s.tasks.map((t) =>
+                t.id === id
+                  ? {
+                      ...t,
+                      done: true,
+                      dueDate: nextDue,
+                      ...(durationMs != null
+                        ? { endDate: new Date(nextDue.getTime() + durationMs) }
+                        : {}),
+                      updatedAt: now,
+                    }
+                  : t,
+              ),
+            };
+          }
+          return {
+            tasks: s.tasks.map((t) =>
+              t.id === id ? { ...t, done: !t.done, updatedAt: now } : t,
+            ),
+          };
+        }),
 
       removeTask: (id) =>
         set((s) => ({
