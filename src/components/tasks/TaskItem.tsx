@@ -30,6 +30,25 @@ function priorityChipClass(p: TaskPriority) {
   return "bg-slate-500/12 text-slate-800 ring-slate-500/20 dark:text-slate-200";
 }
 
+function recurrenceLabel(task: Task): string | undefined {
+  if (!task.recurrence) return undefined;
+  const cadence =
+    task.recurrence.frequency === "daily"
+      ? task.recurrence.interval === 1
+        ? "day"
+        : "days"
+      : task.recurrence.frequency === "weekly"
+        ? task.recurrence.interval === 1
+          ? "week"
+          : "weeks"
+        : task.recurrence.interval === 1
+          ? "month"
+          : "months";
+  const base = `Repeats every ${task.recurrence.interval} ${cadence}`;
+  if (!task.recurrence.untilDate) return base;
+  return `${base}, until ${formatTaskDue(task.recurrence.untilDate)}`;
+}
+
 export function TaskItem({
   task,
   onToggle,
@@ -214,7 +233,7 @@ export function TaskItem({
             {task.recurrence ? (
               <span
                 className="inline-flex items-center gap-0.5 rounded-md bg-white/50 px-2 py-0.5 ring-1 ring-zinc-200/80 dark:bg-zinc-950/40 dark:ring-zinc-600/50"
-                title={`Repeats every ${task.recurrence.interval} ${task.recurrence.frequency === "daily" ? (task.recurrence.interval === 1 ? "day" : "days") : task.recurrence.frequency === "weekly" ? (task.recurrence.interval === 1 ? "week" : "weeks") : task.recurrence.interval === 1 ? "month" : "months"}`}
+                title={recurrenceLabel(task)}
               >
                 <IoRepeatOutline
                   className="h-3.5 w-3.5 shrink-0 opacity-80"

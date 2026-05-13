@@ -57,6 +57,11 @@ export function collectOccurrencesInRange(
 
   const { frequency } = task.recurrence;
   const interval = Math.max(1, task.recurrence.interval ?? 1);
+  const recurrenceEndDay = task.recurrence.untilDate
+    ? DateTime.fromJSDate(task.recurrence.untilDate).startOf("day")
+    : null;
+  const visibleEndDay =
+    recurrenceEndDay && recurrenceEndDay < end ? recurrenceEndDay : end;
 
   let dayCursor = anchorDay;
   let safety = 0;
@@ -67,7 +72,7 @@ export function collectOccurrencesInRange(
 
   const out: { displayDueDate: Date; rowKey: string }[] = [];
   safety = 0;
-  while (dayCursor <= end && safety < 10000) {
+  while (dayCursor <= visibleEndDay && safety < 10000) {
     const display = combineDateAndTime(dayCursor, anchor);
     const iso = dayCursor.toISODate();
     if (iso) {

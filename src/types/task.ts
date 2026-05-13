@@ -1,10 +1,12 @@
 export type TaskPriority = "low" | "medium" | "high";
+export type TaskKind = "task" | "event" | "reminder" | "habit" | "class";
 
 export type RecurrenceFrequency = "daily" | "weekly" | "monthly";
 
 export type TaskRecurrence = {
   frequency: RecurrenceFrequency;
   interval: number;
+  untilDate?: Date;
 };
 
 export function parseTaskRecurrence(raw: unknown): TaskRecurrence | undefined {
@@ -17,7 +19,29 @@ export function parseTaskRecurrence(raw: unknown): TaskRecurrence | undefined {
     typeof n === "number" && Number.isFinite(n) && n >= 1
       ? Math.min(Math.floor(n), 365)
       : 1;
-  return { frequency: f, interval };
+  const rawUntilDate = o.untilDate;
+  const untilDate =
+    rawUntilDate != null && rawUntilDate !== ""
+      ? new Date(String(rawUntilDate))
+      : undefined;
+  return {
+    frequency: f,
+    interval,
+    ...(untilDate && Number.isFinite(untilDate.getTime()) ? { untilDate } : {}),
+  };
+}
+
+export function parseTaskKind(raw: unknown): TaskKind | undefined {
+  if (
+    raw === "task" ||
+    raw === "event" ||
+    raw === "reminder" ||
+    raw === "habit" ||
+    raw === "class"
+  )
+    return raw;
+  if (raw === "todo") return "task";
+  return undefined;
 }
 
 /** Trim, drop empties, dedupe case-insensitively (keeps first casing). */
@@ -47,6 +71,7 @@ export function parseTagsInput(s: string): string[] | undefined {
 
 export type Task = {
   id: string;
+  kind: TaskKind;
   title: string;
   done: boolean;
   createdAt: Date;
@@ -66,6 +91,7 @@ export type Task = {
 };
 
 export type AddTaskPayload = {
+  kind?: TaskKind;
   title: string;
   dueDate?: Date;
   endDate?: Date;
@@ -81,6 +107,7 @@ export type AddTaskPayload = {
 };
 
 export type UpdateTaskPayload = {
+  kind?: TaskKind;
   title: string;
   dueDate?: Date;
   endDate?: Date;

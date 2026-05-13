@@ -60,7 +60,7 @@ export function DayAgendaView({
       </div>
       <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          {dayTasks.length} due {dayTasks.length === 1 ? "task" : "tasks"}
+          {dayTasks.length} due {dayTasks.length === 1 ? "item" : "items"}
         </p>
         {onAddTaskForDay ? (
           <motion.button

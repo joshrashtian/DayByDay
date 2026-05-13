@@ -15,7 +15,12 @@ export function useMenuNavigation() {
                 case 'tasks':    navigate('/tasks');    break;
                 case 'calendar': navigate('/calendar'); break;
                 case 'blocks':   navigate('/blocks');   break;
-                case 'settings': navigate('/settings'); break;
+                case 'profile':
+                    window.dispatchEvent(new Event('dbd:open-profile'));
+                    break;
+                case 'settings':
+                    window.dispatchEvent(new Event('dbd:open-settings'));
+                    break;
                 case 'help':     navigate('/help');     break;
             }
         }).then(fn => { unlisten = fn; });

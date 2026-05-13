@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { AddTaskPayload } from "../../types/task";
+import type { AddTaskPayload, TaskKind } from "../../types/task";
 import { TaskCreatorPopupForm } from "./TaskCreatorPopupForm";
 
 type Args = {
@@ -7,6 +7,7 @@ type Args = {
   closePopup: () => void;
   initialDueLocal?: string;
   initialEndLocal?: string;
+  initialKind?: TaskKind;
 };
 
 export function taskCreatorPopupContent({
@@ -14,11 +15,13 @@ export function taskCreatorPopupContent({
   closePopup,
   initialDueLocal,
   initialEndLocal,
+  initialKind,
 }: Args): ReactNode {
   return (
     <div className="p-5 sm:p-6">
       <TaskCreatorPopupForm
         key={`${initialDueLocal ?? "__default__"}::${initialEndLocal ?? "__none__"}`}
+        initialKind={initialKind}
         initialDueLocal={initialDueLocal}
         initialEndLocal={initialEndLocal}
         onAdd={(payload) => {

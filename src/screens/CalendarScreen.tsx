@@ -57,7 +57,7 @@ export default function CalendarScreen() {
     })),
   );
 
-  const [mode, setMode] = useState<CalendarMode>("month");
+  const [mode, setMode] = useState<CalendarMode>("week");
   const [controlsDock, setControlsDock] = useState<ControlsDock>("bottom");
   const [isDraggingControls, setIsDraggingControls] = useState(false);
   const focus = useMemo(() => {
@@ -112,6 +112,7 @@ export default function CalendarScreen() {
           closePopup,
           initialDueLocal: localInputForDateTime(start),
           initialEndLocal: localInputForDateTime(end),
+          initialKind: "event",
         }),
       );
     },
@@ -121,6 +122,7 @@ export default function CalendarScreen() {
   const quickAddTaskForRange = useCallback(
     (title: string, start: DateTime, end: DateTime) => {
       addTask({
+        kind: "event",
         title,
         dueDate: start.toJSDate(),
         endDate: end.toJSDate(),

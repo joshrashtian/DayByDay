@@ -1,6 +1,7 @@
 import { useState, type MouseEvent as ReactMouseEvent } from "react";
 import { IoCheckmarkDone } from "react-icons/io5";
 import { renderCategoryIcon } from "../../../lib/categoryIcons";
+import { getTaskKindVisual } from "../../../lib/taskKinds";
 import { resolveCategoryVisual } from "../../../lib/taskCategories";
 import { formatTaskDue } from "../../../lib/taskDates";
 import { useContextMenu } from "../../../providers/ContextMenuProvider";
@@ -57,6 +58,7 @@ export function TaskDueList({
         <ul className="flex min-h-0 flex-col gap-1">
           {items.map(({ task, displayDueDate, rowKey }) => {
             const categoryVisual = resolveCategoryVisual(task.category);
+            const kindVisual = getTaskKindVisual(task.kind);
             return (
               <li key={rowKey}>
                 <button
@@ -100,6 +102,11 @@ export function TaskDueList({
                   style={task.done ? completedCheckeredStyle : undefined}
                 >
                   <div className="mb-1 flex items-center justify-between gap-2">
+                    <span
+                      className={`inline-flex max-w-full items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${kindVisual.subtleBadgeClass}`}
+                    >
+                      {kindVisual.label}
+                    </span>
                     {task.critical ? (
                       <span className="text-[10px] font-display italic text-red-500">
                         CRITICAL
@@ -151,6 +158,7 @@ export function TaskDueList({
         <ul className="flex flex-col gap-1">
           {items.map(({ task, displayDueDate, rowKey }) => {
             const categoryVisual = resolveCategoryVisual(task.category);
+            const kindVisual = getTaskKindVisual(task.kind);
             return (
               <li key={rowKey} className="flex flex-row items-center gap-2">
                 {task.done ? (
@@ -217,6 +225,11 @@ export function TaskDueList({
                     </time>
                   )}
                   <div className="mb-1 flex flex-wrap items-center gap-2">
+                    <span
+                      className={`rounded-full border px-2 py-0.5 text-xs font-semibold uppercase tracking-wide ${kindVisual.badgeClass}`}
+                    >
+                      {kindVisual.label}
+                    </span>
                     {task.block ? (
                       <span className="rounded-full bg-indigo-500/15 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-indigo-700 dark:text-indigo-300">
                         {task.block}
@@ -284,6 +297,7 @@ export function TaskDueList({
               {selectedTask.priority ? (
                 <p>Priority: {selectedTask.priority}</p>
               ) : null}
+              <p>Type: {getTaskKindVisual(selectedTask.kind).label}</p>
               {selectedTask.block ? <p>Block: {selectedTask.block}</p> : null}
               {selectedTask.category ? (
                 <p>Category: {selectedTask.category}</p>

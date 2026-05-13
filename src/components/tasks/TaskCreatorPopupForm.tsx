@@ -1,17 +1,14 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import {
-  IoCalendarOutline,
-  IoClose,
-  IoDocumentTextOutline,
-  IoWarning,
-} from "react-icons/io5";
+import { IoClose, IoWarning } from "react-icons/io5";
 import { parseDueLocalInput } from "../../lib/taskDates";
 import { collectAvailableBlocks } from "../../lib/taskBlocks";
 import { collectAvailableCategories } from "../../lib/taskCategories";
+import { TASK_KIND_OPTIONS } from "../../lib/taskKinds";
 import {
   type AddTaskPayload,
   parseTagsInput,
   type RecurrenceFrequency,
+  type TaskKind,
   type TaskPriority,
   type UpdateTaskPayload,
 } from "../../types/task";
@@ -40,6 +37,7 @@ type Props = {
 
   initialDueLocal?: string;
   initialEndLocal?: string;
+  initialKind?: TaskKind;
   initialTitle?: string;
   initialTagsInput?: string;
   initialBlock?: string;
@@ -50,9 +48,8 @@ type Props = {
   initialCritical?: boolean;
   initialRecurrenceChoice?: RecurrenceChoice;
   initialRecurrenceInterval?: number;
+  initialRecurrenceUntilLocal?: string;
 };
-
-type SectionId = "basics" | "events" | "notes";
 
 type RecurrenceChoice = "none" | RecurrenceFrequency;
 
@@ -62,6 +59,14 @@ const RECURRENCE_OPTIONS: { value: RecurrenceChoice; label: string }[] = [
   { value: "weekly", label: "Weekly" },
   { value: "monthly", label: "Monthly" },
 ];
+
+const TASK_KIND_COPY: Record<TaskKind, string> = {
+  task: "General to-do item",
+  event: "Time-based event",
+  class: "Weekly class schedule",
+  reminder: "One-time reminder",
+  habit: "Routine or recurring practice",
+};
 
 export function TaskCreatorPopupForm({
   onAdd,
@@ -73,6 +78,7 @@ export function TaskCreatorPopupForm({
   submitText = "Create Task",
   initialDueLocal,
   initialEndLocal,
+  initialKind = "task",
   initialTitle = "",
   initialTagsInput = "",
   initialBlock = "",
@@ -83,6 +89,7 @@ export function TaskCreatorPopupForm({
   initialCritical = false,
   initialRecurrenceChoice = "none",
   initialRecurrenceInterval = 1,
+  initialRecurrenceUntilLocal = "",
 }: Props) {
   const isEditMode = mode === "edit";
   const pinnedDueRef = useRef(initialDueLocal ?? "");
@@ -91,6 +98,7 @@ export function TaskCreatorPopupForm({
   pinnedEndRef.current = initialEndLocal ?? "";
 
   const [title, setTitle] = useState(initialTitle);
+  const [kind, setKind] = useState<TaskKind>(initialKind);
   const [tagsInput, setTagsInput] = useState(initialTagsInput);
   const [block, setBlock] = useState(initialBlock);
   const [category, setCategory] = useState(initialCategory);
@@ -100,44 +108,84 @@ export function TaskCreatorPopupForm({
   const [endLocal, setEndLocal] = useState(initialEndLocal ?? "");
   const [priority, setPriority] = useState<TaskPriority | "">(initialPriority);
   const [critical, setCritical] = useState(initialCritical);
-  const [recurrenceChoice, setRecurrenceChoice] =
-    useState<RecurrenceChoice>(initialRecurrenceChoice);
+  const [recurrenceChoice, setRecurrenceChoice] = useState<RecurrenceChoice>(
+    initialRecurrenceChoice,
+  );
   const [recurrenceInterval, setRecurrenceInterval] = useState(
     Math.max(1, Math.min(365, initialRecurrenceInterval || 1)),
   );
-  const [section, setSection] = useState<SectionId>("basics");
+  const [recurrenceUntilLocal, setRecurrenceUntilLocal] = useState(
+    initialRecurrenceUntilLocal,
+  );
+  const [showAdvanced, setShowAdvanced] = useState(
+    Boolean(
+      initialBlock ||
+        initialCategory ||
+        initialTagsInput ||
+        initialDescription ||
+        initialNotes,
+    ),
+  );
   const titleRef = useRef<HTMLInputElement>(null);
   const tasks = useTasksStore((s) => s.tasks);
   const blockSuggestions = collectAvailableBlocks(tasks);
   const categorySuggestions = collectAvailableCategories(tasks);
+  const isClassKind = kind === "class";
+  const parsedDueLocal = parseDueLocalInput(dueLocal);
+  const parsedEndLocal = parseDueLocalInput(endLocal);
+  const parsedRecurrenceUntilLocal = parseDueLocalInput(recurrenceUntilLocal);
 
   useEffect(() => {
     const t = requestAnimationFrame(() => titleRef.current?.focus());
     return () => cancelAnimationFrame(t);
   }, []);
 
-  useEffect(() => {
-    if (initialDueLocal?.trim()) setSection("events");
-  }, [initialDueLocal]);
+  const classValidationMessage = (() => {
+    if (!isClassKind) return "";
+    if (!parsedDueLocal || !parsedEndLocal) {
+      return "Classes require both start and end date/time.";
+    }
+    if (parsedEndLocal <= parsedDueLocal) {
+      return "Class end time must be after the start time.";
+    }
+    if (!parsedRecurrenceUntilLocal) {
+      return "Set a semester end date so the class recurrence can stop.";
+    }
+    if (parsedRecurrenceUntilLocal < parsedDueLocal) {
+      return "Semester end must be after the first class occurrence.";
+    }
+    return "";
+  })();
+  const canSubmit = Boolean(title.trim()) && !classValidationMessage;
 
   const buildPayload = (): UpdateTaskPayload | null => {
     const trimmed = title.trim();
     if (!trimmed) return null;
-    const dueDate = parseDueLocalInput(dueLocal);
-    const endDate = parseDueLocalInput(endLocal);
+    const dueDate = parsedDueLocal;
+    const endDate = parsedEndLocal;
+    const recurrenceUntilDate = parsedRecurrenceUntilLocal;
+    if (isClassKind && classValidationMessage) return null;
     const normalizedBlock = block.trim();
     const cat = category.trim();
     const tags = parseTagsInput(tagsInput);
     const desc = description.trim();
     const n = notes.trim();
-    const recurrence =
-      dueDate && recurrenceChoice !== "none"
-        ? {
-            frequency: recurrenceChoice,
-            interval: Math.max(1, Math.min(365, recurrenceInterval || 1)),
-          }
-        : undefined;
+    let recurrence: UpdateTaskPayload["recurrence"];
+    if (isClassKind && dueDate) {
+      recurrence = {
+        frequency: "weekly",
+        interval: 1,
+        ...(recurrenceUntilDate ? { untilDate: recurrenceUntilDate } : {}),
+      };
+    } else if (dueDate && recurrenceChoice !== "none") {
+      recurrence = {
+        frequency: recurrenceChoice,
+        interval: Math.max(1, Math.min(365, recurrenceInterval || 1)),
+        ...(recurrenceUntilDate ? { untilDate: recurrenceUntilDate } : {}),
+      };
+    }
     return {
+      kind,
       title: trimmed,
       ...(dueDate ? { dueDate } : {}),
       ...(dueDate && endDate && endDate >= dueDate ? { endDate } : {}),
@@ -154,6 +202,7 @@ export function TaskCreatorPopupForm({
 
   const resetForm = () => {
     setTitle(initialTitle);
+    setKind(initialKind);
     setTagsInput(initialTagsInput);
     setBlock(initialBlock);
     setCategory(initialCategory);
@@ -164,7 +213,10 @@ export function TaskCreatorPopupForm({
     setPriority(initialPriority);
     setCritical(initialCritical);
     setRecurrenceChoice(initialRecurrenceChoice);
-    setRecurrenceInterval(Math.max(1, Math.min(365, initialRecurrenceInterval || 1)));
+    setRecurrenceInterval(
+      Math.max(1, Math.min(365, initialRecurrenceInterval || 1)),
+    );
+    setRecurrenceUntilLocal(initialRecurrenceUntilLocal);
   };
 
   const submit = (e: FormEvent) => {
@@ -185,6 +237,19 @@ export function TaskCreatorPopupForm({
     resetForm();
     requestAnimationFrame(() => titleRef.current?.focus());
   };
+
+  const dueLabel =
+    kind === "class"
+      ? "Start"
+      : kind === "event"
+        ? "Starts"
+        : kind === "habit"
+          ? "Starts"
+          : kind === "reminder"
+            ? "Remind At"
+            : "Due";
+  const showEndField = kind === "event" || kind === "class";
+  const showRepeats = kind !== "class" && kind !== "reminder";
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-5">
@@ -219,92 +284,263 @@ export function TaskCreatorPopupForm({
           </button>
         ) : null}
       </div>
+      <div className="no-scrollbar max-h-[430px] space-y-4 overflow-y-auto pr-1">
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="popup-task-title" className={fieldLabel}>
+            Title
+          </label>
+          <input
+            ref={titleRef}
+            id="popup-task-title"
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="What needs doing?"
+            autoComplete="off"
+            className={inputClass}
+            required
+          />
+        </div>
 
-      <div className="no-scrollbar grid h-[300px] gap-4 overflow-y-auto md:grid-cols-[10rem_minmax(0,1fr)]">
-        <nav
-          aria-label="Task form sections"
-          className="no-scrollbar flex flex-row gap-2 overflow-x-auto pb-1 md:sticky md:top-0 md:flex-col md:overflow-visible md:pb-0"
-        >
-          <SectionTab
-            label="Basics"
-            icon={<IoDocumentTextOutline />}
-            active={section === "basics"}
-            onClick={() => setSection("basics")}
-          />
-          <SectionTab
-            label="Events"
-            icon={<IoCalendarOutline />}
-            active={section === "events"}
-            onClick={() => setSection("events")}
-          />
-          <SectionTab
-            label="Notes"
-            icon={<IoDocumentTextOutline />}
-            active={section === "notes"}
-            onClick={() => setSection("notes")}
-          />
-        </nav>
+        <div className="flex flex-col gap-2">
+          <span className={fieldLabel}>Type</span>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {TASK_KIND_OPTIONS.map((opt) => {
+              const active = kind === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setKind(opt.value)}
+                  className={`rounded-xl border px-3 py-2 text-left transition-colors ${
+                    active
+                      ? "border-zinc-900 bg-zinc-900 text-white dark:border-white dark:bg-white dark:text-zinc-900"
+                      : "border-zinc-300/80 bg-white/70 text-zinc-700 hover:border-zinc-400 dark:border-zinc-600 dark:bg-zinc-950/40 dark:text-zinc-300 dark:hover:border-zinc-500"
+                  }`}
+                >
+                  <p className="text-sm font-semibold">{opt.label}</p>
+                  <p
+                    className={`text-[11px] ${
+                      active
+                        ? "text-zinc-200 dark:text-zinc-700"
+                        : "text-zinc-500 dark:text-zinc-400"
+                    }`}
+                  >
+                    {TASK_KIND_COPY[opt.value]}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-        <div className="space-y-4">
-          {section === "basics" ? (
-            <>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="popup-task-due" className={fieldLabel}>
+              {dueLabel}
+            </label>
+            <input
+              id="popup-task-due"
+              type="datetime-local"
+              value={dueLocal}
+              onChange={(e) => setDueLocal(e.target.value)}
+              className={inputClass}
+            />
+          </div>
+
+          {showEndField ? (
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="popup-task-end" className={fieldLabel}>
+                End
+              </label>
+              <input
+                id="popup-task-end"
+                type="datetime-local"
+                value={endLocal}
+                onChange={(e) => setEndLocal(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+          ) : null}
+        </div>
+
+        {isClassKind || showRepeats ? (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {showRepeats ? (
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="popup-task-title" className={fieldLabel}>
-                  Title
+                <label htmlFor="popup-task-repeat" className={fieldLabel}>
+                  Repeats
                 </label>
-                <input
-                  ref={titleRef}
-                  id="popup-task-title"
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="What needs doing?"
-                  autoComplete="off"
+                <select
+                  id="popup-task-repeat"
+                  value={recurrenceChoice}
+                  onChange={(e) =>
+                    setRecurrenceChoice(e.target.value as RecurrenceChoice)
+                  }
                   className={inputClass}
-                  required
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="popup-task-block" className={fieldLabel}>
-                  Block
-                </label>
-                <input
-                  id="popup-task-block"
-                  list="popup-task-block-suggestions"
-                  type="text"
-                  value={block}
-                  onChange={(e) => setBlock(e.target.value)}
-                  placeholder="Morning, Work, Home..."
-                  autoComplete="off"
-                  className={inputClass}
-                />
-                <datalist id="popup-task-block-suggestions">
-                  {blockSuggestions.map((option) => (
-                    <option key={option} value={option} />
+                >
+                  {RECURRENCE_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
                   ))}
-                </datalist>
+                </select>
               </div>
+            ) : null}
 
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="popup-task-category" className={fieldLabel}>
-                  Category
-                </label>
-                <input
-                  id="popup-task-category"
-                  list="popup-task-category-suggestions"
-                  type="text"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  placeholder="Searchable label (optional)"
-                  autoComplete="off"
-                  className={inputClass}
-                />
-                <datalist id="popup-task-category-suggestions">
-                  {categorySuggestions.map((option) => (
-                    <option key={option} value={option} />
-                  ))}
-                </datalist>
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="popup-task-repeat-until" className={fieldLabel}>
+                {isClassKind ? "Semester Ends" : "Repeat Until"}
+              </label>
+              <input
+                id="popup-task-repeat-until"
+                type="datetime-local"
+                value={recurrenceUntilLocal}
+                onChange={(e) => setRecurrenceUntilLocal(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+          </div>
+        ) : null}
+
+        {showRepeats && recurrenceChoice !== "none" ? (
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="popup-task-repeat-interval" className={fieldLabel}>
+              Every
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                id="popup-task-repeat-interval"
+                type="number"
+                min={1}
+                max={365}
+                value={recurrenceInterval}
+                onChange={(e) =>
+                  setRecurrenceInterval(
+                    Math.max(1, Math.min(365, Number(e.target.value) || 1)),
+                  )
+                }
+                className={`${inputClass} max-w-24`}
+              />
+              <span className="text-sm text-zinc-600 dark:text-zinc-400">
+                {recurrenceChoice === "daily"
+                  ? recurrenceInterval === 1
+                    ? "day"
+                    : "days"
+                  : recurrenceChoice === "weekly"
+                    ? recurrenceInterval === 1
+                      ? "week"
+                      : "weeks"
+                    : recurrenceInterval === 1
+                      ? "month"
+                      : "months"}
+              </span>
+            </div>
+          </div>
+        ) : null}
+
+        <div className="flex flex-col gap-2">
+          <span className={fieldLabel}>Priority</span>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setPriority("")}
+              className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                priority === ""
+                  ? "border-zinc-800 bg-zinc-800 text-white dark:border-white dark:bg-white dark:text-zinc-900"
+                  : "border-zinc-300/80 bg-white/60 text-zinc-700 hover:border-zinc-400 dark:border-zinc-600 dark:bg-zinc-950/40 dark:text-zinc-300 dark:hover:border-zinc-500"
+              }`}
+            >
+              None
+            </button>
+            {PRIORITIES.map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setPriority(value)}
+                className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                  priority === value
+                    ? value === "high"
+                      ? "border-rose-500/60 bg-rose-500/20 text-rose-900 dark:text-rose-100"
+                      : value === "medium"
+                        ? "border-amber-500/60 bg-amber-500/20 text-amber-900 dark:text-amber-100"
+                        : "border-slate-500/50 bg-slate-500/15 text-slate-800 dark:text-slate-200"
+                    : "border-zinc-300/80 bg-white/60 text-zinc-700 hover:border-zinc-400 dark:border-zinc-600 dark:bg-zinc-950/40 dark:text-zinc-300 dark:hover:border-zinc-500"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setCritical(!critical)}
+              className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                critical
+                  ? "border-red-500/50 bg-red-500/10 text-red-800 dark:text-red-200"
+                  : "border-zinc-300/80 bg-white/60 text-zinc-700 dark:border-zinc-600 dark:bg-zinc-950/40 dark:text-zinc-300"
+              }`}
+            >
+              <IoWarning
+                className={`h-4 w-4 ${critical ? "text-red-500" : "text-zinc-500"}`}
+                aria-hidden
+              />
+              Critical
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={() => setShowAdvanced((v) => !v)}
+            className="self-start rounded-lg border border-zinc-300/80 bg-white/60 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-zinc-600 hover:bg-white dark:border-zinc-600 dark:bg-zinc-900/50 dark:text-zinc-300 dark:hover:bg-zinc-900"
+          >
+            {showAdvanced ? "Hide details" : "More details"}
+          </button>
+
+          {showAdvanced ? (
+            <div className="space-y-3 rounded-xl border border-zinc-200/80 bg-zinc-50/60 p-3 dark:border-zinc-700 dark:bg-zinc-900/35">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="popup-task-block" className={fieldLabel}>
+                    Block
+                  </label>
+                  <input
+                    id="popup-task-block"
+                    list="popup-task-block-suggestions"
+                    type="text"
+                    value={block}
+                    onChange={(e) => setBlock(e.target.value)}
+                    placeholder="Morning, Work, Home..."
+                    autoComplete="off"
+                    className={inputClass}
+                  />
+                  <datalist id="popup-task-block-suggestions">
+                    {blockSuggestions.map((option) => (
+                      <option key={option} value={option} />
+                    ))}
+                  </datalist>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="popup-task-category" className={fieldLabel}>
+                    Category
+                  </label>
+                  <input
+                    id="popup-task-category"
+                    list="popup-task-category-suggestions"
+                    type="text"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    placeholder="School, Work, Health..."
+                    autoComplete="off"
+                    className={inputClass}
+                  />
+                  <datalist id="popup-task-category-suggestions">
+                    {categorySuggestions.map((option) => (
+                      <option key={option} value={option} />
+                    ))}
+                  </datalist>
+                </div>
               </div>
 
               <div className="flex flex-col gap-1.5">
@@ -335,184 +571,34 @@ export function TaskCreatorPopupForm({
                   className={`${inputClass} min-h-20 resize-y`}
                 />
               </div>
-            </>
-          ) : null}
 
-          {section === "events" ? (
-            <>
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="popup-task-due" className={fieldLabel}>
-                  Due
+                <label htmlFor="popup-task-notes" className={fieldLabel}>
+                  Notes
                 </label>
-                <input
-                  id="popup-task-due"
-                  type="datetime-local"
-                  value={dueLocal}
-                  onChange={(e) => setDueLocal(e.target.value)}
-                  className={inputClass}
+                <textarea
+                  id="popup-task-notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Extra detail, links, reminders…"
+                  rows={4}
+                  className={`${inputClass} min-h-24 resize-y`}
                 />
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                  Repeating tasks use this as the first occurrence; later dates
-                  keep the same time of day.
-                </p>
               </div>
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="popup-task-end" className={fieldLabel}>
-                  End
-                </label>
-                <input
-                  id="popup-task-end"
-                  type="datetime-local"
-                  value={endLocal}
-                  onChange={(e) => setEndLocal(e.target.value)}
-                  className={inputClass}
-                />
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                  Optional. Used for time ranges when creating tasks from week
-                  slots.
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="popup-task-repeat" className={fieldLabel}>
-                  Repeats
-                </label>
-                <select
-                  id="popup-task-repeat"
-                  value={recurrenceChoice}
-                  onChange={(e) =>
-                    setRecurrenceChoice(e.target.value as RecurrenceChoice)
-                  }
-                  className={inputClass}
-                >
-                  {RECURRENCE_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-                {recurrenceChoice !== "none" ? (
-                  <div className="flex flex-col gap-1 pt-1">
-                    <label
-                      htmlFor="popup-task-repeat-interval"
-                      className={fieldLabel}
-                    >
-                      Every
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        id="popup-task-repeat-interval"
-                        type="number"
-                        min={1}
-                        max={365}
-                        value={recurrenceInterval}
-                        onChange={(e) =>
-                          setRecurrenceInterval(
-                            Math.max(
-                              1,
-                              Math.min(365, Number(e.target.value) || 1),
-                            ),
-                          )
-                        }
-                        className={`${inputClass} max-w-24`}
-                      />
-                      <span className="text-sm text-zinc-600 dark:text-zinc-400">
-                        {recurrenceChoice === "daily"
-                          ? recurrenceInterval === 1
-                            ? "day"
-                            : "days"
-                          : recurrenceChoice === "weekly"
-                            ? recurrenceInterval === 1
-                              ? "week"
-                              : "weeks"
-                            : recurrenceInterval === 1
-                              ? "month"
-                              : "months"}
-                      </span>
-                    </div>
-                    {!dueLocal.trim() ? (
-                      <p className="text-[11px] font-medium text-amber-700 dark:text-amber-300">
-                        Set a due date so repeats have a starting point.
-                      </p>
-                    ) : null}
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <span className={fieldLabel}>Priority</span>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setPriority("")}
-                    className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-                      priority === ""
-                        ? "border-zinc-800 bg-zinc-800 text-white dark:border-white dark:bg-white dark:text-zinc-900"
-                        : "border-zinc-300/80 bg-white/60 text-zinc-700 hover:border-zinc-400 dark:border-zinc-600 dark:bg-zinc-950/40 dark:text-zinc-300 dark:hover:border-zinc-500"
-                    }`}
-                  >
-                    None
-                  </button>
-                  {PRIORITIES.map(({ value, label }) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => setPriority(value)}
-                      className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-                        priority === value
-                          ? value === "high"
-                            ? "border-rose-500/60 bg-rose-500/20 text-rose-900 dark:text-rose-100"
-                            : value === "medium"
-                              ? "border-amber-500/60 bg-amber-500/20 text-amber-900 dark:text-amber-100"
-                              : "border-slate-500/50 bg-slate-500/15 text-slate-800 dark:text-slate-200"
-                          : "border-zinc-300/80 bg-white/60 text-zinc-700 hover:border-zinc-400 dark:border-zinc-600 dark:bg-zinc-950/40 dark:text-zinc-300 dark:hover:border-zinc-500"
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => setCritical(!critical)}
-                    className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-                      critical
-                        ? "border-red-500/50 bg-red-500/10 text-red-800 dark:text-red-200"
-                        : "border-zinc-300/80 bg-white/60 text-zinc-700 dark:border-zinc-600 dark:bg-zinc-950/40 dark:text-zinc-300"
-                    }`}
-                  >
-                    <IoWarning
-                      className={`h-4 w-4 ${critical ? "text-red-500" : "text-zinc-500"}`}
-                      aria-hidden
-                    />
-                    Critical
-                  </button>
-                </div>
-              </div>
-            </>
-          ) : null}
-
-          {section === "notes" ? (
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="popup-task-notes" className={fieldLabel}>
-                Notes
-              </label>
-              <textarea
-                id="popup-task-notes"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Extra detail, links, reminders…"
-                rows={6}
-                className={`${inputClass} min-h-32 resize-y`}
-              />
             </div>
           ) : null}
         </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3 border-t border-zinc-200/80 pt-4 dark:border-white/10">
+        {classValidationMessage ? (
+          <p className="w-full text-xs font-medium text-amber-700 dark:text-amber-300">
+            {classValidationMessage}
+          </p>
+        ) : null}
         <button
           type="submit"
-          disabled={!title.trim()}
+          disabled={!canSubmit}
           className="min-w-32 flex-1 font-quantify rounded-xl bg-zinc-900 px-4 py-3 text-sm font-semibold text-white transition-opacity enabled:hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-35 dark:bg-white dark:text-zinc-900 dark:enabled:hover:bg-zinc-100"
         >
           {submitText}
@@ -520,7 +606,7 @@ export function TaskCreatorPopupForm({
         {!isEditMode ? (
           <button
             type="button"
-            disabled={!title.trim()}
+            disabled={!canSubmit}
             onClick={handleAddAnother}
             className="min-w-32 rounded-xl border border-zinc-300/80 bg-white px-4 py-3 text-sm font-semibold text-zinc-900 transition-colors enabled:hover:bg-zinc-50 font-display disabled:cursor-not-allowed disabled:opacity-35 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:enabled:hover:bg-zinc-700"
           >
@@ -538,42 +624,5 @@ export function TaskCreatorPopupForm({
         ) : null}
       </div>
     </form>
-  );
-}
-
-function SectionTab({
-  label,
-  icon,
-  active,
-  onClick,
-}: {
-  label: string;
-  icon: React.ReactNode;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`min-w-24 rounded-xl border px-3 py-2 text-left transition-colors md:min-w-0 ${
-        active
-          ? "border-zinc-800 bg-zinc-800 text-white dark:border-white dark:bg-white dark:text-zinc-900"
-          : "border-zinc-300/80 bg-white/70 text-zinc-700 hover:border-zinc-400 dark:border-zinc-600 dark:bg-zinc-950/40 dark:text-zinc-300 dark:hover:border-zinc-500"
-      }`}
-    >
-      <span
-        className={`block text-[11px] ${
-          active
-            ? "text-zinc-200 dark:text-zinc-700"
-            : "text-zinc-500 dark:text-zinc-400"
-        }`}
-      >
-        <span className="flex items-center gap-2">
-          {icon}
-          <span className="block text-sm font-semibold">{label}</span>
-        </span>
-      </span>
-    </button>
   );
 }

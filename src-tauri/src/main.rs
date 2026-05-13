@@ -7,8 +7,13 @@ use tauri::{
 fn main() {
     tauri::Builder::default()
         .setup(|app| {
+            let settings_item = MenuItemBuilder::with_id("settings", "Settings...")
+                .accelerator("CmdOrCtrl+,")
+                .build(app)?;
             let app_menu = SubmenuBuilder::new(app, app.package_info().name.clone())
                 .about(None)
+                .separator()
+                .item(&settings_item)
                 .separator()
                 .quit()
                 .build()?;
@@ -59,6 +64,9 @@ fn main() {
                     }
                     "blocks" => {
                         let _ = app_handle.emit("navigate", "blocks");
+                    }
+                    "settings" => {
+                        let _ = app_handle.emit("navigate", "settings");
                     }
                     "create_task" => {
                         let _ = app_handle.emit("create-task", ());

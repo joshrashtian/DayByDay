@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
   normalizeTaskTags,
+  parseTaskKind,
   parseTaskRecurrence,
   type AddTaskPayload,
   type Task,
@@ -44,6 +45,10 @@ function reviveTask(raw: Record<string, unknown>): Task {
   const recurrence = parseTaskRecurrence(
     (raw as Record<string, unknown>).recurrence,
   );
+  const kind =
+    parseTaskKind((raw as Record<string, unknown>).kind) ??
+    parseTaskKind((raw as Record<string, unknown>).type) ??
+    "task";
 
   const tags = normalizeTaskTags(rawTags);
   const block = normalizeTaskBlock(
@@ -61,7 +66,9 @@ function reviveTask(raw: Record<string, unknown>): Task {
       | "recurrence"
       | "tags"
       | "lastCompletedAt"
+      | "kind"
     >),
+    kind,
     createdAt: new Date(String(createdAt)),
     updatedAt: new Date(String(updatedAt)),
     ...(dueDate != null && dueDate !== ""
@@ -162,6 +169,9 @@ export const useTasksStore = create<TasksState>()(
             ? {
                 frequency: payload.recurrence.frequency,
                 interval: Math.max(1, payload.recurrence.interval ?? 1),
+                ...(payload.recurrence.untilDate
+                  ? { untilDate: payload.recurrence.untilDate }
+                  : {}),
               }
             : undefined;
         const tags = normalizeTaskTags(payload.tags ?? null);
@@ -170,6 +180,7 @@ export const useTasksStore = create<TasksState>()(
             ...s.tasks,
             {
               id: crypto.randomUUID(),
+              kind: payload.kind ?? "task",
               title: trimmed,
               done: false,
               createdAt: now,
@@ -208,6 +219,9 @@ export const useTasksStore = create<TasksState>()(
               ? {
                   frequency: payload.recurrence.frequency,
                   interval: Math.max(1, payload.recurrence.interval ?? 1),
+                  ...(payload.recurrence.untilDate
+                    ? { untilDate: payload.recurrence.untilDate }
+                    : {}),
                 }
               : undefined;
 
@@ -216,6 +230,7 @@ export const useTasksStore = create<TasksState>()(
               t.id === taskId
                 ? {
                     ...t,
+                    kind: payload.kind ?? t.kind ?? "task",
                     title,
                     dueDate,
                     endDate,
@@ -258,6 +273,16 @@ export const useTasksStore = create<TasksState>()(
               ? task.endDate.getTime() - task.dueDate.getTime()
               : undefined;
             const nextDue = advanceRecurrenceDate(task.dueDate, task.recurrence);
+            const recursAgain =
+              !task.recurrence.untilDate ||
+              nextDue.getTime() <= task.recurrence.untilDate.getTime();
+            if (!recursAgain) {
+              return {
+                tasks: s.tasks.map((t) =>
+                  t.id === id ? { ...t, done: true, updatedAt: now } : t,
+                ),
+              };
+            }
             // Flash done for 600ms, then reset to undone for the next occurrence.
             setTimeout(() => {
               set((s2) => ({

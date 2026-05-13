@@ -24,6 +24,7 @@ export function taskEditorPopupContent({
 }: Args): ReactNode {
   const dueLocal = dateToLocalInput(task.dueDate);
   const endLocal = dateToLocalInput(task.endDate);
+  const recurrenceUntilLocal = dateToLocalInput(task.recurrence?.untilDate);
 
   return (
     <div className="p-5 sm:p-6">
@@ -31,6 +32,7 @@ export function taskEditorPopupContent({
         mode="edit"
         headingText="EDIT TASK"
         submitText="Save Changes"
+        initialKind={task.kind}
         initialTitle={task.title}
         initialBlock={task.block ?? ""}
         initialCategory={task.category ?? ""}
@@ -43,6 +45,7 @@ export function taskEditorPopupContent({
         initialCritical={Boolean(task.critical)}
         initialRecurrenceChoice={task.recurrence?.frequency ?? "none"}
         initialRecurrenceInterval={task.recurrence?.interval ?? 1}
+        initialRecurrenceUntilLocal={recurrenceUntilLocal}
         onSave={(payload) => {
           updateTask(task.id, payload);
           closePopup();

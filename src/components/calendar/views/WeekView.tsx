@@ -10,6 +10,7 @@ import { IoAdd, IoClose, IoDocument } from "react-icons/io5";
 import type { Task } from "../../../types/task";
 import { tasksByDueDateKeyInRange, type CalendarTaskRow } from "../../../lib/calendarUtils";
 import { getCategoryIconOption, renderCategoryIcon } from "../../../lib/categoryIcons";
+import { getTaskKindVisual } from "../../../lib/taskKinds";
 import { resolveCategoryVisual } from "../../../lib/taskCategories";
 import { formatTaskDue } from "../../../lib/taskDates";
 import { useContextMenu } from "../../../providers/ContextMenuProvider";
@@ -410,6 +411,7 @@ function FragmentQuarterRow({
                   const categoryVisual = resolveCategoryVisual(
                     row.task.category,
                   );
+                  const kindVisual = getTaskKindVisual(row.task.kind);
                   return (
                     <motion.button
                       layout="position"
@@ -450,7 +452,7 @@ function FragmentQuarterRow({
                           ? "bg-emerald-500/20 text-emerald-900 line-through dark:bg-emerald-500/25 dark:text-emerald-100"
                           : row.task.critical
                           ? "bg-red-500/20 text-red-700 dark:bg-red-500/30 dark:text-red-200"
-                          : "bg-white/90 text-zinc-800 dark:bg-white/15 dark:text-zinc-100"
+                          : "text-zinc-800 dark:text-zinc-100"
                       } ${isStartSlot ? "rounded-t-md" : ""} ${isEndSlot ? "rounded-b-md shadow-xl" : ""}`}
                       style={
                         row.task.done
@@ -463,6 +465,26 @@ function FragmentQuarterRow({
                                 color: categoryVisual.text,
                                 borderLeftColor: categoryVisual.accent,
                               }
+                            : row.task.kind === "event"
+                              ? {
+                                  backgroundColor: "rgba(14, 165, 233, 0.18)",
+                                  borderLeftColor: "rgba(14, 165, 233, 0.65)",
+                                }
+                              : row.task.kind === "reminder"
+                                ? {
+                                    backgroundColor: "rgba(245, 158, 11, 0.18)",
+                                    borderLeftColor: "rgba(245, 158, 11, 0.65)",
+                                  }
+                                : row.task.kind === "habit"
+                                  ? {
+                                      backgroundColor: "rgba(139, 92, 246, 0.18)",
+                                      borderLeftColor: "rgba(139, 92, 246, 0.65)",
+                                    }
+                                  : row.task.kind === "class"
+                                    ? {
+                                        backgroundColor: "rgba(99, 102, 241, 0.2)",
+                                        borderLeftColor: "rgba(99, 102, 241, 0.65)",
+                                      }
                             : undefined
                       }
                       title={`${DateTime.fromJSDate(row.displayDueDate).toFormat("h:mm a")} ${row.task.title}`}
@@ -488,7 +510,7 @@ function FragmentQuarterRow({
                           <span className="truncate">
                             {`${categoryIconTitlePrefix(
                               categoryVisual?.icon,
-                            )}${DateTime.fromJSDate(row.displayDueDate).toFormat("h:mm a")} ${row.task.title}`}
+                            )}${DateTime.fromJSDate(row.displayDueDate).toFormat("h:mm a")} [${kindVisual.label}] ${row.task.title}`}
                           </span>
                         </span>
                       ) : null}
@@ -771,7 +793,7 @@ export function WeekView({
                   {day.toFormat("d")}
                 </p>
                 <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
-                  {count} {count === 1 ? "task" : "tasks"}
+                  {count} {count === 1 ? "item" : "items"}
                 </p>
               </button>
             );
@@ -810,7 +832,7 @@ export function WeekView({
                           ? "bg-emerald-500/25 text-emerald-900 dark:bg-emerald-500/30 dark:text-emerald-100"
                           : row.task.critical
                           ? "bg-red-500/20 text-red-700 dark:bg-red-500/30 dark:text-red-200"
-                          : "bg-zinc-500/15 text-zinc-700 dark:bg-zinc-500/25 dark:text-zinc-200"
+                          : getTaskKindVisual(row.task.kind).subtleBadgeClass
                       }`}
                       style={row.task.done ? completedCheckeredStyle : undefined}
                     >
@@ -1035,6 +1057,7 @@ export function WeekView({
               {selectedTask.priority ? (
                 <p>Priority: {selectedTask.priority}</p>
               ) : null}
+              <p>Type: {getTaskKindVisual(selectedTask.kind).label}</p>
               {selectedTask.block ? <p>Block: {selectedTask.block}</p> : null}
               {selectedTask.category ? (
                 <p>Category: {selectedTask.category}</p>

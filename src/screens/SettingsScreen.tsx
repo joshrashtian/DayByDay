@@ -61,7 +61,7 @@ const settingsSections = [
   { id: "blocks-custom-css", label: "Blocks CSS" },
 ];
 
-export const SettingsScreen = () => {
+export const SettingsScreen = ({ modal = false }: { modal?: boolean }) => {
   const [latInput, setLatInput] = useState("");
   const [lonInput, setLonInput] = useState("");
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -280,7 +280,11 @@ export const SettingsScreen = () => {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-start justify-start gap-5 overflow-x-hidden p-4">
+    <main
+      className={`flex flex-col items-start justify-start gap-5 overflow-x-hidden p-4 ${
+        modal ? "min-h-0" : "min-h-screen"
+      }`}
+    >
       <motion.div
         className="inline-block origin-center"
         key={Math.random()}
