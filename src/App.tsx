@@ -12,7 +12,9 @@ import CalendarScreen from "./screens/CalendarScreen";
 import HelpScreen from "./screens/HelpScreen";
 import BlockScreen from "./screens/BlockScreen";
 import AppsScreen from "./screens/AppsScreen";
-import SpotifyScreen from "./screens/SpotifyScreen";
+import SpotifyScreen from "./screens/integrations/SpotifyScreen";
+import ToolkitScreen from "./screens/ToolkitScreen";
+import ToolkitWindowScreen from "./screens/ToolkitWindowScreen";
 import CognitionBar from "./ui/CognitionBar";
 import { useMenuNavigation } from "./hooks/useMenuNavigation";
 import { useCreateTaskAction } from "./hooks/useCreateTaskAction";
@@ -119,6 +121,22 @@ export default function App() {
                 element={
                   <AnimatedPage>
                     <AppsScreen />
+                  </AnimatedPage>
+                }
+              />
+              <Route
+                path="/toolkit"
+                element={
+                  <AnimatedPage>
+                    <ToolkitScreen />
+                  </AnimatedPage>
+                }
+              />
+              <Route
+                path="/toolkit/:panelId"
+                element={
+                  <AnimatedPage>
+                    <ToolkitWindowScreen />
                   </AnimatedPage>
                 }
               />

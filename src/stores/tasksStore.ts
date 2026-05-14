@@ -39,6 +39,9 @@ function reviveTask(raw: Record<string, unknown>): Task {
     context: rawLegacyContext,
     category,
     tags: rawTags,
+    metadata: rawMetadata,
+    classLocation: rawClassLocation,
+    classGrade: rawClassGrade,
     ...rest
   } = raw as Record<string, unknown>;
 
@@ -54,6 +57,41 @@ function reviveTask(raw: Record<string, unknown>): Task {
   const block = normalizeTaskBlock(
     typeof rawBlock === "string" ? rawBlock : rawLegacyContext,
   );
+
+  const metadataClassRaw =
+    rawMetadata &&
+    typeof rawMetadata === "object" &&
+    (rawMetadata as Record<string, unknown>).class &&
+    typeof (rawMetadata as Record<string, unknown>).class === "object"
+      ? ((rawMetadata as Record<string, unknown>).class as Record<
+          string,
+          unknown
+        >)
+      : undefined;
+
+  const classLocationFromMetadata =
+    typeof metadataClassRaw?.location === "string"
+      ? metadataClassRaw.location.trim()
+      : "";
+  const classGradeFromMetadata =
+    typeof metadataClassRaw?.grade === "string"
+      ? metadataClassRaw.grade.trim()
+      : "";
+  const classLocationLegacy =
+    typeof rawClassLocation === "string" ? rawClassLocation.trim() : "";
+  const classGradeLegacy =
+    typeof rawClassGrade === "string" ? rawClassGrade.trim() : "";
+  const classLocation = classLocationFromMetadata || classLocationLegacy;
+  const classGrade = classGradeFromMetadata || classGradeLegacy;
+  const metadata =
+    classLocation || classGrade
+      ? {
+          class: {
+            ...(classLocation ? { location: classLocation } : {}),
+            ...(classGrade ? { grade: classGrade } : {}),
+          },
+        }
+      : undefined;
 
   const task: Task = {
     ...(rest as Omit<
@@ -83,6 +121,7 @@ function reviveTask(raw: Record<string, unknown>): Task {
     ...(typeof category === "string" && category.trim()
       ? { category: category.trim() }
       : {}),
+    ...(metadata ? { metadata } : {}),
     ...(block ? { block } : {}),
     ...(tags ? { tags } : {}),
     ...(recurrence ? { recurrence } : {}),
@@ -161,6 +200,23 @@ export const useTasksStore = create<TasksState>()(
         if (!trimmed) return;
         const now = new Date();
         const cat = payload.category?.trim() || undefined;
+        const classLocation =
+          payload.metadata?.class?.location?.trim() ||
+          payload.classLocation?.trim() ||
+          undefined;
+        const classGrade =
+          payload.metadata?.class?.grade?.trim() ||
+          payload.classGrade?.trim() ||
+          undefined;
+        const metadata =
+          classLocation || classGrade
+            ? {
+                class: {
+                  ...(classLocation ? { location: classLocation } : {}),
+                  ...(classGrade ? { grade: classGrade } : {}),
+                },
+              }
+            : undefined;
         const block = normalizeTaskBlock(payload.block ?? payload.context);
         const description = payload.description?.trim() || undefined;
         const notes = payload.notes?.trim() || undefined;
@@ -193,6 +249,9 @@ export const useTasksStore = create<TasksState>()(
               ...(cat ? { category: cat } : {}),
               ...(description ? { description } : {}),
               ...(notes ? { notes } : {}),
+              ...(metadata ? { metadata } : {}),
+              ...(classLocation ? { classLocation } : {}),
+              ...(classGrade ? { classGrade } : {}),
               ...(tags ? { tags } : {}),
               ...(recurrence ? { recurrence } : {}),
             },
@@ -208,6 +267,23 @@ export const useTasksStore = create<TasksState>()(
           const category = payload.category?.trim() || undefined;
           const description = payload.description?.trim() || undefined;
           const notes = payload.notes?.trim() || undefined;
+          const classLocation =
+            payload.metadata?.class?.location?.trim() ||
+            payload.classLocation?.trim() ||
+            undefined;
+          const classGrade =
+            payload.metadata?.class?.grade?.trim() ||
+            payload.classGrade?.trim() ||
+            undefined;
+          const metadata =
+            classLocation || classGrade
+              ? {
+                  class: {
+                    ...(classLocation ? { location: classLocation } : {}),
+                    ...(classGrade ? { grade: classGrade } : {}),
+                  },
+                }
+              : undefined;
           const tags = normalizeTaskTags(payload.tags ?? []);
           const dueDate = payload.dueDate;
           const endDate =
@@ -240,6 +316,9 @@ export const useTasksStore = create<TasksState>()(
                     category,
                     description,
                     notes,
+                    metadata,
+                    classLocation,
+                    classGrade,
                     tags,
                     recurrence,
                     updatedAt: new Date(),

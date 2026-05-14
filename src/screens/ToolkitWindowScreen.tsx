@@ -1,0 +1,375 @@
+import { useMemo, type FormEvent } from "react";
+import { useParams } from "react-router-dom";
+import { TOOLKIT_PANELS } from "../lib/toolkitPanels";
+import { useTasksStore } from "../stores/tasksStore";
+import type { Task, UpdateTaskPayload } from "../types/task";
+
+const WEEK_DAYS = [
+  { label: "Mon", dayIndex: 1 },
+  { label: "Tue", dayIndex: 2 },
+  { label: "Wed", dayIndex: 3 },
+  { label: "Thu", dayIndex: 4 },
+  { label: "Fri", dayIndex: 5 },
+] as const;
+
+function sanitizeInput(value: string): string {
+  return value.trim().replace(/\s+/g, " ");
+}
+
+function formatClock(date?: Date): string {
+  if (!(date instanceof Date)) return "No time";
+  return date.toLocaleTimeString(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function formatTimeRange(start?: Date, end?: Date): string {
+  if (!(start instanceof Date)) return "No time";
+  if (!(end instanceof Date)) return formatClock(start);
+  return `${formatClock(start)} - ${formatClock(end)}`;
+}
+
+function formatDateTimeLocalInput(date?: Date): string {
+  if (!date) return "";
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hour = String(date.getHours()).padStart(2, "0");
+  const minute = String(date.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hour}:${minute}`;
+}
+
+function parseDateTimeLocalInput(value: string): Date | undefined {
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  const parsed = new Date(trimmed);
+  if (Number.isNaN(parsed.getTime())) return undefined;
+  return parsed;
+}
+
+function toUpdatePayload(
+  task: Task,
+  patch: Partial<UpdateTaskPayload>,
+): UpdateTaskPayload {
+  const classLocation =
+    patch.metadata?.class?.location ??
+    patch.classLocation ??
+    task.metadata?.class?.location ??
+    task.classLocation;
+  const classGrade =
+    patch.metadata?.class?.grade ??
+    patch.classGrade ??
+    task.metadata?.class?.grade ??
+    task.classGrade;
+
+  return {
+    kind: "class",
+    title: patch.title ?? task.title,
+    dueDate: patch.dueDate,
+    endDate: patch.endDate,
+    priority: patch.priority ?? task.priority,
+    critical: patch.critical ?? task.critical,
+    block: patch.block ?? task.block,
+    category: patch.category ?? task.category,
+    description: patch.description ?? task.description,
+    notes: patch.notes ?? task.notes,
+    metadata:
+      classLocation || classGrade
+        ? {
+            class: {
+              ...(classLocation ? { location: classLocation } : {}),
+              ...(classGrade ? { grade: classGrade } : {}),
+            },
+          }
+        : undefined,
+    classLocation: classLocation || undefined,
+    classGrade: classGrade || undefined,
+    tags: patch.tags ?? task.tags,
+    recurrence: patch.recurrence ?? task.recurrence,
+  };
+}
+
+function ClassesView() {
+  const tasks = useTasksStore((state) => state.tasks);
+  const updateTask = useTasksStore((state) => state.updateTask);
+  const toggleTask = useTasksStore((state) => state.toggleTask);
+
+  const classTasks = useMemo(
+    () =>
+      tasks
+        .filter((task) => task.kind === "class")
+        .sort((a, b) => {
+          const aTime = a.dueDate?.getTime() ?? Number.MAX_SAFE_INTEGER;
+          const bTime = b.dueDate?.getTime() ?? Number.MAX_SAFE_INTEGER;
+          return aTime - bTime;
+        }),
+    [tasks],
+  );
+
+  const weeklyClassTasks = useMemo(
+    () =>
+      classTasks.filter((task) => !task.done && task.dueDate instanceof Date),
+    [classTasks],
+  );
+
+  const weeklyByDay = useMemo(() => {
+    const byDay = new Map<number, Task[]>();
+    for (const day of WEEK_DAYS) byDay.set(day.dayIndex, []);
+    for (const task of weeklyClassTasks) {
+      const dayIndex = task.dueDate!.getDay();
+      byDay.get(dayIndex)?.push(task);
+    }
+    return byDay;
+  }, [weeklyClassTasks]);
+
+  const onSaveClassTask = (task: Task, event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const nextTitle = sanitizeInput(String(formData.get("title") ?? ""));
+    if (!nextTitle) return;
+
+    const nextCategory = sanitizeInput(String(formData.get("course") ?? ""));
+    const nextDueDate = parseDateTimeLocalInput(
+      String(formData.get("dueDate") ?? ""),
+    );
+    const nextLocation = sanitizeInput(String(formData.get("location") ?? ""));
+    const nextGrade = sanitizeInput(String(formData.get("grade") ?? ""));
+
+    let nextEndDate: Date | undefined = task.endDate;
+    if (nextDueDate) {
+      if (task.dueDate && task.endDate && task.endDate > task.dueDate) {
+        const durationMs = task.endDate.getTime() - task.dueDate.getTime();
+        nextEndDate = new Date(nextDueDate.getTime() + durationMs);
+      }
+    } else {
+      nextEndDate = undefined;
+    }
+
+    updateTask(
+      task.id,
+      toUpdatePayload(task, {
+        title: nextTitle,
+        category: nextCategory || undefined,
+        dueDate: nextDueDate,
+        endDate: nextEndDate,
+        classLocation: nextLocation || undefined,
+        classGrade: nextGrade || undefined,
+      }),
+    );
+  };
+
+  return (
+    <>
+      <h1 className="font-quantify text-3xl text-zinc-900 dark:text-zinc-100 sm:text-4xl">
+        Classes
+      </h1>
+
+      <section className="mt-6 w-full rounded-2xl border border-zinc-200/80 bg-white/70 p-5 dark:border-zinc-700 dark:bg-zinc-900/60">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+            Your School Schedule
+          </h2>
+          <span className="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
+            {weeklyClassTasks.length} scheduled
+          </span>
+        </div>
+
+        {weeklyClassTasks.length ? (
+          <div className="mt-4 grid grid-cols-1 gap-1 md:grid-cols-2 xl:grid-cols-5">
+            {WEEK_DAYS.map((day) => {
+              const dayTasks = weeklyByDay.get(day.dayIndex) ?? [];
+              return (
+                <div
+                  key={day.label}
+                  className=" -skew-x-12 bg-blue-300/20 p-3 dark:border-zinc-700 dark:bg-zinc-900/80"
+                >
+                  <p className="text-xs skew-x-12 font-quantify font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                    {day.label}
+                  </p>
+                  {dayTasks.length ? (
+                    <ul className="mt-2 skew-x-12 space-y-2">
+                      {dayTasks.slice(0, 4).map((task) => {
+                        return (
+                          <li
+                            key={task.id}
+                            className=" -skew-x-12 border bg-white border-zinc-200/80 p-2.5 dark:border-zinc-700 dark:bg-zinc-950"
+                          >
+                            <p className="mt-0.5 truncate skew-x-12 text-[11px] text-zinc-600 dark:text-zinc-300">
+                              {task.title}
+                            </p>
+                            {task.metadata?.class?.location ||
+                            task.classLocation ? (
+                              <p className="truncate text-[10px] text-zinc-500 dark:text-zinc-400">
+                                {task.metadata?.class?.location ??
+                                  task.classLocation}
+                              </p>
+                            ) : null}
+                            <div className=" flex items-center justify-between gap-2">
+                              <p className="text-[10px] font-semibold text-blue-600 dark:text-blue-300">
+                                {formatTimeRange(task.dueDate, task.endDate)}
+                              </p>
+                              {task.metadata?.class?.grade ||
+                              task.classGrade ? (
+                                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700 dark:bg-blue-500/20 dark:text-blue-200">
+                                  {task.metadata?.class?.grade ??
+                                    task.classGrade}
+                                </span>
+                              ) : null}
+                            </div>
+                          </li>
+                        );
+                      })}
+                      {dayTasks.length > 4 ? (
+                        <li className="text-[10px] text-zinc-500 dark:text-zinc-400">
+                          +{dayTasks.length - 4} more
+                        </li>
+                      ) : null}
+                    </ul>
+                  ) : (
+                    <p className="mt-3 text-[11px] text-zinc-400 dark:text-zinc-500">
+                      No classes
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">
+            No scheduled class tasks yet. Assign due dates to your class tasks
+            to place them in the weekly calendar.
+          </p>
+        )}
+      </section>
+
+      <section className="mt-5 w-full rounded-2xl border border-zinc-200/80 bg-white/70 p-5 dark:border-zinc-700 dark:bg-zinc-900/60">
+        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+          Edit Class Tasks
+        </h2>
+
+        {classTasks.length ? (
+          <div className="mt-4 space-y-3">
+            {classTasks.map((task) => {
+              return (
+                <form
+                  key={task.id}
+                  onSubmit={(event) => onSaveClassTask(task, event)}
+                  className="rounded-xl border border-zinc-200/80 bg-white/80 p-3 dark:border-zinc-700 dark:bg-zinc-950/70"
+                >
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
+                    <input
+                      name="title"
+                      defaultValue={task.title}
+                      placeholder="Class task title"
+                      className="rounded-lg border border-zinc-300/80 bg-white px-2.5 py-1.5 text-xs text-zinc-900 outline-none transition focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-zinc-500"
+                    />
+                    <input
+                      name="course"
+                      defaultValue={task.category ?? ""}
+                      placeholder="Course / class name"
+                      className="rounded-lg border border-zinc-300/80 bg-white px-2.5 py-1.5 text-xs text-zinc-900 outline-none transition focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-zinc-500"
+                    />
+                    <input
+                      name="dueDate"
+                      type="datetime-local"
+                      defaultValue={formatDateTimeLocalInput(task.dueDate)}
+                      className="rounded-lg border border-zinc-300/80 bg-white px-2.5 py-1.5 text-xs text-zinc-900 outline-none transition focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-zinc-500"
+                    />
+                    <input
+                      name="location"
+                      defaultValue={
+                        task.metadata?.class?.location ?? task.classLocation ?? ""
+                      }
+                      placeholder="Location"
+                      className="rounded-lg border border-zinc-300/80 bg-white px-2.5 py-1.5 text-xs text-zinc-900 outline-none transition focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-zinc-500"
+                    />
+                    <input
+                      name="grade"
+                      defaultValue={
+                        task.metadata?.class?.grade ?? task.classGrade ?? ""
+                      }
+                      placeholder="Grade"
+                      className="rounded-lg border border-zinc-300/80 bg-white px-2.5 py-1.5 text-xs text-zinc-900 outline-none transition focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-zinc-500"
+                    />
+                  </div>
+                  <div className="mt-2 flex items-center justify-between">
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                      {task.done ? "Completed" : "Open"} •{" "}
+                      {task.dueDate
+                        ? `${task.dueDate.toLocaleDateString()} ${formatClock(task.dueDate)}`
+                        : "No schedule"}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => toggleTask(task.id)}
+                        className="rounded-md border border-zinc-300 px-2 py-1 text-[11px] font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                      >
+                        {task.done ? "Mark Open" : "Mark Done"}
+                      </button>
+                      <button
+                        type="submit"
+                        className="rounded-md bg-zinc-900 px-2.5 py-1 text-[11px] font-semibold text-white transition hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
+                      >
+                        Save
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">
+            No class tasks yet. Create a task with type `class` and it will
+            appear here and on the calendar.
+          </p>
+        )}
+      </section>
+    </>
+  );
+}
+
+export default function ToolkitWindowScreen() {
+  const { panelId } = useParams();
+  const selectedPanel = TOOLKIT_PANELS.find((panel) => panel.id === panelId);
+
+  if (!selectedPanel) {
+    return (
+      <main className="mx-auto flex min-h-[calc(100dvh-7rem)] w-full max-w-5xl flex-col px-3 pb-24 pt-20 sm:px-6 sm:pt-24 lg:px-8">
+        <h1 className="font-quantify text-3xl text-zinc-900 dark:text-zinc-100 sm:text-4xl">
+          Panel Not Found
+        </h1>
+        <p className="mt-3 text-base text-zinc-600 dark:text-zinc-300">
+          This panel is not currently part of Toolkit.
+        </p>
+      </main>
+    );
+  }
+
+  return (
+    <main className="mx-auto flex min-h-[calc(100dvh-7rem)] w-full max-w-5xl flex-col px-3 pb-24 pt-20 sm:px-6 sm:pt-24 lg:px-8">
+      {selectedPanel.id === "classes" ? <ClassesView /> : null}
+      {selectedPanel.id !== "classes" ? (
+        <>
+          <h1 className="font-quantify text-3xl text-zinc-900 dark:text-zinc-100 sm:text-4xl">
+            {selectedPanel.label}
+          </h1>
+          <p className="mt-3 max-w-2xl text-base text-zinc-600 dark:text-zinc-300">
+            {selectedPanel.description}
+          </p>
+          <div className="mt-6 w-full rounded-2xl border border-dashed border-zinc-300/80 bg-zinc-50/80 p-5 dark:border-zinc-700 dark:bg-zinc-900/30">
+            <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+              Coming Soon
+            </p>
+            <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-200">
+              This dedicated panel is reserved for first-party features we add
+              in the app.
+            </p>
+          </div>
+        </>
+      ) : null}
+    </main>
+  );
+}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   IoApps,
@@ -14,6 +14,11 @@ import {
 } from "react-icons/io5";
 import { AnimatePresence, Reorder, motion } from "motion/react";
 import spotifyIcon from "../../assets/spotifysvg.svg";
+import {
+  TOOLKIT_PANELS,
+  TOOLKIT_PINNED_UPDATED_EVENT,
+  loadPinnedToolkitPanels,
+} from "../../lib/toolkitPanels";
 
 type SidebarNavItem = {
   label: string;
@@ -34,15 +39,22 @@ const socialDefaultNavItems: SidebarNavItem[] = [
   // Reserved for dedicated social features.
 ];
 
-const appDefaultNavItems: SidebarNavItem[] = [
-  {
-    label: "Spotify",
-    icon: <img src={spotifyIcon} alt="" className="h-5 w-5" aria-hidden />,
-    link: "/spotify",
-  },
-
-  { label: "Integrations", icon: <IoApps />, link: "/apps" },
-];
+const buildPinnedPanelNavItems = (panelIds: string[]): SidebarNavItem[] => {
+  const panelById = new Map(TOOLKIT_PANELS.map((panel) => [panel.id, panel]));
+  return panelIds
+    .map((panelId) => panelById.get(panelId))
+    .filter((panel): panel is (typeof TOOLKIT_PANELS)[number] => Boolean(panel))
+    .map((panel) => ({
+      label: panel.label,
+      icon:
+        panel.id === "spotify" ? (
+          <img src={spotifyIcon} alt="" className="h-5 w-5" aria-hidden />
+        ) : (
+          <IoGrid />
+        ),
+      link: panel.route,
+    }));
+};
 
 const utilityNavItems: SidebarNavItem[] = [
   { label: "Profile", icon: <IoPersonOutline />, link: "/profile" },
@@ -102,6 +114,16 @@ const SideBar = ({
   onOpenSettings,
 }: SideBarProps) => {
   const location = useLocation();
+  const [pinnedPanelIds, setPinnedPanelIds] = useState<string[]>(() =>
+    loadPinnedToolkitPanels(),
+  );
+  const appDefaultNavItems = useMemo(
+    () => [
+      { label: "Toolbox", icon: <IoApps />, link: "/toolkit" },
+      ...buildPinnedPanelNavItems(pinnedPanelIds),
+    ],
+    [pinnedPanelIds],
+  );
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarWidth, setSidebarWidth] = useState<number>(
     DEFAULT_SIDEBAR_WIDTH,
@@ -113,11 +135,17 @@ const SideBar = ({
   const [socialItems, setSocialItems] = useState<SidebarNavItem[]>(
     socialDefaultNavItems,
   );
-  const [appItems, setAppItems] =
-    useState<SidebarNavItem[]>(appDefaultNavItems);
+  const [appItems, setAppItems] = useState<SidebarNavItem[]>(appDefaultNavItems);
   const [isResizing, setIsResizing] = useState(false);
   const [swipeStartX, setSwipeStartX] = useState<number | null>(null);
   const [edgeSwipeStartX, setEdgeSwipeStartX] = useState<number | null>(null);
+
+  useEffect(() => {
+    const syncPinnedPanels = () => setPinnedPanelIds(loadPinnedToolkitPanels());
+    window.addEventListener(TOOLKIT_PINNED_UPDATED_EVENT, syncPinnedPanels);
+    return () =>
+      window.removeEventListener(TOOLKIT_PINNED_UPDATED_EVENT, syncPinnedPanels);
+  }, []);
 
   useEffect(() => {
     try {
@@ -158,6 +186,15 @@ const SideBar = ({
       // Ignore invalid local storage payloads.
     }
   }, []);
+
+  useEffect(() => {
+    setAppItems((previous) =>
+      restoreOrderedItems(
+        appDefaultNavItems,
+        previous.map((item) => item.link),
+      ),
+    );
+  }, [appDefaultNavItems]);
 
   useEffect(() => {
     onWidthChange?.(sidebarOpen ? sidebarWidth : 0);

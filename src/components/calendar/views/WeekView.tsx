@@ -1066,6 +1066,14 @@ export function WeekView({
                 <p>Tags: {selectedTask.tags.join(", ")}</p>
               ) : null}
             </div>
+            <div className="rounded-xl border border-zinc-200/80 bg-zinc-50/80 p-3 dark:border-zinc-700 dark:bg-zinc-900/70">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                Metadata
+              </p>
+              <pre className="max-h-52 overflow-auto whitespace-pre-wrap break-all text-[11px] leading-relaxed text-zinc-700 dark:text-zinc-300">
+                {JSON.stringify(selectedTask, null, 2)}
+              </pre>
+            </div>
             <button
               type="button"
               onClick={() => {

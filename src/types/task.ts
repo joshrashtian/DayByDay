@@ -9,6 +9,13 @@ export type TaskRecurrence = {
   untilDate?: Date;
 };
 
+export type TaskMetadata = {
+  class?: {
+    location?: string;
+    grade?: string;
+  };
+};
+
 export function parseTaskRecurrence(raw: unknown): TaskRecurrence | undefined {
   if (!raw || typeof raw !== "object") return undefined;
   const o = raw as Record<string, unknown>;
@@ -84,6 +91,10 @@ export type Task = {
   description?: string;
   tags?: string[];
   notes?: string;
+  metadata?: TaskMetadata;
+  // Legacy fields kept for backwards compatibility.
+  classLocation?: string;
+  classGrade?: string;
   critical?: boolean;
   recurrence?: TaskRecurrence;
   lastCompletedAt?: Date;
@@ -102,6 +113,10 @@ export type AddTaskPayload = {
   category?: string;
   description?: string;
   notes?: string;
+  metadata?: TaskMetadata;
+  // Legacy fields kept for backwards compatibility.
+  classLocation?: string;
+  classGrade?: string;
   tags?: string[];
   recurrence?: TaskRecurrence;
 };
@@ -117,6 +132,10 @@ export type UpdateTaskPayload = {
   category?: string;
   description?: string;
   notes?: string;
+  metadata?: TaskMetadata;
+  // Legacy fields kept for backwards compatibility.
+  classLocation?: string;
+  classGrade?: string;
   tags?: string[];
   recurrence?: TaskRecurrence;
 };

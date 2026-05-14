@@ -22,6 +22,7 @@ export function useMenuNavigation() {
                     window.dispatchEvent(new Event('dbd:open-settings'));
                     break;
                 case 'help':     navigate('/help');     break;
+                case 'toolkit':  navigate('/toolkit');  break;
             }
         }).then(fn => { unlisten = fn; });
 
