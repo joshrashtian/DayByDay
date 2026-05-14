@@ -32,6 +32,15 @@ function priorityChipClass(p: TaskPriority) {
 
 function recurrenceLabel(task: Task): string | undefined {
   if (!task.recurrence) return undefined;
+  const dayLabels: Record<number, string> = {
+    1: "Mon",
+    2: "Tue",
+    3: "Wed",
+    4: "Thu",
+    5: "Fri",
+    6: "Sat",
+    7: "Sun",
+  };
   const cadence =
     task.recurrence.frequency === "daily"
       ? task.recurrence.interval === 1
@@ -44,7 +53,17 @@ function recurrenceLabel(task: Task): string | undefined {
         : task.recurrence.interval === 1
           ? "month"
           : "months";
-  const base = `Repeats every ${task.recurrence.interval} ${cadence}`;
+  let base = `Repeats every ${task.recurrence.interval} ${cadence}`;
+  if (
+    task.recurrence.frequency === "weekly" &&
+    task.recurrence.weekdays?.length
+  ) {
+    const onDays = task.recurrence.weekdays
+      .map((day) => dayLabels[day] ?? "")
+      .filter(Boolean)
+      .join(", ");
+    if (onDays) base += ` on ${onDays}`;
+  }
   if (!task.recurrence.untilDate) return base;
   return `${base}, until ${formatTaskDue(task.recurrence.untilDate)}`;
 }
@@ -211,7 +230,9 @@ export function TaskItem({
                   borderColor: categoryVisual.border,
                 }}
               >
-                {categoryVisual.icon ? renderCategoryIcon(categoryVisual.icon) : null}
+                {categoryVisual.icon
+                  ? renderCategoryIcon(categoryVisual.icon)
+                  : null}
                 <span className="wrap-break-word">{task.category}</span>
               </span>
             ) : null}

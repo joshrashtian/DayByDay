@@ -225,6 +225,9 @@ export const useTasksStore = create<TasksState>()(
             ? {
                 frequency: payload.recurrence.frequency,
                 interval: Math.max(1, payload.recurrence.interval ?? 1),
+                ...(payload.recurrence.weekdays?.length
+                  ? { weekdays: payload.recurrence.weekdays }
+                  : {}),
                 ...(payload.recurrence.untilDate
                   ? { untilDate: payload.recurrence.untilDate }
                   : {}),
@@ -295,6 +298,9 @@ export const useTasksStore = create<TasksState>()(
               ? {
                   frequency: payload.recurrence.frequency,
                   interval: Math.max(1, payload.recurrence.interval ?? 1),
+                  ...(payload.recurrence.weekdays?.length
+                    ? { weekdays: payload.recurrence.weekdays }
+                    : {}),
                   ...(payload.recurrence.untilDate
                     ? { untilDate: payload.recurrence.untilDate }
                     : {}),
@@ -358,32 +364,47 @@ export const useTasksStore = create<TasksState>()(
             if (!recursAgain) {
               return {
                 tasks: s.tasks.map((t) =>
-                  t.id === id ? { ...t, done: true, updatedAt: now } : t,
+                  t.id === id
+                    ? {
+                        ...t,
+                        done: true,
+                        lastCompletedAt: now,
+                        updatedAt: now,
+                      }
+                    : t,
                 ),
               };
             }
-            // Flash done for 600ms, then reset to undone for the next occurrence.
-            setTimeout(() => {
-              set((s2) => ({
-                tasks: s2.tasks.map((t) =>
-                  t.id === id && t.done ? { ...t, done: false } : t,
-                ),
-              }));
-            }, 600);
+
+            const sourceId = task.recurringSourceId ?? task.id;
+            const completedOccurrence: Task = {
+              ...task,
+              id: crypto.randomUUID(),
+              done: true,
+              recurrence: undefined,
+              recurringSourceId: sourceId,
+              lastCompletedAt: now,
+              updatedAt: now,
+            };
+
             return {
-              tasks: s.tasks.map((t) =>
-                t.id === id
-                  ? {
-                      ...t,
-                      done: true,
-                      dueDate: nextDue,
-                      ...(durationMs != null
-                        ? { endDate: new Date(nextDue.getTime() + durationMs) }
-                        : {}),
-                      updatedAt: now,
-                    }
-                  : t,
-              ),
+              tasks: [
+                ...s.tasks.map((t) =>
+                  t.id === id
+                    ? {
+                        ...t,
+                        done: false,
+                        dueDate: nextDue,
+                        ...(durationMs != null
+                          ? { endDate: new Date(nextDue.getTime() + durationMs) }
+                          : {}),
+                        recurringSourceId: sourceId,
+                        updatedAt: now,
+                      }
+                    : t,
+                ),
+                completedOccurrence,
+              ],
             };
           }
           return {

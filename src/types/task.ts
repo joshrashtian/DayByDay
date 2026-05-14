@@ -2,10 +2,29 @@ export type TaskPriority = "low" | "medium" | "high";
 export type TaskKind = "task" | "event" | "reminder" | "habit" | "class";
 
 export type RecurrenceFrequency = "daily" | "weekly" | "monthly";
+export type RecurrenceWeekday = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+export function normalizeRecurrenceWeekdays(
+  input: unknown,
+): RecurrenceWeekday[] | undefined {
+  if (!Array.isArray(input)) return undefined;
+  const seen = new Set<number>();
+  const out: RecurrenceWeekday[] = [];
+  for (const raw of input) {
+    if (typeof raw !== "number" || !Number.isFinite(raw)) continue;
+    const value = Math.floor(raw);
+    if (value < 1 || value > 7 || seen.has(value)) continue;
+    seen.add(value);
+    out.push(value as RecurrenceWeekday);
+  }
+  out.sort((a, b) => a - b);
+  return out.length ? out : undefined;
+}
 
 export type TaskRecurrence = {
   frequency: RecurrenceFrequency;
   interval: number;
+  weekdays?: RecurrenceWeekday[];
   untilDate?: Date;
 };
 
@@ -31,9 +50,11 @@ export function parseTaskRecurrence(raw: unknown): TaskRecurrence | undefined {
     rawUntilDate != null && rawUntilDate !== ""
       ? new Date(String(rawUntilDate))
       : undefined;
+  const weekdays = normalizeRecurrenceWeekdays(o.weekdays);
   return {
     frequency: f,
     interval,
+    ...(f === "weekly" && weekdays ? { weekdays } : {}),
     ...(untilDate && Number.isFinite(untilDate.getTime()) ? { untilDate } : {}),
   };
 }

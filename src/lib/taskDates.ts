@@ -1,5 +1,9 @@
 import { DateTime } from "luxon";
-import type { Task, TaskRecurrence } from "../types/task";
+import {
+  normalizeRecurrenceWeekdays,
+  type Task,
+  type TaskRecurrence,
+} from "../types/task";
 
 const TIME_PARSE_FORMATS = ["h:mma", "h:mm a", "ha", "h a", "HH:mm", "H:mm"] as const;
 
@@ -68,11 +72,35 @@ function parseCompactMdLocalDateTime(trimmed: string): Date | undefined {
   return undefined;
 }
 
+function parseLocalizedLocalDateTime(trimmed: string): Date | undefined {
+  const formats = [
+    "M/d/yyyy, h:mm a",
+    "M/d/yyyy, h:mma",
+    "M/d/yyyy h:mm a",
+    "M/d/yyyy h:mma",
+    "M/d/yy, h:mm a",
+    "M/d/yy, h:mma",
+    "M/d/yy h:mm a",
+    "M/d/yy h:mma",
+  ] as const;
+  for (const fmt of formats) {
+    const dt = DateTime.fromFormat(trimmed, fmt, { zone: "local" });
+    if (dt.isValid) return dt.toJSDate();
+    const dtLower = DateTime.fromFormat(trimmed.toLowerCase(), fmt, {
+      zone: "local",
+    });
+    if (dtLower.isValid) return dtLower.toJSDate();
+  }
+  return undefined;
+}
+
 export function parseDueLocalInput(value: string): Date | undefined {
   const trimmed = value.trim();
   if (!trimmed) return undefined;
   const dt = DateTime.fromISO(trimmed);
   if (dt.isValid) return dt.toJSDate();
+  const localized = parseLocalizedLocalDateTime(trimmed);
+  if (localized) return localized;
   return parseCompactMdLocalDateTime(trimmed);
 }
 
@@ -137,7 +165,24 @@ export function advanceRecurrenceDate(
   const dt = DateTime.fromJSDate(dueDate);
   const { frequency, interval } = recurrence;
   if (frequency === "daily") return dt.plus({ days: interval }).toJSDate();
-  if (frequency === "weekly") return dt.plus({ weeks: interval }).toJSDate();
+  if (frequency === "weekly") {
+    const weekdays = normalizeRecurrenceWeekdays(recurrence.weekdays);
+    if (!weekdays) return dt.plus({ weeks: interval }).toJSDate();
+    const nextDayInWeek = weekdays.find((day) => day > dt.weekday);
+    if (nextDayInWeek) {
+      return dt.plus({ days: nextDayInWeek - dt.weekday }).toJSDate();
+    }
+    const nextWeekStart = dt.startOf("week").plus({ weeks: Math.max(1, interval) });
+    return nextWeekStart
+      .plus({ days: weekdays[0] - 1 })
+      .set({
+        hour: dt.hour,
+        minute: dt.minute,
+        second: dt.second,
+        millisecond: dt.millisecond,
+      })
+      .toJSDate();
+  }
   return dt.plus({ months: interval }).toJSDate();
 }
 

@@ -1,7 +1,8 @@
 import { DateTime } from "luxon";
-import type { RecurrenceFrequency, Task } from "../types/task";
+import type { Task } from "../types/task";
+import { advanceRecurrenceDate } from "./taskDates";
 
-/** One row in a calendar day list (recurring tasks get one row per occurrence). */
+/** One row in a calendar day list (recurring tasks can project multiple rows). */
 export type CalendarTaskRow = {
   task: Task;
   displayDueDate: Date;
@@ -19,23 +20,6 @@ function combineDateAndTime(
     millisecond: timeSource.millisecond,
   });
 }
-
-function advanceRecurrenceDay(
-  day: DateTime,
-  frequency: RecurrenceFrequency,
-  interval: number,
-): DateTime {
-  const n = Math.max(1, interval);
-  switch (frequency) {
-    case "daily":
-      return day.plus({ days: n });
-    case "weekly":
-      return day.plus({ weeks: n });
-    case "monthly":
-      return day.plus({ months: n });
-  }
-}
-
 
 export function collectOccurrencesInRange(
   task: Task,
@@ -55,33 +39,34 @@ export function collectOccurrencesInRange(
     return [{ displayDueDate: display.toJSDate(), rowKey: task.id }];
   }
 
-  const { frequency } = task.recurrence;
-  const interval = Math.max(1, task.recurrence.interval ?? 1);
   const recurrenceEndDay = task.recurrence.untilDate
     ? DateTime.fromJSDate(task.recurrence.untilDate).startOf("day")
     : null;
   const visibleEndDay =
     recurrenceEndDay && recurrenceEndDay < end ? recurrenceEndDay : end;
 
-  let dayCursor = anchorDay;
+  let cursor = anchor;
   let safety = 0;
-  while (dayCursor < start && safety < 10000) {
-    dayCursor = advanceRecurrenceDay(dayCursor, frequency, interval);
+  while (cursor.startOf("day") < start && safety < 10000) {
+    cursor = DateTime.fromJSDate(
+      advanceRecurrenceDate(cursor.toJSDate(), task.recurrence),
+    );
     safety++;
   }
 
   const out: { displayDueDate: Date; rowKey: string }[] = [];
   safety = 0;
-  while (dayCursor <= visibleEndDay && safety < 10000) {
-    const display = combineDateAndTime(dayCursor, anchor);
-    const iso = dayCursor.toISODate();
+  while (cursor.startOf("day") <= visibleEndDay && safety < 10000) {
+    const iso = cursor.toISODate();
     if (iso) {
       out.push({
-        displayDueDate: display.toJSDate(),
+        displayDueDate: cursor.toJSDate(),
         rowKey: `${task.id}@${iso}`,
       });
     }
-    dayCursor = advanceRecurrenceDay(dayCursor, frequency, interval);
+    cursor = DateTime.fromJSDate(
+      advanceRecurrenceDate(cursor.toJSDate(), task.recurrence),
+    );
     safety++;
   }
   return out;

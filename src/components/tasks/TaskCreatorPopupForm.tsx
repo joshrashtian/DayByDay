@@ -6,8 +6,10 @@ import { collectAvailableCategories } from "../../lib/taskCategories";
 import { TASK_KIND_OPTIONS } from "../../lib/taskKinds";
 import {
   type AddTaskPayload,
+  normalizeRecurrenceWeekdays,
   parseTagsInput,
   type RecurrenceFrequency,
+  type RecurrenceWeekday,
   type TaskKind,
   type TaskPriority,
   type UpdateTaskPayload,
@@ -48,6 +50,7 @@ type Props = {
   initialCritical?: boolean;
   initialRecurrenceChoice?: RecurrenceChoice;
   initialRecurrenceInterval?: number;
+  initialRecurrenceWeekdays?: RecurrenceWeekday[];
   initialRecurrenceUntilLocal?: string;
 };
 
@@ -67,6 +70,24 @@ const TASK_KIND_COPY: Record<TaskKind, string> = {
   reminder: "One-time reminder",
   habit: "Routine or recurring practice",
 };
+
+const WEEKDAY_OPTIONS: Array<{
+  value: RecurrenceWeekday;
+  short: string;
+  label: string;
+}> = [
+  { value: 1, short: "M", label: "Mon" },
+  { value: 2, short: "T", label: "Tue" },
+  { value: 3, short: "W", label: "Wed" },
+  { value: 4, short: "T", label: "Thu" },
+  { value: 5, short: "F", label: "Fri" },
+  { value: 6, short: "S", label: "Sat" },
+  { value: 7, short: "S", label: "Sun" },
+];
+
+function jsDayToRecurrenceWeekday(day: number): RecurrenceWeekday {
+  return (((day + 6) % 7) + 1) as RecurrenceWeekday;
+}
 
 export function TaskCreatorPopupForm({
   onAdd,
@@ -89,6 +110,7 @@ export function TaskCreatorPopupForm({
   initialCritical = false,
   initialRecurrenceChoice = "none",
   initialRecurrenceInterval = 1,
+  initialRecurrenceWeekdays = [],
   initialRecurrenceUntilLocal = "",
 }: Props) {
   const isEditMode = mode === "edit";
@@ -114,16 +136,19 @@ export function TaskCreatorPopupForm({
   const [recurrenceInterval, setRecurrenceInterval] = useState(
     Math.max(1, Math.min(365, initialRecurrenceInterval || 1)),
   );
+  const [recurrenceWeekdays, setRecurrenceWeekdays] = useState<
+    RecurrenceWeekday[]
+  >(normalizeRecurrenceWeekdays(initialRecurrenceWeekdays) ?? []);
   const [recurrenceUntilLocal, setRecurrenceUntilLocal] = useState(
     initialRecurrenceUntilLocal,
   );
   const [showAdvanced, setShowAdvanced] = useState(
     Boolean(
       initialBlock ||
-        initialCategory ||
-        initialTagsInput ||
-        initialDescription ||
-        initialNotes,
+      initialCategory ||
+      initialTagsInput ||
+      initialDescription ||
+      initialNotes,
     ),
   );
   const titleRef = useRef<HTMLInputElement>(null);
@@ -139,6 +164,18 @@ export function TaskCreatorPopupForm({
     const t = requestAnimationFrame(() => titleRef.current?.focus());
     return () => cancelAnimationFrame(t);
   }, []);
+
+  useEffect(() => {
+    if (recurrenceChoice !== "weekly" || recurrenceWeekdays.length > 0) return;
+    const base = parsedDueLocal ?? new Date();
+    setRecurrenceWeekdays([jsDayToRecurrenceWeekday(base.getDay())]);
+  }, [recurrenceChoice, recurrenceWeekdays.length, parsedDueLocal]);
+
+  useEffect(() => {
+    if (!isClassKind || recurrenceWeekdays.length > 0) return;
+    const base = parsedDueLocal ?? new Date();
+    setRecurrenceWeekdays([jsDayToRecurrenceWeekday(base.getDay())]);
+  }, [isClassKind, recurrenceWeekdays.length, parsedDueLocal]);
 
   const classValidationMessage = (() => {
     if (!isClassKind) return "";
@@ -172,15 +209,26 @@ export function TaskCreatorPopupForm({
     const n = notes.trim();
     let recurrence: UpdateTaskPayload["recurrence"];
     if (isClassKind && dueDate) {
+      const classWeekdays = normalizeRecurrenceWeekdays(recurrenceWeekdays) ?? [
+        jsDayToRecurrenceWeekday(dueDate.getDay()),
+      ];
       recurrence = {
         frequency: "weekly",
         interval: 1,
+        weekdays: classWeekdays,
         ...(recurrenceUntilDate ? { untilDate: recurrenceUntilDate } : {}),
       };
     } else if (dueDate && recurrenceChoice !== "none") {
+      const weeklyDays =
+        recurrenceChoice === "weekly"
+          ? (normalizeRecurrenceWeekdays(recurrenceWeekdays) ?? [
+              jsDayToRecurrenceWeekday(dueDate.getDay()),
+            ])
+          : undefined;
       recurrence = {
         frequency: recurrenceChoice,
         interval: Math.max(1, Math.min(365, recurrenceInterval || 1)),
+        ...(weeklyDays ? { weekdays: weeklyDays } : {}),
         ...(recurrenceUntilDate ? { untilDate: recurrenceUntilDate } : {}),
       };
     }
@@ -215,6 +263,9 @@ export function TaskCreatorPopupForm({
     setRecurrenceChoice(initialRecurrenceChoice);
     setRecurrenceInterval(
       Math.max(1, Math.min(365, initialRecurrenceInterval || 1)),
+    );
+    setRecurrenceWeekdays(
+      normalizeRecurrenceWeekdays(initialRecurrenceWeekdays) ?? [],
     );
     setRecurrenceUntilLocal(initialRecurrenceUntilLocal);
   };
@@ -404,37 +455,109 @@ export function TaskCreatorPopupForm({
         ) : null}
 
         {showRepeats && recurrenceChoice !== "none" ? (
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="popup-task-repeat-interval" className={fieldLabel}>
-              Every
-            </label>
-            <div className="flex items-center gap-2">
-              <input
-                id="popup-task-repeat-interval"
-                type="number"
-                min={1}
-                max={365}
-                value={recurrenceInterval}
-                onChange={(e) =>
-                  setRecurrenceInterval(
-                    Math.max(1, Math.min(365, Number(e.target.value) || 1)),
-                  )
-                }
-                className={`${inputClass} max-w-24`}
-              />
-              <span className="text-sm text-zinc-600 dark:text-zinc-400">
-                {recurrenceChoice === "daily"
-                  ? recurrenceInterval === 1
-                    ? "day"
-                    : "days"
-                  : recurrenceChoice === "weekly"
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-1.5">
+              <label
+                htmlFor="popup-task-repeat-interval"
+                className={fieldLabel}
+              >
+                Every
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  id="popup-task-repeat-interval"
+                  type="number"
+                  min={1}
+                  max={365}
+                  value={recurrenceInterval}
+                  onChange={(e) =>
+                    setRecurrenceInterval(
+                      Math.max(1, Math.min(365, Number(e.target.value) || 1)),
+                    )
+                  }
+                  className={`${inputClass} max-w-24`}
+                />
+                <span className="text-sm text-zinc-600 dark:text-zinc-400">
+                  {recurrenceChoice === "daily"
                     ? recurrenceInterval === 1
-                      ? "week"
-                      : "weeks"
-                    : recurrenceInterval === 1
-                      ? "month"
-                      : "months"}
-              </span>
+                      ? "day"
+                      : "days"
+                    : recurrenceChoice === "weekly"
+                      ? recurrenceInterval === 1
+                        ? "week"
+                        : "weeks"
+                      : recurrenceInterval === 1
+                        ? "month"
+                        : "months"}
+                </span>
+              </div>
+            </div>
+            {recurrenceChoice === "weekly" ? (
+              <div className="flex flex-col items-center gap-1.5">
+                <span className={fieldLabel}>On days</span>
+                <div className="grid grid-cols-7 w-full pl-3 gap-1 ">
+                  {WEEKDAY_OPTIONS.map((day) => {
+                    const active = recurrenceWeekdays.includes(day.value);
+                    return (
+                      <button
+                        key={day.value}
+                        type="button"
+                        aria-pressed={active}
+                        title={day.label}
+                        onClick={() =>
+                          setRecurrenceWeekdays((current) => {
+                            const next = current.includes(day.value)
+                              ? current.filter((d) => d !== day.value)
+                              : [...current, day.value];
+                            return normalizeRecurrenceWeekdays(next) ?? [];
+                          })
+                        }
+                        className={`h-10 w-full -skew-x-6  text-xs font-semibold transition-colors ${
+                          active
+                            ? " bg-blue-600 text-white "
+                            : " bg-white/60 border border-dashed text-zinc-700 "
+                        }`}
+                      >
+                        <p className="skew-x-6">{day.short}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        {isClassKind ? (
+          <div className="flex flex-col gap-1.5">
+            <span className={fieldLabel}>Class days</span>
+            <div className="grid grid-cols-7 w-full pl-3 gap-1 ">
+              {WEEKDAY_OPTIONS.map((day) => {
+                const active = recurrenceWeekdays.includes(day.value);
+                return (
+                  <button
+                    key={`class-${day.value}`}
+                    type="button"
+                    aria-pressed={active}
+                    title={day.label}
+                    onClick={() =>
+                      setRecurrenceWeekdays((current) => {
+                        const next = current.includes(day.value)
+                          ? current.filter((d) => d !== day.value)
+                          : [...current, day.value];
+                        return normalizeRecurrenceWeekdays(next) ?? [];
+                      })
+                    }
+                    className={`h-10 w-full -skew-x-6  text-xs font-semibold transition-colors ${
+                      active
+                        ? " bg-blue-600 text-white "
+                        : " bg-white/60 border border-dashed text-zinc-700 "
+                    }`}
+                  >
+                    <p className="skew-x-6">{day.short}</p>
+                  </button>
+                );
+              })}
             </div>
           </div>
         ) : null}

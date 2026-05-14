@@ -45,6 +45,7 @@ export function taskEditorPopupContent({
         initialCritical={Boolean(task.critical)}
         initialRecurrenceChoice={task.recurrence?.frequency ?? "none"}
         initialRecurrenceInterval={task.recurrence?.interval ?? 1}
+        initialRecurrenceWeekdays={task.recurrence?.weekdays ?? []}
         initialRecurrenceUntilLocal={recurrenceUntilLocal}
         onSave={(payload) => {
           updateTask(task.id, payload);
