@@ -2,7 +2,11 @@ import { useMemo, type FormEvent } from "react";
 import { useParams } from "react-router-dom";
 import { TOOLKIT_PANELS } from "../lib/toolkitPanels";
 import { useTasksStore } from "../stores/tasksStore";
-import type { Task, UpdateTaskPayload } from "../types/task";
+import {
+  normalizeRecurrenceWeekdays,
+  type Task,
+  type UpdateTaskPayload,
+} from "../types/task";
 
 const WEEK_DAYS = [
   { label: "Mon", dayIndex: 1 },
@@ -117,11 +121,35 @@ function ClassesView() {
     const byDay = new Map<number, Task[]>();
     for (const day of WEEK_DAYS) byDay.set(day.dayIndex, []);
     for (const task of weeklyClassTasks) {
-      const dayIndex = task.dueDate!.getDay();
-      byDay.get(dayIndex)?.push(task);
+      const recurrenceDays = normalizeRecurrenceWeekdays(
+        task.recurrence?.weekdays,
+      );
+      const fallbackDay = task.dueDate!.getDay();
+      const dayIndexes = recurrenceDays?.length ? recurrenceDays : [fallbackDay];
+      for (const dayIndex of dayIndexes) {
+        const bucket = byDay.get(dayIndex);
+        if (!bucket) continue;
+        bucket.push(task);
+      }
+    }
+    for (const list of byDay.values()) {
+      list.sort((a, b) => {
+        const aTime = a.dueDate?.getTime() ?? Number.MAX_SAFE_INTEGER;
+        const bTime = b.dueDate?.getTime() ?? Number.MAX_SAFE_INTEGER;
+        return aTime - bTime;
+      });
     }
     return byDay;
   }, [weeklyClassTasks]);
+
+  const weeklyScheduledCount = useMemo(
+    () =>
+      WEEK_DAYS.reduce(
+        (total, day) => total + (weeklyByDay.get(day.dayIndex)?.length ?? 0),
+        0,
+      ),
+    [weeklyByDay],
+  );
 
   const onSaveClassTask = (task: Task, event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -165,26 +193,26 @@ function ClassesView() {
         Classes
       </h1>
 
-      <section className="mt-6 w-full rounded-2xl border border-zinc-200/80 bg-white/70 p-5 dark:border-zinc-700 dark:bg-zinc-900/60">
+      <section className="mt-6 w-full rounded-2xl border border-zinc-200/80 bg-white/80 p-5 shadow-[0_8px_30px_rgba(15,23,42,0.05)] dark:border-zinc-700 dark:bg-zinc-900/60">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
             Your School Schedule
           </h2>
-          <span className="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
-            {weeklyClassTasks.length} scheduled
+          <span className="rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-xs font-semibold text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
+            {weeklyScheduledCount} scheduled
           </span>
         </div>
 
-        {weeklyClassTasks.length ? (
-          <div className="mt-4 grid grid-cols-1 gap-1 md:grid-cols-2 xl:grid-cols-5">
+        {weeklyScheduledCount ? (
+          <div className="mt-4 grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-5">
             {WEEK_DAYS.map((day) => {
               const dayTasks = weeklyByDay.get(day.dayIndex) ?? [];
               return (
                 <div
                   key={day.label}
-                  className=" -skew-x-12 bg-blue-300/20 p-3 dark:border-zinc-700 dark:bg-zinc-900/80"
+                  className="-skew-x-12 rounded-xl border border-sky-100 bg-sky-50/60 p-3 dark:border-sky-900/30 dark:bg-sky-950/20"
                 >
-                  <p className="text-xs skew-x-12 font-quantify font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                  <p className="skew-x-12 text-[11px] font-quantify font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
                     {day.label}
                   </p>
                   {dayTasks.length ? (
@@ -193,25 +221,25 @@ function ClassesView() {
                         return (
                           <li
                             key={task.id}
-                            className=" -skew-x-12 border bg-white border-zinc-200/80 p-2.5 dark:border-zinc-700 dark:bg-zinc-950"
+                            className="-skew-x-12 rounded-lg border border-zinc-200/80 bg-white/95 p-2.5 shadow-[0_2px_8px_rgba(15,23,42,0.04)] dark:border-zinc-700 dark:bg-zinc-950/90"
                           >
-                            <p className="mt-0.5 truncate skew-x-12 text-[11px] text-zinc-600 dark:text-zinc-300">
+                            <p className="skew-x-12 truncate text-xs font-semibold text-zinc-800 dark:text-zinc-100">
                               {task.title}
                             </p>
                             {task.metadata?.class?.location ||
                             task.classLocation ? (
-                              <p className="truncate text-[10px] text-zinc-500 dark:text-zinc-400">
+                              <p className="mt-0.5 skew-x-12 truncate text-[10px] text-zinc-500 dark:text-zinc-400">
                                 {task.metadata?.class?.location ??
                                   task.classLocation}
                               </p>
                             ) : null}
-                            <div className=" flex items-center justify-between gap-2">
-                              <p className="text-[10px] font-semibold text-blue-600 dark:text-blue-300">
+                            <div className="mt-1.5 flex skew-x-12 flex-wrap items-center gap-1.5">
+                              <p className="whitespace-nowrap text-[11px] font-semibold text-blue-600 dark:text-blue-300">
                                 {formatTimeRange(task.dueDate, task.endDate)}
                               </p>
                               {task.metadata?.class?.grade ||
                               task.classGrade ? (
-                                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700 dark:bg-blue-500/20 dark:text-blue-200">
+                                <span className="inline-flex shrink-0 items-center rounded-md border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700 dark:border-blue-500/25 dark:bg-blue-500/20 dark:text-blue-200">
                                   {task.metadata?.class?.grade ??
                                     task.classGrade}
                                 </span>
@@ -221,13 +249,13 @@ function ClassesView() {
                         );
                       })}
                       {dayTasks.length > 4 ? (
-                        <li className="text-[10px] text-zinc-500 dark:text-zinc-400">
+                        <li className="skew-x-12 text-[10px] font-medium text-zinc-500 dark:text-zinc-400">
                           +{dayTasks.length - 4} more
                         </li>
                       ) : null}
                     </ul>
                   ) : (
-                    <p className="mt-3 text-[11px] text-zinc-400 dark:text-zinc-500">
+                    <p className="mt-3 skew-x-12 text-[11px] italic text-zinc-400 dark:text-zinc-500">
                       No classes
                     </p>
                   )}
