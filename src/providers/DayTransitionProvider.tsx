@@ -8,6 +8,9 @@ import {
   type ReactNode,
 } from "react";
 import {
+  Alignment,
+  Fit,
+  Layout,
   useRive,
   useViewModel,
   useViewModelInstance,
@@ -30,11 +33,17 @@ type DayTransitionContextType = {
 
 const DAY_TRANSITION_PREFS_KEY = "daybyday.home.day-transition.v1";
 const LOOP_DAY_TRANSITION_PREVIEW = false;
-const RIVE_TRANSITION_DURATION_MS = 2200;
+// Keep this comfortably longer than the Rive timeline length so
+// the overlay does not disappear before the animation finishes.
+const RIVE_TRANSITION_DURATION_MS = 4200;
 const DAY_STATE_CHANGE_RIVE_SRC = new URL(
   "../assets/animations/DayStateChange.riv",
   import.meta.url,
 ).href;
+const DAY_STATE_CHANGE_LAYOUT = new Layout({
+  fit: Fit.Cover,
+  alignment: Alignment.Center,
+});
 const BEFORE_TEXT_RUN_CANDIDATES = ["beforeLabel", "before.abel", "BeforeText"];
 const AFTER_TEXT_RUN_CANDIDATES = ["afterLabel", "after.abel", "AfterText"];
 
@@ -61,6 +70,9 @@ function LabelAnimation({
     src: DAY_STATE_CHANGE_RIVE_SRC,
     stateMachines: "State Machine 1",
     autoplay: true,
+    layout: DAY_STATE_CHANGE_LAYOUT,
+  }, {
+    shouldResizeCanvasToContainer: true,
   });
   const viewModel = useViewModel(rive, { useDefault: true });
   const defaultViewModelInstance = useViewModelInstance(viewModel, {
@@ -190,7 +202,7 @@ export const DayTransitionProvider = ({
       {isTransitionAnimationEnabled && activeTransition ? (
         <div
           key={`${activeTransition.from}-${activeTransition.to}`}
-          className="pointer-events-none fixed inset-0 z-9999 bg-[#1f2125]"
+          className="pointer-events-none fixed inset-0 z-9999 "
         >
           <LabelAnimation
             beforeText={activeTransition.from}
