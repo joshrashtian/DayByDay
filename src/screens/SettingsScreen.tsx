@@ -7,7 +7,10 @@ import {
   getBlocksUserCss,
   setBlocksUserCss,
 } from "../lib/blocksUserCss";
-import { getCategoryIconOption, renderCategoryIcon } from "../lib/categoryIcons";
+import {
+  getCategoryIconOption,
+  renderCategoryIcon,
+} from "../lib/categoryIcons";
 import {
   clearManualWeatherCoords,
   getManualWeatherCoords,
@@ -543,7 +546,10 @@ export const SettingsScreen = ({ modal = false }: { modal?: boolean }) => {
               >
                 {categoryIconInput.trim() ? (
                   <span className="inline-flex items-center">
-                    {renderCategoryIcon(categoryIconInput.trim(), "h-3.5 w-3.5")}
+                    {renderCategoryIcon(
+                      categoryIconInput.trim(),
+                      "h-3.5 w-3.5",
+                    )}
                   </span>
                 ) : null}
                 <span>{categoryNameInput.trim() || "Category"}</span>

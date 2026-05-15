@@ -118,26 +118,42 @@ function ClassesView() {
   );
 
   const weeklyByDay = useMemo(() => {
-    const byDay = new Map<number, Task[]>();
-    for (const day of WEEK_DAYS) byDay.set(day.dayIndex, []);
+    const byDaySeries = new Map<number, Map<string, Task>>();
+    for (const day of WEEK_DAYS) byDaySeries.set(day.dayIndex, new Map());
     for (const task of weeklyClassTasks) {
       const recurrenceDays = normalizeRecurrenceWeekdays(
         task.recurrence?.weekdays,
       );
       const fallbackDay = task.dueDate!.getDay();
       const dayIndexes = recurrenceDays?.length ? recurrenceDays : [fallbackDay];
+      const seriesKey = task.recurringSourceId ?? task.id;
       for (const dayIndex of dayIndexes) {
-        const bucket = byDay.get(dayIndex);
+        const bucket = byDaySeries.get(dayIndex);
         if (!bucket) continue;
-        bucket.push(task);
+        const existing = bucket.get(seriesKey);
+        if (!existing) {
+          bucket.set(seriesKey, task);
+          continue;
+        }
+        // Prefer the canonical recurring source over detached copies, then latest edit.
+        const chooseCurrent =
+          Boolean(task.recurrence) && !existing.recurrence
+            ? true
+            : task.recurrence === existing.recurrence
+              ? task.updatedAt > existing.updatedAt
+              : false;
+        if (chooseCurrent) bucket.set(seriesKey, task);
       }
     }
-    for (const list of byDay.values()) {
+    const byDay = new Map<number, Task[]>();
+    for (const [dayIndex, seriesMap] of byDaySeries.entries()) {
+      const list = [...seriesMap.values()];
       list.sort((a, b) => {
         const aTime = a.dueDate?.getTime() ?? Number.MAX_SAFE_INTEGER;
         const bTime = b.dueDate?.getTime() ?? Number.MAX_SAFE_INTEGER;
         return aTime - bTime;
       });
+      byDay.set(dayIndex, list);
     }
     return byDay;
   }, [weeklyClassTasks]);

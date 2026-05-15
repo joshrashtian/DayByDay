@@ -3,6 +3,7 @@ import { DateCorner } from "../components/dateCorner";
 import { CriticalHeaderRibbon } from "../components/home/CriticalDayRibbon";
 import { TasksFrontPage } from "../components/tasks/TasksFrontPage";
 import { useContextMenu } from "../providers/ContextMenuProvider";
+import { useDayTransition } from "../providers/DayTransitionProvider";
 import {
   getBlockBannerClasses,
   type BlockVisualStyle,
@@ -65,8 +66,7 @@ function loadHomeVisualPrefs(): HomeVisualPrefs {
           : "punchy",
       blockScale: clampScale(parsed.blockScale ?? 1),
       ribbonStyle:
-        parsed.ribbonStyle === "muted" ||
-        parsed.ribbonStyle === "high-contrast"
+        parsed.ribbonStyle === "muted" || parsed.ribbonStyle === "high-contrast"
           ? parsed.ribbonStyle
           : "default",
       ribbonScale: clampScale(parsed.ribbonScale ?? 1),
@@ -100,6 +100,7 @@ export const HomeScreen = () => {
     loadHomeVisualPrefs(),
   );
   const context = useContextMenu();
+  const { focusMode, switchFocusMode } = useDayTransition();
 
   useEffect(() => {
     const update = () => setMinuteOfDay(nowMinuteOfDay());
@@ -153,6 +154,8 @@ export const HomeScreen = () => {
   );
   const ribbonStyleClass = getCriticalRibbonClass(visualPrefs.ribbonStyle);
   const tasksStyleClass = getTasksPanelClass(visualPrefs.tasksStyle);
+  const isAllDayMode = focusMode === "all-day";
+  const displayedBlockName = isAllDayMode ? undefined : activeBlockName;
 
   const openBlockMenu = (event: React.MouseEvent<HTMLDivElement>) => {
     context.openMenu(event, [
@@ -190,8 +193,7 @@ export const HomeScreen = () => {
         id: "block-size-medium",
         type: "item",
         label: "Size: Medium",
-        onSelect: () =>
-          setVisualPrefs((prev) => ({ ...prev, blockScale: 1 })),
+        onSelect: () => setVisualPrefs((prev) => ({ ...prev, blockScale: 1 })),
       },
       {
         id: "block-size-large",
@@ -239,8 +241,7 @@ export const HomeScreen = () => {
         id: "ribbon-size-medium",
         type: "item",
         label: "Size: Medium",
-        onSelect: () =>
-          setVisualPrefs((prev) => ({ ...prev, ribbonScale: 1 })),
+        onSelect: () => setVisualPrefs((prev) => ({ ...prev, ribbonScale: 1 })),
       },
       {
         id: "ribbon-size-large",
@@ -288,8 +289,7 @@ export const HomeScreen = () => {
         id: "tasks-size-medium",
         type: "item",
         label: "Size: Medium",
-        onSelect: () =>
-          setVisualPrefs((prev) => ({ ...prev, tasksScale: 1 })),
+        onSelect: () => setVisualPrefs((prev) => ({ ...prev, tasksScale: 1 })),
       },
       {
         id: "tasks-size-large",
@@ -337,8 +337,7 @@ export const HomeScreen = () => {
         id: "clock-size-medium",
         type: "item",
         label: "Size: Medium",
-        onSelect: () =>
-          setVisualPrefs((prev) => ({ ...prev, clockScale: 1 })),
+        onSelect: () => setVisualPrefs((prev) => ({ ...prev, clockScale: 1 })),
       },
       {
         id: "clock-size-large",
@@ -353,9 +352,6 @@ export const HomeScreen = () => {
   return (
     <div className="min-h-dvh">
       <main className="mx-auto max-w-6xl px-3 pb-10 pt-20 sm:px-6 sm:pb-12 sm:pt-24 lg:px-8">
-        <p className="mb-3 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-          Right-click Home widgets to customize style and size.
-        </p>
         <div className="grid grid-cols-1 items-start gap-6 sm:gap-8 xl:grid-cols-[minmax(0,1fr)_auto] xl:gap-10">
           <div className="flex min-w-0 flex-col items-stretch gap-5">
             <div
@@ -364,14 +360,50 @@ export const HomeScreen = () => {
               style={{ transform: `scale(${visualPrefs.blockScale})` }}
             >
               <h1 className={blockClasses.titleClassName}>
-                {activeBlockName ?? "Anytime"}
+                {isAllDayMode ? "All Day" : (activeBlockName ?? "Anytime")}
               </h1>
-              {activeBlockConfig ? (
+              {!isAllDayMode && activeBlockConfig ? (
                 <p className={blockClasses.timeClassName}>
                   {formatMinutesAsTimeInput(activeBlockConfig.startMinutes)}-
                   {formatMinutesAsTimeInput(activeBlockConfig.endMinutes)}
                 </p>
               ) : null}
+            </div>
+            <div className="inline-flex w-fit items-center gap-1 rounded-full border border-zinc-200 bg-white p-1 text-xs shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+              <button
+                type="button"
+                onClick={() =>
+                  switchFocusMode("current-block", {
+                    from: "All Day",
+                    to: activeBlockName ?? "Current Block",
+                  })
+                }
+                className={`rounded-full px-3 py-1.5 font-semibold transition-colors ${
+                  !isAllDayMode
+                    ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                    : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                }`}
+                aria-pressed={!isAllDayMode}
+              >
+                Current Block
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  switchFocusMode("all-day", {
+                    from: activeBlockName ?? "Current Block",
+                    to: "All Day",
+                  })
+                }
+                className={`rounded-full px-3 py-1.5 font-semibold transition-colors ${
+                  isAllDayMode
+                    ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                    : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                }`}
+                aria-pressed={isAllDayMode}
+              >
+                All Day
+              </button>
             </div>
             <div
               onContextMenu={openRibbonMenu}
@@ -391,7 +423,7 @@ export const HomeScreen = () => {
                 transformOrigin: "left top",
               }}
             >
-              <TasksFrontPage activeBlockName={activeBlockName} />
+              <TasksFrontPage activeBlockName={displayedBlockName} />
             </div>
           </div>
           <aside

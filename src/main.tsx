@@ -4,6 +4,7 @@ import { HashRouter } from "react-router-dom";
 import App from "./App";
 import ContextMenuProvider from "./providers/ContextMenuProvider";
 import PopupProvider from "./providers/PopupProvider";
+import { DayTransitionProvider } from "./providers/DayTransitionProvider";
 import { ProfileProvider } from "./providers/ProfileProvider";
 import { StyleProvider } from "./providers/StyleProvider";
 
@@ -13,9 +14,11 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
       <StyleProvider>
         <ContextMenuProvider>
           <PopupProvider>
-            <ProfileProvider>
-              <App />
-            </ProfileProvider>
+            <DayTransitionProvider>
+              <ProfileProvider>
+                <App />
+              </ProfileProvider>
+            </DayTransitionProvider>
           </PopupProvider>
         </ContextMenuProvider>
       </StyleProvider>

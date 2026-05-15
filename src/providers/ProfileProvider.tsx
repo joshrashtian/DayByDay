@@ -126,7 +126,7 @@ export const ProfileProvider = ({
             <h2 className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
               Your{" "}
               <span className="italic underline underline-offset-4 font-black">
-                Identity
+                Persona
               </span>
               .
             </h2>
@@ -142,7 +142,7 @@ export const ProfileProvider = ({
         </header>
 
         <div className="flex h-[calc(100vh-77px)] flex-col gap-4 overflow-y-auto p-5">
-          <div className="flex items-center -skew-3 gap-4 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="flex items-center -skew-3 gap-4  border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900">
             <AvatarProfilePhoto
               size="sm"
               className="skew-3"

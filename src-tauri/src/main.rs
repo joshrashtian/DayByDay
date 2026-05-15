@@ -35,6 +35,21 @@ fn main() {
                 .select_all()
                 .build()?;
 
+            let zoom_in_item = MenuItemBuilder::with_id("zoom_in", "Zoom In")
+                .accelerator("CmdOrCtrl+=")
+                .build(app)?;
+            let zoom_out_item = MenuItemBuilder::with_id("zoom_out", "Zoom Out")
+                .accelerator("CmdOrCtrl+-")
+                .build(app)?;
+            let actual_size_item = MenuItemBuilder::with_id("zoom_reset", "Actual Size")
+                .accelerator("CmdOrCtrl+0")
+                .build(app)?;
+            let view_menu = SubmenuBuilder::new(app, "View")
+                .item(&zoom_in_item)
+                .item(&zoom_out_item)
+                .item(&actual_size_item)
+                .build()?;
+
             let go_menu = SubmenuBuilder::new(app, "Go")
                 .text("home", "Home")
                 .text("calendar", "Calendar")
@@ -45,6 +60,7 @@ fn main() {
             let menu = MenuBuilder::new(app)
                 .item(&app_menu)
                 .item(&edit_menu)
+                .item(&view_menu)
                 .item(&task_menu)
                 .item(&go_menu)
                 .build()?;
@@ -70,6 +86,15 @@ fn main() {
                     }
                     "create_task" => {
                         let _ = app_handle.emit("create-task", ());
+                    }
+                    "zoom_in" => {
+                        let _ = app_handle.emit("menu-zoom", "in");
+                    }
+                    "zoom_out" => {
+                        let _ = app_handle.emit("menu-zoom", "out");
+                    }
+                    "zoom_reset" => {
+                        let _ = app_handle.emit("menu-zoom", "reset");
                     }
                     _ => {
                         // Ignore unrelated native menu events.
