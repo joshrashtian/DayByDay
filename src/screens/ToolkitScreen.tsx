@@ -1,22 +1,9 @@
-import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
-import {
-  TOOLKIT_PANELS,
-  TOOLKIT_PINNED_UPDATED_EVENT,
-  loadPinnedToolkitPanels,
-  savePinnedToolkitPanels,
-} from "../lib/toolkitPanels";
+import { TOOLKIT_PANELS, savePinnedToolkitPanels } from "../lib/toolkitPanels";
+import { useSettingsStore } from "../stores/settingsStore";
 
 export default function ToolkitScreen() {
-  const [pinnedPanelIds, setPinnedPanelIds] = useState<string[]>(() =>
-    loadPinnedToolkitPanels(),
-  );
-
-  useEffect(() => {
-    const syncPinned = () => setPinnedPanelIds(loadPinnedToolkitPanels());
-    window.addEventListener(TOOLKIT_PINNED_UPDATED_EVENT, syncPinned);
-    return () => window.removeEventListener(TOOLKIT_PINNED_UPDATED_EVENT, syncPinned);
-  }, []);
+  const pinnedPanelIds = useSettingsStore((s) => s.pinnedToolkitPanels);
 
   const togglePinnedPanel = (panelId: string) => {
     const isPinned = pinnedPanelIds.includes(panelId);
@@ -24,7 +11,6 @@ export default function ToolkitScreen() {
       ? pinnedPanelIds.filter((id) => id !== panelId)
       : [...pinnedPanelIds, panelId];
     savePinnedToolkitPanels(next);
-    setPinnedPanelIds(next);
   };
 
   return (

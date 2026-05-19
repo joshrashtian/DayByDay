@@ -4,68 +4,16 @@ import { CriticalHeaderRibbon } from "../components/home/CriticalDayRibbon";
 import { TasksFrontPage } from "../components/tasks/TasksFrontPage";
 import { useContextMenu } from "../providers/ContextMenuProvider";
 import { useDayTransition } from "../providers/DayTransitionProvider";
-import type { HomeVisualPrefs } from "@/types";
 import { getBlockBannerClasses } from "../providers/homeBlockBannerStyles";
 import { getCriticalRibbonClass } from "../providers/homeCriticalRibbonStyles";
 import { getTasksPanelClass } from "../providers/homeTasksPanelStyles";
 import {
-  BLOCK_CONFIGS_CHANGED,
-  BLOCK_CONFIG_STORAGE_KEY,
   formatMinutesAsTimeInput,
   getActiveBlockNameAt,
   getBlockConfigByName,
 } from "../lib/taskBlocks";
+import { useSettingsStore } from "../stores/settingsStore";
 import { IoSettings } from "react-icons/io5";
-
-const HOME_VISUAL_PREFS_KEY = "daybyday.home.visual-prefs.v1";
-
-const defaultHomeVisualPrefs: HomeVisualPrefs = {
-  blockStyle: "punchy",
-  blockScale: 1,
-  ribbonStyle: "default",
-  ribbonScale: 1,
-  tasksStyle: "default",
-  tasksScale: 1,
-  clockStyle: "p5",
-  clockScale: 1,
-};
-
-const clampScale = (value: number) => Math.min(1.5, Math.max(0.8, value));
-
-function loadHomeVisualPrefs(): HomeVisualPrefs {
-  if (typeof window === "undefined") return defaultHomeVisualPrefs;
-  const raw = window.localStorage.getItem(HOME_VISUAL_PREFS_KEY);
-  if (!raw) return defaultHomeVisualPrefs;
-  try {
-    const parsed = JSON.parse(raw) as Partial<HomeVisualPrefs>;
-    return {
-      blockStyle:
-        parsed.blockStyle === "clean" || parsed.blockStyle === "outline"
-          ? parsed.blockStyle
-          : "punchy",
-      blockScale: clampScale(parsed.blockScale ?? 1),
-      ribbonStyle:
-        parsed.ribbonStyle === "muted" || parsed.ribbonStyle === "high-contrast"
-          ? parsed.ribbonStyle
-          : "default",
-      ribbonScale: clampScale(parsed.ribbonScale ?? 1),
-      tasksStyle:
-        parsed.tasksStyle === "card" || parsed.tasksStyle === "minimal"
-          ? parsed.tasksStyle
-          : "default",
-      tasksScale: clampScale(parsed.tasksScale ?? 1),
-      clockStyle:
-        parsed.clockStyle === "minimal" ||
-        parsed.clockStyle === "basic" ||
-        parsed.clockStyle === "p5"
-          ? parsed.clockStyle
-          : "p5",
-      clockScale: clampScale(parsed.clockScale ?? 1),
-    };
-  } catch {
-    return defaultHomeVisualPrefs;
-  }
-}
 
 function nowMinuteOfDay(): number {
   const now = new Date();
@@ -74,10 +22,9 @@ function nowMinuteOfDay(): number {
 
 export const HomeScreen = () => {
   const [minuteOfDay, setMinuteOfDay] = useState(() => nowMinuteOfDay());
-  const [blockConfigVersion, setBlockConfigVersion] = useState(0);
-  const [visualPrefs, setVisualPrefs] = useState<HomeVisualPrefs>(() =>
-    loadHomeVisualPrefs(),
-  );
+  const blockConfigs = useSettingsStore((s) => s.blockConfigs);
+  const visualPrefs = useSettingsStore((s) => s.homeVisualPrefs);
+  const setVisualPrefs = useSettingsStore((s) => s.setHomeVisualPrefs);
   const context = useContextMenu();
   const { focusMode, switchFocusMode } = useDayTransition();
 
@@ -87,35 +34,15 @@ export const HomeScreen = () => {
     return () => window.clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    const refresh = () => setBlockConfigVersion((v) => v + 1);
-    window.addEventListener(BLOCK_CONFIGS_CHANGED, refresh);
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === BLOCK_CONFIG_STORAGE_KEY || e.key === null) refresh();
-    };
-    window.addEventListener("storage", onStorage);
-    return () => {
-      window.removeEventListener(BLOCK_CONFIGS_CHANGED, refresh);
-      window.removeEventListener("storage", onStorage);
-    };
-  }, []);
-
-  useEffect(() => {
-    window.localStorage.setItem(
-      HOME_VISUAL_PREFS_KEY,
-      JSON.stringify(visualPrefs),
-    );
-  }, [visualPrefs]);
-
   const activeBlockName = useMemo(
     () => getActiveBlockNameAt(minuteOfDay),
-    [minuteOfDay, blockConfigVersion],
+    [minuteOfDay, blockConfigs],
   );
 
   const activeBlockConfig = useMemo(() => {
     if (!activeBlockName) return undefined;
     return getBlockConfigByName(activeBlockName);
-  }, [activeBlockName, blockConfigVersion]);
+  }, [activeBlockName, blockConfigs]);
 
   const normalized = activeBlockName?.toLowerCase() ?? "";
   const blockAccentClass =

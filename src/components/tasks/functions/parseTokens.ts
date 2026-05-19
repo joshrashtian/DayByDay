@@ -1,8 +1,17 @@
 import { DateTime } from "luxon";
-import { parseDueLocalInput } from "../../../lib/taskDates";
 import { DEFAULT_BLOCK_SUGGESTIONS } from "../../../lib/taskBlocks";
 import type { TaskPriority } from "@/types";
 import { normalizeTaskTags } from "../../../types/task";
+import {
+  applyDueToken,
+  parseInlineDueRangeArg,
+  parseDueTokenArg,
+  resolveDueParts,
+  type DueParts,
+} from "./dueParsing";
+
+export type { DueParts } from "./dueParsing";
+export { parseChatDueArg } from "./dueParsing";
 
 export type TaskChatHint = {
   key: string;
@@ -38,243 +47,6 @@ function mapPriorityToken(t: string): TaskPriority | undefined {
 
 function dueHintLabel(d: Date): string {
   return `Due: ${DateTime.fromJSDate(d).toLocaleString(DateTime.DATETIME_MED)}`;
-}
-
-const TIME_PARSE_FORMATS = ["h:mma", "h:mm a", "ha", "h a", "HH:mm", "H:mm"] as const;
-
-type ParsedDueToken =
-  | { kind: "time"; hour: number; minute: number; label: string }
-  | { kind: "date"; date: DateTime; label: string }
-  | { kind: "datetime"; dateTime: DateTime; label: string };
-
-type ParsedDueRangeToken = {
-  start: ParsedDueToken;
-  end: ParsedDueToken;
-};
-
-type DueParts = {
-  date?: DateTime;
-  time?: { hour: number; minute: number };
-  dateTime?: DateTime;
-};
-
-function parseTimeToken(value: string): { hour: number; minute: number } | undefined {
-  for (const fmt of TIME_PARSE_FORMATS) {
-    const parsed = DateTime.fromFormat(value, fmt, { zone: "local" });
-    if (parsed.isValid) return { hour: parsed.hour, minute: parsed.minute };
-    const lowerParsed = DateTime.fromFormat(value.toLowerCase(), fmt, {
-      zone: "local",
-    });
-    if (lowerParsed.isValid) {
-      return { hour: lowerParsed.hour, minute: lowerParsed.minute };
-    }
-  }
-  return undefined;
-}
-
-function parseDueTokenArg(arg: string): ParsedDueToken | undefined {
-  const trimmed = arg.trim();
-  if (!trimmed) return undefined;
-
-  const now = DateTime.now().setZone("local");
-  const lower = trimmed.toLowerCase();
-
-  if (lower === "today") {
-    const date = now.startOf("day");
-    return { kind: "date", date, label: `Date: ${date.toFormat("EEE d MMM")}` };
-  }
-  if (lower === "tomorrow") {
-    const date = now.plus({ days: 1 }).startOf("day");
-    return { kind: "date", date, label: `Date: ${date.toFormat("EEE d MMM")}` };
-  }
-  if (lower === "tonight") {
-    return { kind: "time", hour: 18, minute: 0, label: "Time: 6:00 PM" };
-  }
-
-  const asTime = parseTimeToken(trimmed);
-  if (asTime) {
-    return {
-      kind: "time",
-      hour: asTime.hour,
-      minute: asTime.minute,
-      label: `Time: ${DateTime.fromObject({ hour: asTime.hour, minute: asTime.minute }).toFormat("h:mm a")}`,
-    };
-  }
-
-  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-    const d = DateTime.fromISO(trimmed, { zone: "local" }).startOf("day");
-    if (d.isValid) {
-      return { kind: "date", date: d, label: `Date: ${d.toFormat("EEE d MMM")}` };
-    }
-  }
-
-  const mdY = DateTime.fromFormat(trimmed, "M/d/yyyy", { zone: "local" });
-  if (mdY.isValid) {
-    const date = mdY.startOf("day");
-    return { kind: "date", date, label: `Date: ${date.toFormat("EEE d MMM")}` };
-  }
-
-  const md = DateTime.fromFormat(trimmed, "M/d", { zone: "local" });
-  if (md.isValid) {
-    let date = md.set({ year: now.year }).startOf("day");
-    if (date < now.startOf("day")) date = date.plus({ years: 1 });
-    return { kind: "date", date, label: `Date: ${date.toFormat("EEE d MMM")}` };
-  }
-
-  const parsedLocal = parseDueLocalInput(trimmed);
-  if (parsedLocal) {
-    const dt = DateTime.fromJSDate(parsedLocal).setZone("local");
-    if (!dt.isValid) return undefined;
-    const hasTime =
-      /[ap]m/i.test(trimmed) ||
-      /:\d{1,2}/.test(trimmed) ||
-      /t\d{1,2}/i.test(trimmed);
-    if (hasTime) {
-      return {
-        kind: "datetime",
-        dateTime: dt,
-        label: `At: ${dt.toLocaleString(DateTime.DATETIME_MED)}`,
-      };
-    }
-    return {
-      kind: "date",
-      date: dt.startOf("day"),
-      label: `Date: ${dt.toFormat("EEE d MMM")}`,
-    };
-  }
-
-  const iso = DateTime.fromISO(trimmed, { zone: "local" });
-  if (iso.isValid) {
-    if (trimmed.includes("T")) {
-      return {
-        kind: "datetime",
-        dateTime: iso,
-        label: `At: ${iso.toLocaleString(DateTime.DATETIME_MED)}`,
-      };
-    }
-    const date = iso.startOf("day");
-    return { kind: "date", date, label: `Date: ${date.toFormat("EEE d MMM")}` };
-  }
-
-  return undefined;
-}
-
-function parseInlineDueRangeArg(arg: string): ParsedDueRangeToken | undefined {
-  const trimmed = arg.trim();
-  if (!trimmed) return undefined;
-
-  const parseSplit = (leftRaw: string, rightRaw: string) => {
-    const left = leftRaw.trim();
-    const right = rightRaw.trim();
-    if (!left || !right) return undefined;
-    const start = parseDueTokenArg(left);
-    const end = parseDueTokenArg(right);
-    if (!start || !end) return undefined;
-    return { start, end };
-  };
-
-  if (trimmed.includes("->")) {
-    const [left, right, ...rest] = trimmed.split("->");
-    if (rest.length === 0 && left && right) return parseSplit(left, right);
-  }
-
-  for (let i = 1; i < trimmed.length - 1; i++) {
-    if (trimmed[i] !== "-") continue;
-    const parsed = parseSplit(trimmed.slice(0, i), trimmed.slice(i + 1));
-    if (parsed) return parsed;
-  }
-
-  return undefined;
-}
-
-function applyDueToken(target: DueParts, parsed: ParsedDueToken): DueParts {
-  if (parsed.kind === "datetime") {
-    return { ...target, dateTime: parsed.dateTime };
-  }
-  if (parsed.kind === "date") {
-    return { ...target, date: parsed.date };
-  }
-  return {
-    ...target,
-    time: { hour: parsed.hour, minute: parsed.minute },
-  };
-}
-
-function resolveDueParts(parts: DueParts, baseDay: DateTime): DateTime | undefined {
-  if (parts.dateTime) return parts.dateTime;
-  if (parts.date && parts.time) {
-    return parts.date.set({
-      hour: parts.time.hour,
-      minute: parts.time.minute,
-      second: 0,
-      millisecond: 0,
-    });
-  }
-  if (parts.date) {
-    return parts.date.set({ hour: 23, minute: 59, second: 0, millisecond: 0 });
-  }
-  if (parts.time) {
-    return baseDay.set({
-      hour: parts.time.hour,
-      minute: parts.time.minute,
-      second: 0,
-      millisecond: 0,
-    });
-  }
-  return undefined;
-}
-
-
-export function parseChatDueArg(arg: string): Date | undefined {
-  const trimmed = arg.trim();
-  if (!trimmed) return undefined;
-
-  const iso = parseDueLocalInput(trimmed);
-  if (iso) return iso;
-
-  const now = DateTime.now().setZone("local");
-  const lower = trimmed.toLowerCase();
-
-  if (lower === "today") {
-    return now.set({ hour: 23, minute: 59, second: 0, millisecond: 0 }).toJSDate();
-  }
-  if (lower === "tomorrow") {
-    return now
-      .plus({ days: 1 })
-      .set({ hour: 9, minute: 0, second: 0, millisecond: 0 })
-      .toJSDate();
-  }
-  if (lower === "tonight") {
-    return now.set({ hour: 18, minute: 0, second: 0, millisecond: 0 }).toJSDate();
-  }
-
-  const tryTimeFormats = (s: string) => {
-    const formats = ["h:mma", "h:mm a", "ha", "h a", "HH:mm", "H:mm"];
-    for (const fmt of formats) {
-      const dt = DateTime.fromFormat(s, fmt, { zone: "local" });
-      if (dt.isValid) {
-        return now
-          .set({ hour: dt.hour, minute: dt.minute, second: 0, millisecond: 0 })
-          .toJSDate();
-      }
-    }
-    return undefined;
-  };
-
-  const asTime = tryTimeFormats(trimmed) ?? tryTimeFormats(lower);
-  if (asTime) return asTime;
-
-  const mdY = DateTime.fromFormat(trimmed, "M/d/yyyy", { zone: "local" });
-  if (mdY.isValid) return mdY.toJSDate();
-
-  const md = DateTime.fromFormat(trimmed, "M/d", { zone: "local" });
-  if (md.isValid) {
-    let y = md.set({ year: now.year });
-    if (y < now.startOf("day")) y = y.plus({ years: 1 });
-    return y.toJSDate();
-  }
-
-  return undefined;
 }
 
 export function parseTaskChatInput(raw: string): TaskChatParse {
@@ -339,14 +111,9 @@ export function parseTaskChatInput(raw: string): TaskChatParse {
       return false;
     }
 
-    // Block: %label
-    // Supports:
-    // - one-word tokens: %work
-    // - known multi-word suggestions: %Early Morning
-    // - quoted custom values: %"Deep Work" or %'Deep Work'
     if (work.startsWith("%")) {
       const quoted = work.match(
-        /^%\s*(?:"([^"]+)"|'([^']+)'|“([^”]+)”|‘([^’]+)’)(\s|$)/,
+        /^%\s*(?:"([^"]+)"|'([^']+)'|"([^"]+)"|'([^']+)')(\s|$)/,
       );
       if (quoted) {
         const value = (
@@ -391,13 +158,9 @@ export function parseTaskChatInput(raw: string): TaskChatParse {
       return false;
     }
 
-    // Category: @@label (must run before single @)
-    // Supports quoted custom values for spaces:
-    // - @@"Deep Work"
-    // - @@'Deep Work'
     if (work.startsWith("@@")) {
       const quoted = work.match(
-        /^@@\s*(?:"([^"]+)"|'([^']+)'|“([^”]+)”|‘([^’]+)’)(\s|$)/,
+        /^@@\s*(?:"([^"]+)"|'([^']+)'|"([^"]+)"|'([^']+)')(\s|$)/,
       );
       if (quoted) {
         const value = (
@@ -425,7 +188,6 @@ export function parseTaskChatInput(raw: string): TaskChatParse {
       return false;
     }
 
-    // Tags: #label (repeatable; letters, digits, _ . -)
     if (work.startsWith("#")) {
       const m = work.match(/^#([\w.-]+)(\s|$)/);
       if (m) {
@@ -437,7 +199,6 @@ export function parseTaskChatInput(raw: string): TaskChatParse {
       return false;
     }
 
-    // Due / time: @token (non-space chunk)
     if (work.startsWith("@")) {
       const m = work.match(/^@(\S+)/);
       if (m) {
@@ -532,15 +293,14 @@ export function parseTaskChatInput(raw: string): TaskChatParse {
     !endDueParts.date &&
     !endDueParts.dateTime
   ) {
-    // If end only had a time and that time is earlier than start,
-    // treat it as crossing midnight into the next day.
     resolvedEnd = resolvedEnd.plus({ days: 1 });
   }
 
   const dueDate = resolvedStart?.toJSDate();
   const endDate = resolvedEnd?.toJSDate();
 
-  if (dueDate) hints.push({ key: "due-summary", label: dueHintLabel(dueDate) });
+  if (dueDate)
+    hints.push({ key: "due-summary", label: dueHintLabel(dueDate) });
   if (endDate) {
     hints.push({
       key: "end-summary",

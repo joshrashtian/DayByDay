@@ -1,8 +1,11 @@
 import type { CategoryConfig, CategoryTone, Task } from "@/types";
+import { useSettingsStore } from "../stores/settingsStore";
 
 export type { CategoryConfig, CategoryTone } from "@/types";
 
+/** @deprecated Use useSettingsStore subscription instead of event listeners */
 export const CATEGORY_CONFIG_STORAGE_KEY = "daybyday-category-configs";
+/** @deprecated Use useSettingsStore subscription instead of event listeners */
 export const CATEGORY_CONFIGS_CHANGED = "daybyday:category-configs-changed";
 
 type CategoryVisual = {
@@ -14,10 +17,6 @@ type CategoryVisual = {
 };
 
 const DEFAULT_CATEGORY_COLOR = "#8b5cf6";
-
-function inBrowser(): boolean {
-  return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
-}
 
 function normalizeCategoryName(raw: unknown): string | undefined {
   if (typeof raw !== "string") return undefined;
@@ -124,31 +123,22 @@ function hslToHex(h: number, s: number, l: number): string {
 }
 
 export function getCategoryConfigs(): CategoryConfig[] {
-  if (!inBrowser()) return [];
-  try {
-    const raw = window.localStorage.getItem(CATEGORY_CONFIG_STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return dedupeByName(
-      parsed
-        .map((item) => normalizeCategoryConfig(item))
-        .filter((item): item is CategoryConfig => item != null),
-    );
-  } catch {
-    return [];
-  }
+  const stored = useSettingsStore.getState().categoryConfigs;
+  if (!stored.length) return [];
+  return dedupeByName(
+    stored
+      .map((item) => normalizeCategoryConfig(item))
+      .filter((item): item is CategoryConfig => item != null),
+  );
 }
 
 export function setCategoryConfigs(configs: CategoryConfig[]): void {
-  if (!inBrowser()) return;
   const cleaned = dedupeByName(
     configs
       .map((cfg) => normalizeCategoryConfig(cfg))
       .filter((cfg): cfg is CategoryConfig => cfg != null),
   );
-  window.localStorage.setItem(CATEGORY_CONFIG_STORAGE_KEY, JSON.stringify(cleaned));
-  window.dispatchEvent(new CustomEvent(CATEGORY_CONFIGS_CHANGED));
+  useSettingsStore.getState().setCategoryConfigs(cleaned);
 }
 
 export function setOrUpdateCategoryConfig(config: CategoryConfig): void {

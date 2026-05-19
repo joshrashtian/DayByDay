@@ -16,6 +16,7 @@ import {
   useViewModelInstance,
   useViewModelInstanceString,
 } from "@rive-app/react-canvas";
+import { useSettingsStore } from "../stores/settingsStore";
 
 export type { DayFocusMode } from "@/types";
 import type { DayFocusMode } from "@/types";
@@ -32,10 +33,7 @@ type DayTransitionContextType = {
   setTransitionAnimationEnabled: (enabled: boolean) => void;
 };
 
-const DAY_TRANSITION_PREFS_KEY = "daybyday.home.day-transition.v1";
 const LOOP_DAY_TRANSITION_PREVIEW = false;
-// Keep this comfortably longer than the Rive timeline length so
-// the overlay does not disappear before the animation finishes.
 const RIVE_TRANSITION_DURATION_MS = 4200;
 const DAY_STATE_CHANGE_RIVE_SRC = new URL(
   "../assets/animations/DayStateChange.riv",
@@ -47,14 +45,6 @@ const DAY_STATE_CHANGE_LAYOUT = new Layout({
 });
 const BEFORE_TEXT_RUN_CANDIDATES = ["beforeLabel", "before.abel", "BeforeText"];
 const AFTER_TEXT_RUN_CANDIDATES = ["afterLabel", "after.abel", "AfterText"];
-
-function loadTransitionAnimationEnabled(): boolean {
-  if (typeof window === "undefined") return true;
-  const raw = window.localStorage.getItem(DAY_TRANSITION_PREFS_KEY);
-  if (raw === "true") return true;
-  if (raw === "false") return false;
-  return !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
 
 const DayTransitionContext = createContext<
   DayTransitionContextType | undefined
@@ -132,8 +122,10 @@ export const DayTransitionProvider = ({
   children: ReactNode;
 }) => {
   const [focusMode, setFocusMode] = useState<DayFocusMode>("current-block");
+  const storedEnabled = useSettingsStore((s) => s.dayTransitionEnabled);
+  const setStoredEnabled = useSettingsStore((s) => s.setDayTransitionEnabled);
   const [isTransitionAnimationEnabled, setTransitionAnimationEnabled] =
-    useState<boolean>(() => loadTransitionAnimationEnabled());
+    useState<boolean>(storedEnabled);
   const [activeTransition, setActiveTransition] =
     useState<TransitionLabels | null>(() =>
       LOOP_DAY_TRANSITION_PREVIEW
@@ -146,11 +138,8 @@ export const DayTransitionProvider = ({
     mode === "all-day" ? "All Day" : "Current Block";
 
   useEffect(() => {
-    window.localStorage.setItem(
-      DAY_TRANSITION_PREFS_KEY,
-      String(isTransitionAnimationEnabled),
-    );
-  }, [isTransitionAnimationEnabled]);
+    setStoredEnabled(isTransitionAnimationEnabled);
+  }, [isTransitionAnimationEnabled, setStoredEnabled]);
 
   useEffect(() => {
     return () => {

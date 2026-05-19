@@ -1,11 +1,7 @@
-import { useEffect, useState } from "react";
-import {
-  getManualWeatherCoords,
-  WEATHER_COORDS_CHANGED,
-  WEATHER_MANUAL_COORDS_STORAGE_KEY,
-} from "../lib/weatherCoords";
+import { useEffect, useRef, useState } from "react";
+import { getManualWeatherCoords } from "../lib/weatherCoords";
+import { useSettingsStore } from "../stores/settingsStore";
 
-// los angeles
 const FALLBACK_LAT = 34.0549;
 const FALLBACK_LON = -118.2452;
 
@@ -14,6 +10,8 @@ import type { WeatherState } from "@/types";
 
 export function useWeather(): WeatherState {
   const [state, setState] = useState<WeatherState>({ status: "loading" });
+  const weatherCoords = useSettingsStore((s) => s.weatherCoords);
+  const ranOnce = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -45,12 +43,14 @@ export function useWeather(): WeatherState {
       if (manual) return manual;
       if (typeof navigator !== "undefined" && navigator.geolocation) {
         try {
-          const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject, {
-              maximumAge: 600_000,
-              timeout: 10_000,
-            });
-          });
+          const pos = await new Promise<GeolocationPosition>(
+            (resolve, reject) => {
+              navigator.geolocation.getCurrentPosition(resolve, reject, {
+                maximumAge: 600_000,
+                timeout: 10_000,
+              });
+            },
+          );
           return { lat: pos.coords.latitude, lon: pos.coords.longitude };
         } catch {
           /* use fallback */
@@ -70,22 +70,12 @@ export function useWeather(): WeatherState {
     };
 
     void run();
-
-    const onCoordsChanged = () => {
-      void run();
-    };
-    window.addEventListener(WEATHER_COORDS_CHANGED, onCoordsChanged);
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === WEATHER_MANUAL_COORDS_STORAGE_KEY) void run();
-    };
-    window.addEventListener("storage", onStorage);
+    ranOnce.current = true;
 
     return () => {
       cancelled = true;
-      window.removeEventListener(WEATHER_COORDS_CHANGED, onCoordsChanged);
-      window.removeEventListener("storage", onStorage);
     };
-  }, []);
+  }, [weatherCoords]);
 
   return state;
 }

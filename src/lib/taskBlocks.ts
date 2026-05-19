@@ -23,7 +23,11 @@ export const DEFAULT_BLOCK_SUGGESTIONS = [
   ...CONTEXT_BLOCK_SUGGESTIONS,
 ] as const;
 
+import { useSettingsStore } from "../stores/settingsStore";
+
+/** @deprecated Use useSettingsStore subscription instead of event listeners */
 export const BLOCK_CONFIG_STORAGE_KEY = "daybyday-block-configs";
+/** @deprecated Use useSettingsStore subscription instead of event listeners */
 export const BLOCK_CONFIGS_CHANGED = "daybyday:block-configs-changed";
 
 const MINUTES_IN_DAY = 24 * 60;
@@ -97,36 +101,23 @@ export function parseTimeInputToMinutes(raw: string): number | undefined {
   return hh * 60 + mm;
 }
 
-function inBrowser(): boolean {
-  return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
-}
-
 export function getBlockConfigs(): BlockConfig[] {
-  if (!inBrowser()) return fallbackConfigsFromSuggestions();
-  try {
-    const raw = window.localStorage.getItem(BLOCK_CONFIG_STORAGE_KEY);
-    if (!raw) return fallbackConfigsFromSuggestions();
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return fallbackConfigsFromSuggestions();
-    const normalized = parsed
-      .map((item) => normalizeBlockConfig(item))
-      .filter((item): item is BlockConfig => item != null);
-    if (normalized.length === 0) return fallbackConfigsFromSuggestions();
-    return dedupeByName(normalized);
-  } catch {
-    return fallbackConfigsFromSuggestions();
-  }
+  const stored = useSettingsStore.getState().blockConfigs;
+  if (!stored.length) return fallbackConfigsFromSuggestions();
+  const normalized = stored
+    .map((item) => normalizeBlockConfig(item))
+    .filter((item): item is BlockConfig => item != null);
+  if (normalized.length === 0) return fallbackConfigsFromSuggestions();
+  return dedupeByName(normalized);
 }
 
 export function setBlockConfigs(configs: BlockConfig[]): void {
-  if (!inBrowser()) return;
   const cleaned = dedupeByName(
     configs
       .map((cfg) => normalizeBlockConfig(cfg))
       .filter((cfg): cfg is BlockConfig => cfg != null),
   );
-  window.localStorage.setItem(BLOCK_CONFIG_STORAGE_KEY, JSON.stringify(cleaned));
-  window.dispatchEvent(new CustomEvent(BLOCK_CONFIGS_CHANGED));
+  useSettingsStore.getState().setBlockConfigs(cleaned);
 }
 
 export function setOrUpdateBlockConfig(config: BlockConfig): void {

@@ -13,74 +13,20 @@ import { useShallow } from "zustand/react/shallow";
 import { parseTaskChatInput } from "../tasks/functions/parseTokens";
 import { useTasksStore } from "../../stores/tasksStore";
 import { getActiveBlockNameAt } from "../../lib/taskBlocks";
+import {
+  parseCalendarDayArg,
+  includesNormalized,
+} from "./commandbar/calendarCommands";
+import {
+  extractInlineCategoryQuery,
+  formatCategoryToken,
+  parseCategoryPartialLabel,
+  sanitizeCategoryValue,
+} from "./commandbar/categoryHelpers";
+import { CategoryPicker } from "./commandbar/CategoryPicker";
 
 type Mode = "task" | "calendar";
 type Feedback = { tone: "neutral" | "success" | "error"; text: string };
-
-function parseCalendarDayArg(
-  raw: string,
-  fallback: DateTime,
-): DateTime | undefined {
-  const v = raw.trim().toLowerCase();
-  if (!v) return undefined;
-  if (v === "today") return DateTime.local().startOf("day");
-  if (v === "tomorrow")
-    return DateTime.local().plus({ days: 1 }).startOf("day");
-  if (v === "yesterday")
-    return DateTime.local().minus({ days: 1 }).startOf("day");
-
-  const iso = DateTime.fromISO(v, { zone: "local" }).startOf("day");
-  if (iso.isValid) return iso;
-
-  const md = DateTime.fromFormat(v, "M/d", { zone: "local" });
-  if (md.isValid) {
-    let withYear = md.set({ year: fallback.year }).startOf("day");
-    if (withYear < fallback.startOf("day"))
-      withYear = withYear.plus({ years: 1 });
-    return withYear;
-  }
-
-  return undefined;
-}
-
-function includesNormalized(haystack: string, needle: string): boolean {
-  return haystack.toLowerCase().includes(needle.trim().toLowerCase());
-}
-
-function parseCategoryPartialLabel(label: string): string {
-  const m = label.match(/^Category:\s*(.*)\.\.\.$/);
-  if (!m) return "";
-  return m[1]?.trim() ?? "";
-}
-
-function sanitizeCategoryValue(value: string): string {
-  return value
-    .trim()
-    .replace(/^[“‘"'`]+|[”’"'`]+$/g, "")
-    .replace(/\s+/g, " ");
-}
-
-function formatCategoryToken(value: string): string {
-  const cleaned = sanitizeCategoryValue(value);
-  if (!cleaned) return "";
-  if (/\s/.test(cleaned)) {
-    return `@@"${cleaned.replace(/"/g, "")}"`;
-  }
-  return `@@${cleaned}`;
-}
-
-function extractInlineCategoryQuery(raw: string): string | null {
-  // If user already ended the token with whitespace, treat category entry as done.
-  if (!raw || /\s$/.test(raw)) return null;
-
-  const m = raw.match(
-    /(?:^|\s)@@(?:"([^"]*)"?|'([^']*)'?|“([^”]*)”?|‘([^’]*)’?|([^\s]*))$/,
-  );
-  if (!m) return null;
-
-  const value = m[1] ?? m[2] ?? m[3] ?? m[4] ?? m[5] ?? "";
-  return sanitizeCategoryValue(value);
-}
 
 export function TaskCalendarCommandBar() {
   const location = useLocation();
@@ -182,16 +128,12 @@ export function TaskCalendarCommandBar() {
       if (!(event.metaKey || event.ctrlKey)) return;
       if (event.shiftKey || event.altKey) return;
       if (event.key.toLowerCase() !== "k") return;
-
       event.preventDefault();
       inputRef.current?.focus();
       inputRef.current?.select();
     };
-
     window.addEventListener("keydown", onKeyDown);
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-    };
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
   useEffect(() => {
@@ -220,10 +162,7 @@ export function TaskCalendarCommandBar() {
       nextDay.toISODate() ?? DateTime.local().toISODate() ?? "",
     );
     navigate(
-      {
-        pathname: "/calendar",
-        search: `?${params.toString()}`,
-      },
+      { pathname: "/calendar", search: `?${params.toString()}` },
       { replace: true },
     );
   };
@@ -410,7 +349,8 @@ export function TaskCalendarCommandBar() {
     if (!token) return;
 
     setRaw((prev) => {
-      const replaceTail = /@@(?:"[^"]*"?|'[^']*'?|“[^”]*”?|‘[^’]*’?|[^\s]*)$/;
+      const replaceTail =
+        /@@(?:"[^"]*"?|'[^']*'?|\u201c[^"]*\u201d?|\u2018[^']*\u2019?|[^\s]*)$/;
       const maybeReplaced = prev.replace(replaceTail, token);
       if (maybeReplaced !== prev) return `${maybeReplaced} `;
       const spacer = prev.trimEnd().length > 0 ? " " : "";
@@ -419,62 +359,22 @@ export function TaskCalendarCommandBar() {
     inputRef.current?.focus();
   };
 
-  const onCategoryDraftKeyDown = (
-    event: ReactKeyboardEvent<HTMLInputElement>,
-  ) => {
-    if (!categoryOptionRows.length) {
-      if (event.key === "Enter" || event.key === "Tab") {
-        const fallback = sanitizeCategoryValue(categoryDraft);
-        if (fallback) {
-          event.preventDefault();
-          applyCategoryToken(fallback);
-        }
-      }
-      return;
-    }
-
-    if (event.key === "ArrowDown") {
-      event.preventDefault();
-      setHighlightedCategoryIndex((prev) =>
-        Math.min(prev + 1, categoryOptionRows.length - 1),
-      );
-      return;
-    }
-    if (event.key === "ArrowUp") {
-      event.preventDefault();
-      setHighlightedCategoryIndex((prev) => Math.max(prev - 1, 0));
-      return;
-    }
-    if (event.key === "Tab") {
-      event.preventDefault();
-      const option =
-        categoryOptionRows[highlightedCategoryIndex] ?? categoryOptionRows[0];
-      if (option) setCategoryDraft(option.value);
-      return;
-    }
-    if (event.key === "Enter") {
-      event.preventDefault();
-      const option =
-        categoryOptionRows[highlightedCategoryIndex] ?? categoryOptionRows[0];
-      if (option) applyCategoryToken(option.value);
-      return;
-    }
-  };
-
   const onMainInputKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
     if (activeCategoryQuery === null || !categoryOptionRows.length) return;
 
     if (event.key === "ArrowDown") {
       event.preventDefault();
-      setHighlightedCategoryIndex((prev) =>
-        Math.min(prev + 1, categoryOptionRows.length - 1),
+      setHighlightedCategoryIndex(
+        Math.min(highlightedCategoryIndex + 1, categoryOptionRows.length - 1),
       );
       return;
     }
 
     if (event.key === "ArrowUp") {
       event.preventDefault();
-      setHighlightedCategoryIndex((prev) => Math.max(prev - 1, 0));
+      setHighlightedCategoryIndex(
+        Math.max(highlightedCategoryIndex - 1, 0),
+      );
       return;
     }
 
@@ -503,53 +403,14 @@ export function TaskCalendarCommandBar() {
         className="pointer-events-auto relative -skew-x-12 bg-white/90 p-2 px-6 shadow-[0_8px_36px_rgba(15,15,15,0.14)] ring-1 ring-black/5 backdrop-blur-xl dark:border-zinc-700/70 dark:bg-zinc-900/90 dark:ring-white/10"
       >
         {activeCategoryQuery !== null ? (
-          <div className="absolute left-3 right-3 top-0 -translate-y-full rounded-xl border border-zinc-200/80 bg-white/95  skew-x-12 shadow-lg dark:border-zinc-700 dark:bg-zinc-900/95">
-            <div className="mb-2 flex items-center gap-2 p-2">
-              <span className="shrink-0 text-[11px] font-semibold font-quantify -skew-x-12 uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                Category
-              </span>
-              <input
-                type="text"
-                value={categoryDraft}
-                onChange={(e) => setCategoryDraft(e.target.value)}
-                onKeyDown={onCategoryDraftKeyDown}
-                placeholder="Type category..."
-                className="min-w-0 flex-1 rounded-md border -skew-x-12 border-zinc-300/70 bg-white px-2 py-1 text-xs text-zinc-900 outline-none focus:border-zinc-400 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
-              />
-            </div>
-            {categoryOptionRows.length ? (
-              <ul className="max-h-36 overflow-y-auto rounded-md border border-zinc-200/80 bg-white/80 dark:border-zinc-700 dark:bg-zinc-900/70">
-                {categoryOptionRows.map((row, index) => (
-                  <li key={`${row.value}-${index}`}>
-                    <button
-                      type="button"
-                      onMouseEnter={() => setHighlightedCategoryIndex(index)}
-                      onClick={() => applyCategoryToken(row.value)}
-                      className={`flex w-full items-center justify-between px-2 py-1.5 text-left text-xs ${
-                        highlightedCategoryIndex === index
-                          ? "bg-sky-100 text-sky-900 dark:bg-sky-900/40 dark:text-sky-200"
-                          : "text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
-                      }`}
-                    >
-                      <span className="truncate">{row.label}</span>
-                      {row.isCreate ? (
-                        <span className="ml-2 shrink-0 text-[10px] uppercase font-display tracking-wide text-zinc-500 dark:text-zinc-400">
-                          New Category
-                        </span>
-                      ) : null}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                Start typing a category value.
-              </p>
-            )}
-            <p className="mt-1 text-[10px] text-zinc-500 dark:text-zinc-400">
-              Arrow keys to navigate, Tab to autocomplete, Enter to apply.
-            </p>
-          </div>
+          <CategoryPicker
+            categoryDraft={categoryDraft}
+            setCategoryDraft={setCategoryDraft}
+            categoryOptionRows={categoryOptionRows}
+            highlightedCategoryIndex={highlightedCategoryIndex}
+            setHighlightedCategoryIndex={setHighlightedCategoryIndex}
+            applyCategoryToken={applyCategoryToken}
+          />
         ) : null}
         <div className="flex skew-x-12 items-center gap-2">
           <div className="group/mode relative">
@@ -585,7 +446,7 @@ export function TaskCalendarCommandBar() {
             onChange={(e) => setRaw(e.target.value)}
             onKeyDown={onMainInputKeyDown}
             placeholder="Type task or command... (@9am, @9am-11am, /day today, /done)"
-            className="min-w-0 flex-1 font-eudoxus font-bold  bg-transparent px-1.5 py-2 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+            className="min-w-0 flex-1 font-eudoxus font-bold bg-transparent px-1.5 py-2 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 dark:text-zinc-100 dark:placeholder:text-zinc-500"
             aria-label="Global command input"
           />
           <button

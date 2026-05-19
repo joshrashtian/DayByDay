@@ -1,12 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { getBlocksUserCss } from "../lib/blocksUserCss";
 import {
-  BLOCKS_USER_CSS_CHANGED,
-  BLOCKS_USER_CSS_STORAGE_KEY,
-  getBlocksUserCss,
-} from "../lib/blocksUserCss";
-import {
-  BLOCK_CONFIGS_CHANGED,
-  BLOCK_CONFIG_STORAGE_KEY,
   collectAvailableBlocks,
   CONTEXT_BLOCK_SUGGESTIONS,
   formatMinutesAsTimeInput,
@@ -17,6 +11,7 @@ import {
   TIME_BLOCK_SUGGESTIONS,
 } from "../lib/taskBlocks";
 import { useTasksStore } from "../stores/tasksStore";
+import { useSettingsStore } from "../stores/settingsStore";
 import "./BlockScreen.css";
 import BottomSheet from "../ui/BottomSheet";
 import { IoAdd } from "react-icons/io5";
@@ -78,6 +73,8 @@ const rowClassName = (variant?: BlockRowVariant) => {
 };
 
 const BlockScreen = () => {
+  const storedUserCss = useSettingsStore((s) => s.blocksUserCss);
+  const storedBlockConfigs = useSettingsStore((s) => s.blockConfigs);
   const [userCss, setUserCss] = useState(() => getBlocksUserCss());
   const userStyleRef = useRef<HTMLStyleElement>(null);
   const perBlockStyleRef = useRef<HTMLStyleElement>(null);
@@ -108,30 +105,12 @@ const BlockScreen = () => {
   }, [blockConfigs]);
 
   useEffect(() => {
-    const sync = () => setUserCss(getBlocksUserCss());
-    window.addEventListener(BLOCKS_USER_CSS_CHANGED, sync);
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === BLOCKS_USER_CSS_STORAGE_KEY || e.key === null) sync();
-    };
-    window.addEventListener("storage", onStorage);
-    return () => {
-      window.removeEventListener(BLOCKS_USER_CSS_CHANGED, sync);
-      window.removeEventListener("storage", onStorage);
-    };
-  }, []);
+    setUserCss(getBlocksUserCss());
+  }, [storedUserCss]);
 
   useEffect(() => {
-    const sync = () => setBlockConfigs(getBlockConfigs());
-    window.addEventListener(BLOCK_CONFIGS_CHANGED, sync);
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === BLOCK_CONFIG_STORAGE_KEY || e.key === null) sync();
-    };
-    window.addEventListener("storage", onStorage);
-    return () => {
-      window.removeEventListener(BLOCK_CONFIGS_CHANGED, sync);
-      window.removeEventListener("storage", onStorage);
-    };
-  }, []);
+    setBlockConfigs(getBlockConfigs());
+  }, [storedBlockConfigs]);
 
   const blockNames = collectAvailableBlocks(tasks);
   const blocks: Block[] = blockNames.map((name) => {
