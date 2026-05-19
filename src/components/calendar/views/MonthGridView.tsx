@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 import { DateTime } from "luxon";
-import type { Task } from "../../../types/task";
+import type { Task } from "@/types";
 import {
   buildMonthGrid,
   tasksByDueDateKeyInRange,

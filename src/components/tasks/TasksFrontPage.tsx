@@ -139,7 +139,7 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
   );
 
   return (
-    <div className="rounded-2xl">
+    <div className="font-eudoxus">
       {isPointerDragging && draggedTask ? (
         <motion.div
           className="pointer-events-none fixed z-999 w-56 rounded-xl border border-zinc-300/90 bg-white/95 px-3 py-2 shadow-[0_18px_50px_-20px_rgba(15,23,42,0.55)] sm:w-72 dark:border-zinc-600 dark:bg-zinc-900/90"
@@ -179,20 +179,21 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
         </motion.div>
       ) : null}
       <div className="flex min-h-120 flex-col gap-4 sm:gap-6">
-        <div className="flex flex-col items-start gap-1.5">
-          <p className="text-md font-display text-zinc-500 dark:text-zinc-400">
-            {activeBlockName
-              ? `${activeBlockName} tasks: ${sortedTasks.length} (${activeCount} active)`
-              : `All tasks: ${sortedTasks.length} (${activeCount} active)`}
+        <div className="flex flex-col items-start gap-1">
+          <p className="font-baron text-lg font-bold uppercase tracking-[0.14em] text-zinc-800 dark:text-zinc-200">
+            {activeBlockName ? `${activeBlockName} Tasks` : "All Tasks"}
+          </p>
+          <p className="font-eudoxus text-xs tracking-wide text-zinc-400 dark:text-zinc-500">
+            {sortedTasks.length} total &middot; {activeCount} active
           </p>
         </div>
 
         <div
           ref={dropZoneRef}
-          className={`w-full rounded-2xl px-3 py-3 transition-colors sm:px-5 sm:py-4 ${
+          className={`w-full rounded-2xl px-2 py-3 transition-colors sm:px-4 sm:py-4 ${
             isDropActive
-              ? "border-sky-400 bg-sky-50/80 dark:border-sky-400 dark:bg-sky-950/30"
-              : " "
+              ? "border border-sky-400 bg-sky-50/60 dark:border-sky-400 dark:bg-sky-950/30"
+              : ""
           }`}
         >
           {!visibleFocusedTask ? (
@@ -200,11 +201,11 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
           ) : (
             <div className="flex min-h-48 flex-col items-center justify-between gap-4 sm:min-h-44">
               <div>
-                <h2 className="wrap-break-word text-center text-3xl font-semibold font-quantify text-zinc-900 dark:text-zinc-50 sm:text-5xl">
+                <h2 className="wrap-break-word text-center text-3xl font-semibold font-ppneue text-zinc-900 dark:text-zinc-50 sm:text-5xl">
                   {visibleFocusedTask.title}
                 </h2>
                 {visibleFocusedTask.description ? (
-                  <p className="mt-1.5 text-center text-sm text-zinc-600 dark:text-zinc-300">
+                  <p className="mt-1.5 text-center text-sm font-sans text-zinc-600 dark:text-zinc-300">
                     {visibleFocusedTask.description}
                   </p>
                 ) : null}
@@ -226,7 +227,7 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
               </div>
               <div className="flex w-full flex-col items-center justify-between gap-3 sm:flex-row sm:gap-0">
                 <h3
-                  className={`text-center text-2xl font-display sm:text-3xl ${isTaskOverdue(visibleFocusedTask.dueDate) ? "text-red-500" : "text-zinc-500"}`}
+                  className={`text-center font-baron text-2xl tracking-[0.08em] sm:text-3xl ${isTaskOverdue(visibleFocusedTask.dueDate) ? "text-red-500" : "text-zinc-500"}`}
                 >
                   {isTaskOverdue(visibleFocusedTask.dueDate)
                     ? "OVERDUE"
@@ -258,7 +259,7 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
         </div>
 
         <div className="mt-auto w-full max-w-full">
-          <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+          <h3 className="mb-3 font-baron text-xs font-bold uppercase tracking-[0.18em] text-zinc-400 dark:text-zinc-500">
             Task List
           </h3>
           <div className="max-h-72 max-w-none space-y-2 overflow-y-scroll pr-1 no-scrollbar sm:max-w-sm">
@@ -277,7 +278,7 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
                     : "border-zinc-200/90 bg-white/85 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900/65 dark:hover:bg-zinc-900"
                 } ${task.done ? "opacity-60" : ""} cursor-grab active:cursor-grabbing`}
               >
-                <div className="mb-1 flex items-center justify-between gap-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                <div className="mb-0.5 flex items-center justify-between gap-2 font-eudoxus text-[10px] font-medium uppercase tracking-[0.1em] text-zinc-400 dark:text-zinc-500">
                   <span>
                     {task.critical
                       ? "Critical"
@@ -289,14 +290,19 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
                     {task.dueDate ? formatTaskDue(task.dueDate) : "No time"}
                   </span>
                 </div>
-                <p className="truncate text-sm font-medium text-zinc-800 dark:text-zinc-100">
+                <p className="truncate font-ppneue text-[13px] font-medium text-zinc-800 dark:text-zinc-100">
                   {task.title}
                 </p>
               </button>
             ))}
             {sortedTasks.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-zinc-300/80 bg-zinc-50/80 px-3 py-4 text-sm text-zinc-500 dark:border-zinc-600 dark:bg-zinc-800/50 dark:text-zinc-400">
-                Nothing here yet.
+              <div className="py-6 pl-1">
+                <p className="font-ppneue text-base font-medium text-zinc-400 dark:text-zinc-500">
+                  Nothing here yet.
+                </p>
+                <p className="mt-1 font-eudoxus text-xs text-zinc-300 dark:text-zinc-600">
+                  Add a task below to get started.
+                </p>
               </div>
             ) : null}
           </div>

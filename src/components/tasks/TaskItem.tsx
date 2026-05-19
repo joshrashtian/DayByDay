@@ -4,11 +4,8 @@ import { renderCategoryIcon } from "../../lib/categoryIcons";
 import { resolveCategoryVisual } from "../../lib/taskCategories";
 import { formatTaskDue, taskDueToIso } from "../../lib/taskDates";
 import { useContextMenu } from "../../providers/ContextMenuProvider";
-import {
-  normalizeTaskTags,
-  type Task,
-  type TaskPriority,
-} from "../../types/task";
+import type { Task, TaskPriority } from "@/types";
+import { normalizeTaskTags } from "../../types/task";
 
 type Props = {
   task: Task;

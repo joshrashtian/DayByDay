@@ -2,11 +2,8 @@ import { useMemo, type FormEvent } from "react";
 import { useParams } from "react-router-dom";
 import { TOOLKIT_PANELS } from "../lib/toolkitPanels";
 import { useTasksStore } from "../stores/tasksStore";
-import {
-  normalizeRecurrenceWeekdays,
-  type Task,
-  type UpdateTaskPayload,
-} from "../types/task";
+import type { Task, UpdateTaskPayload } from "@/types";
+import { normalizeRecurrenceWeekdays } from "../types/task";
 
 const WEEK_DAYS = [
   { label: "Mon", dayIndex: 1 },

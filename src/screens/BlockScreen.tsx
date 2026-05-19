@@ -227,30 +227,35 @@ const BlockScreen = () => {
       {/* Per-block CSS rules generated from block configs */}
       <style ref={perBlockStyleRef} id="daybyday-blocks-per-block-css" />
       <div id="block-screen" className="block-screen">
-        <button
-          onClick={() => {
-            openCreateEditor();
-          }}
-          className="rounded-full bg-zinc-500/15 w-16 h-16 flex text-center items-center justify-center text-5xl font-semibold text-zinc-700 dark:text-zinc-300"
-        >
-          +
-        </button>
-        <h1 className="block-screen__title">Blocks</h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          Segment tasks by time blocks (like Morning) or life blocks (like Work,
-          School, Home). Set a block while creating a task.
-        </p>
+        <div className="block-screen__header">
+          <div className="block-screen__heading-group">
+            <h1 className="block-screen__title">Blocks</h1>
+            <p className="block-screen__subtitle">
+              Segment tasks by time blocks (like Morning) or life blocks (like
+              Work, School, Home). Set a block while creating a task.
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              openCreateEditor();
+            }}
+            className="block-screen__add-button"
+            aria-label="Create a new block"
+          >
+            +
+          </button>
+        </div>
         <div className="block-screen__list w-full">
           {blocks.length === 0 ? (
-            <div className="block-screen__row flex flex-col items-start justify-start gap-2">
-              <h2 className="block-screen__row--title text-xl font-quantify font-black">
+            <div className="block-screen__row block-screen__empty">
+              <h2 className="block-screen__row--title">
                 No blocks yet
               </h2>
-              <p className="block-screen__row--description text-zinc-500">
+              <p className="block-screen__row--description">
                 Create your own block with custom timing to start segmenting
                 your day.
               </p>
-              <p className="block-screen__row--description text-zinc-500">
+              <p className="block-screen__row--description">
                 Suggested names: {TIME_BLOCK_SUGGESTIONS.join(", ")},{" "}
                 {CONTEXT_BLOCK_SUGGESTIONS.join(", ")}.
               </p>
@@ -260,30 +265,27 @@ const BlockScreen = () => {
             <div
               key={block.name}
               data-block-key={block.blockKey}
-              className={
-                rowClassName(block.rowVariant) +
-                " flex flex-col h-32 w-full items-start justify-start gap-2"
-              }
+              className={rowClassName(block.rowVariant)}
             >
-              <div className="flex flex-row items-center gap-2">
+              <div className="block-screen__card-header">
                 <h2 className="block-screen__row--title">{block.name}</h2>
-                <span className="rounded-full bg-zinc-500/15 px-2 py-0.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                <span className="block-screen__count-pill">
                   {block.taskCount} {block.taskCount === 1 ? "task" : "tasks"}
                 </span>
               </div>
               {block.description ? (
-                <p className="block-screen__row--description text-zinc-500">
+                <p className="block-screen__row--description">
                   {block.description}
                 </p>
               ) : null}
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+              <div className="block-screen__card-footer">
+                <p className="block-screen__time-range">
                   {block.startTime} - {block.endTime}
                 </p>
                 <button
                   type="button"
                   onClick={() => openEditEditor(block)}
-                  className="rounded-lg bg-zinc-900 px-2.5 py-1 text-xs font-semibold text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                  className="block-screen__edit-button"
                 >
                   Edit timing
                 </button>

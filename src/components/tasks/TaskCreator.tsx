@@ -9,11 +9,8 @@ import {
 import { IoArrowUp, IoChevronDown, IoPencil, IoWarning } from "react-icons/io5";
 import { parseDueLocalInput } from "../../lib/taskDates";
 import { collectAvailableBlocks } from "../../lib/taskBlocks";
-import {
-  type AddTaskPayload,
-  parseTagsInput,
-  type TaskPriority,
-} from "../../types/task";
+import type { AddTaskPayload, TaskPriority } from "@/types";
+import { parseTagsInput } from "../../types/task";
 import { parseTaskChatInput } from "./functions/parseTokens";
 import { motion } from "motion/react";
 import { useTasksStore } from "../../stores/tasksStore";

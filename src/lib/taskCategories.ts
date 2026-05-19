@@ -1,17 +1,9 @@
-import type { Task } from "../types/task";
+import type { CategoryConfig, CategoryTone, Task } from "@/types";
+
+export type { CategoryConfig, CategoryTone } from "@/types";
 
 export const CATEGORY_CONFIG_STORAGE_KEY = "daybyday-category-configs";
 export const CATEGORY_CONFIGS_CHANGED = "daybyday:category-configs-changed";
-
-export type CategoryTone = "soft" | "solid";
-
-export type CategoryConfig = {
-  name: string;
-  color: string;
-  textColor?: string;
-  tone?: CategoryTone;
-  icon?: string;
-};
 
 type CategoryVisual = {
   bg: string;

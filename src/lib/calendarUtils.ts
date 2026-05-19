@@ -1,13 +1,8 @@
 import { DateTime } from "luxon";
-import type { Task } from "../types/task";
+import type { CalendarTaskRow, Task } from "@/types";
 import { advanceRecurrenceDate } from "./taskDates";
 
-/** One row in a calendar day list (recurring tasks can project multiple rows). */
-export type CalendarTaskRow = {
-  task: Task;
-  displayDueDate: Date;
-  rowKey: string;
-};
+export type { CalendarTaskRow } from "@/types";
 
 function combineDateAndTime(
   dateDay: DateTime,

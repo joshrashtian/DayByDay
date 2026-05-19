@@ -7,8 +7,8 @@ import {
   type MouseEvent as ReactMouseEvent,
 } from "react";
 import { IoAdd, IoClose, IoDocument } from "react-icons/io5";
-import type { Task } from "../../../types/task";
-import { tasksByDueDateKeyInRange, type CalendarTaskRow } from "../../../lib/calendarUtils";
+import type { CalendarTaskRow, Task } from "@/types";
+import { tasksByDueDateKeyInRange } from "../../../lib/calendarUtils";
 import { getCategoryIconOption, renderCategoryIcon } from "../../../lib/categoryIcons";
 import { getTaskKindVisual } from "../../../lib/taskKinds";
 import { resolveCategoryVisual } from "../../../lib/taskCategories";

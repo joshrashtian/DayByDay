@@ -17,7 +17,8 @@ import {
   useViewModelInstanceString,
 } from "@rive-app/react-canvas";
 
-export type DayFocusMode = "current-block" | "all-day";
+export type { DayFocusMode } from "@/types";
+import type { DayFocusMode } from "@/types";
 type TransitionLabels = { from: string; to: string };
 
 type DayTransitionContextType = {

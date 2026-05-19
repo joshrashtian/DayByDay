@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { animate, motion, useMotionValue, useMotionValueEvent } from "motion/react";
 import { DateTime } from "luxon";
 import { useShallow } from "zustand/react/shallow";
-import type { Task } from "../../types/task";
+import type { Task } from "@/types";
 import { useTasksStore } from "../../stores/tasksStore";
 import { IoHourglass } from "react-icons/io5";
 

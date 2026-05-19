@@ -1,36 +1,12 @@
-export type ClockTemplate = "minimal" | "p5" | "basic";
+import type { ClockStylePrototype, ClockStylePrototypeInput } from "@/types";
 
-export type ClockStyleSource = "core" | "user" | "marketplace";
-
-export type ClockStylePrototype = {
-  id: string;
-  template: ClockTemplate;
-  source: ClockStyleSource;
-  rootClassName: string;
-  wrapperClassName: string;
-  wrapperIdleClassName: string;
-  transformOrigin: string;
-  dateRowClassName: string;
-  dateRowOverlayClassName?: string;
-  dateRowCardClassName?: string;
-  dateRowCardInnerClassName?: string;
-  dateTextClassName: string;
-  monthClassName: string;
-  dayClassName: string;
-  weekdayRowClassName: string;
-  weekdayClassName: string;
-  weatherClassName: string;
-  weatherIconClassName: string;
-  weatherTemperatureClassName: string;
-  resizeHandleClassName: string;
-};
-
-export type ClockStylePrototypeInput = {
-  template?: ClockTemplate;
-  source?: ClockStyleSource;
-} & Partial<Omit<ClockStylePrototype, "id" | "template" | "source">>;
-
-export type ClockStylePack = Record<string, ClockStylePrototypeInput>;
+export type {
+  ClockTemplate,
+  ClockStyleSource,
+  ClockStylePrototype,
+  ClockStylePrototypeInput,
+  ClockStylePack,
+} from "@/types";
 
 export const defaultClockStyles: Record<string, ClockStylePrototype> = {
   minimal: {

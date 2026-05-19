@@ -1,8 +1,16 @@
-export type TaskPriority = "low" | "medium" | "high";
-export type TaskKind = "task" | "event" | "reminder" | "habit" | "class";
+export type {
+  TaskPriority,
+  TaskKind,
+  RecurrenceFrequency,
+  RecurrenceWeekday,
+  TaskRecurrence,
+  TaskMetadata,
+  Task,
+  AddTaskPayload,
+  UpdateTaskPayload,
+} from "./index";
 
-export type RecurrenceFrequency = "daily" | "weekly" | "monthly";
-export type RecurrenceWeekday = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+import type { RecurrenceWeekday, TaskRecurrence, TaskKind } from "./index";
 
 export function normalizeRecurrenceWeekdays(
   input: unknown,
@@ -20,20 +28,6 @@ export function normalizeRecurrenceWeekdays(
   out.sort((a, b) => a - b);
   return out.length ? out : undefined;
 }
-
-export type TaskRecurrence = {
-  frequency: RecurrenceFrequency;
-  interval: number;
-  weekdays?: RecurrenceWeekday[];
-  untilDate?: Date;
-};
-
-export type TaskMetadata = {
-  class?: {
-    location?: string;
-    grade?: string;
-  };
-};
 
 export function parseTaskRecurrence(raw: unknown): TaskRecurrence | undefined {
   if (!raw || typeof raw !== "object") return undefined;
@@ -96,67 +90,3 @@ export function normalizeTaskTags(input: unknown): string[] | undefined {
 export function parseTagsInput(s: string): string[] | undefined {
   return normalizeTaskTags(s.split(/,/));
 }
-
-export type Task = {
-  id: string;
-  kind: TaskKind;
-  title: string;
-  done: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  dueDate?: Date;
-  endDate?: Date;
-  priority?: TaskPriority;
-  block?: string;
-  category?: string;
-  description?: string;
-  tags?: string[];
-  notes?: string;
-  metadata?: TaskMetadata;
-  // Legacy fields kept for backwards compatibility.
-  classLocation?: string;
-  classGrade?: string;
-  critical?: boolean;
-  recurrence?: TaskRecurrence;
-  lastCompletedAt?: Date;
-  recurringSourceId?: string;
-};
-
-export type AddTaskPayload = {
-  kind?: TaskKind;
-  title: string;
-  dueDate?: Date;
-  endDate?: Date;
-  priority?: TaskPriority;
-  critical?: boolean;
-  block?: string;
-  context?: string;
-  category?: string;
-  description?: string;
-  notes?: string;
-  metadata?: TaskMetadata;
-  // Legacy fields kept for backwards compatibility.
-  classLocation?: string;
-  classGrade?: string;
-  tags?: string[];
-  recurrence?: TaskRecurrence;
-};
-
-export type UpdateTaskPayload = {
-  kind?: TaskKind;
-  title: string;
-  dueDate?: Date;
-  endDate?: Date;
-  priority?: TaskPriority;
-  critical?: boolean;
-  block?: string;
-  category?: string;
-  description?: string;
-  notes?: string;
-  metadata?: TaskMetadata;
-  // Legacy fields kept for backwards compatibility.
-  classLocation?: string;
-  classGrade?: string;
-  tags?: string[];
-  recurrence?: TaskRecurrence;
-};

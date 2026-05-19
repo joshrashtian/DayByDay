@@ -1,4 +1,4 @@
-import type { TaskKind } from "../types/task";
+import type { TaskKind } from "@/types";
 
 export const TASK_KIND_OPTIONS: Array<{ value: TaskKind; label: string }> = [
   { value: "task", label: "Task" },

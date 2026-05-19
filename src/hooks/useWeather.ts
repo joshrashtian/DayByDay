@@ -9,10 +9,8 @@ import {
 const FALLBACK_LAT = 34.0549;
 const FALLBACK_LON = -118.2452;
 
-export type WeatherState =
-  | { status: "loading" }
-  | { status: "ok"; tempF: number; code: number }
-  | { status: "error" };
+export type { WeatherState } from "@/types";
+import type { WeatherState } from "@/types";
 
 export function useWeather(): WeatherState {
   const [state, setState] = useState<WeatherState>({ status: "loading" });

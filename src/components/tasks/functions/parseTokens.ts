@@ -1,7 +1,8 @@
 import { DateTime } from "luxon";
 import { parseDueLocalInput } from "../../../lib/taskDates";
 import { DEFAULT_BLOCK_SUGGESTIONS } from "../../../lib/taskBlocks";
-import { normalizeTaskTags, type TaskPriority } from "../../../types/task";
+import type { TaskPriority } from "@/types";
+import { normalizeTaskTags } from "../../../types/task";
 
 export type TaskChatHint = {
   key: string;

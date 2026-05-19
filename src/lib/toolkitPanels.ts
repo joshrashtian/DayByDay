@@ -1,9 +1,6 @@
-export type ToolkitPanel = {
-  id: string;
-  label: string;
-  description: string;
-  route: string;
-};
+import type { ToolkitPanel } from "@/types";
+
+export type { ToolkitPanel } from "@/types";
 
 export const TOOLKIT_PANELS: ToolkitPanel[] = [
   {

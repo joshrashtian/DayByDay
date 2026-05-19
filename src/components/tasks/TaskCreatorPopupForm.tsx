@@ -4,16 +4,15 @@ import { parseDueLocalInput } from "../../lib/taskDates";
 import { collectAvailableBlocks } from "../../lib/taskBlocks";
 import { collectAvailableCategories } from "../../lib/taskCategories";
 import { TASK_KIND_OPTIONS } from "../../lib/taskKinds";
-import {
-  type AddTaskPayload,
-  normalizeRecurrenceWeekdays,
-  parseTagsInput,
-  type RecurrenceFrequency,
-  type RecurrenceWeekday,
-  type TaskKind,
-  type TaskPriority,
-  type UpdateTaskPayload,
-} from "../../types/task";
+import type {
+  AddTaskPayload,
+  RecurrenceFrequency,
+  RecurrenceWeekday,
+  TaskKind,
+  TaskPriority,
+  UpdateTaskPayload,
+} from "@/types";
+import { normalizeRecurrenceWeekdays, parseTagsInput } from "../../types/task";
 import { motion } from "motion/react";
 import { useTasksStore } from "../../stores/tasksStore";
 

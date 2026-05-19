@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
 import { DateTime } from "luxon";
 import { IoAdd } from "react-icons/io5";
-import type { Task } from "../../../types/task";
+import type { Task } from "@/types";
 import { tasksByDueDateKeyInRange } from "../../../lib/calendarUtils";
 import { TaskDueList } from "./_shared";
 

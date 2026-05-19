@@ -1,7 +1,7 @@
 import { DateTime } from "luxon";
 import type { ReactNode } from "react";
 import { localInputForDateTime } from "../../lib/taskDates";
-import type { Task, UpdateTaskPayload } from "../../types/task";
+import type { Task, UpdateTaskPayload } from "@/types";
 import { TaskCreatorPopupForm } from "./TaskCreatorPopupForm";
 
 type Args = {

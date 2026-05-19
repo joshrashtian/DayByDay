@@ -5,8 +5,7 @@ import { getTaskKindVisual } from "../../../lib/taskKinds";
 import { resolveCategoryVisual } from "../../../lib/taskCategories";
 import { formatTaskDue } from "../../../lib/taskDates";
 import { useContextMenu } from "../../../providers/ContextMenuProvider";
-import type { CalendarTaskRow } from "../../../lib/calendarUtils";
-import type { Task } from "../../../types/task";
+import type { CalendarTaskRow, Task } from "@/types";
 import BottomSheet from "../../../ui/BottomSheet";
 
 export const completedCheckeredStyle = {

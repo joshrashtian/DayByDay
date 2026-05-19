@@ -1,4 +1,6 @@
-import type { Task } from "../types/task";
+import type { BlockConfig, Task } from "@/types";
+
+export type { BlockConfig } from "@/types";
 
 export const TIME_BLOCK_SUGGESTIONS = [
   "Early Morning",
@@ -23,13 +25,6 @@ export const DEFAULT_BLOCK_SUGGESTIONS = [
 
 export const BLOCK_CONFIG_STORAGE_KEY = "daybyday-block-configs";
 export const BLOCK_CONFIGS_CHANGED = "daybyday:block-configs-changed";
-
-export type BlockConfig = {
-  name: string;
-  startMinutes: number;
-  endMinutes: number;
-  customCss?: string;
-};
 
 const MINUTES_IN_DAY = 24 * 60;
 

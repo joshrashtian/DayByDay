@@ -4,19 +4,10 @@ import { CriticalHeaderRibbon } from "../components/home/CriticalDayRibbon";
 import { TasksFrontPage } from "../components/tasks/TasksFrontPage";
 import { useContextMenu } from "../providers/ContextMenuProvider";
 import { useDayTransition } from "../providers/DayTransitionProvider";
-import {
-  getBlockBannerClasses,
-  type BlockVisualStyle,
-} from "../providers/homeBlockBannerStyles";
-import {
-  getCriticalRibbonClass,
-  type RibbonVisualStyle,
-} from "../providers/homeCriticalRibbonStyles";
-import {
-  getTasksPanelClass,
-  type TasksVisualStyle,
-} from "../providers/homeTasksPanelStyles";
-import type { ClockTemplate } from "../providers/clockStyleDefaults";
+import type { HomeVisualPrefs } from "@/types";
+import { getBlockBannerClasses } from "../providers/homeBlockBannerStyles";
+import { getCriticalRibbonClass } from "../providers/homeCriticalRibbonStyles";
+import { getTasksPanelClass } from "../providers/homeTasksPanelStyles";
 import {
   BLOCK_CONFIGS_CHANGED,
   BLOCK_CONFIG_STORAGE_KEY,
@@ -24,19 +15,7 @@ import {
   getActiveBlockNameAt,
   getBlockConfigByName,
 } from "../lib/taskBlocks";
-
-type ClockVisualStyle = ClockTemplate;
-
-type HomeVisualPrefs = {
-  blockStyle: BlockVisualStyle;
-  blockScale: number;
-  ribbonStyle: RibbonVisualStyle;
-  ribbonScale: number;
-  tasksStyle: TasksVisualStyle;
-  tasksScale: number;
-  clockStyle: ClockVisualStyle;
-  clockScale: number;
-};
+import { IoSettings } from "react-icons/io5";
 
 const HOME_VISUAL_PREFS_KEY = "daybyday.home.visual-prefs.v1";
 
@@ -141,12 +120,12 @@ export const HomeScreen = () => {
   const normalized = activeBlockName?.toLowerCase() ?? "";
   const blockAccentClass =
     normalized === "early morning"
-      ? "bg-sky-100 text-sky-900"
+      ? "bg-sky-200/80 text-sky-950"
       : normalized === "afternoon"
-        ? "bg-orange-100 text-orange-900"
+        ? "bg-amber-200/80 text-amber-950"
         : normalized === "evening" || normalized === "late night"
-          ? "bg-indigo-100 text-indigo-900"
-          : "bg-white text-zinc-900";
+          ? "bg-indigo-200/80 text-indigo-950"
+          : "bg-zinc-200/60 text-zinc-900";
 
   const blockClasses = getBlockBannerClasses(
     visualPrefs.blockStyle,
@@ -350,7 +329,7 @@ export const HomeScreen = () => {
   };
 
   return (
-    <div className="min-h-dvh">
+    <div className="min-h-dvh bg-zinc-100/50 dark:bg-zinc-950">
       <main className="mx-auto max-w-6xl px-3 pb-10 pt-20 sm:px-6 sm:pb-12 sm:pt-24 lg:px-8">
         <div className="grid grid-cols-1 items-start gap-6 sm:gap-8 xl:grid-cols-[minmax(0,1fr)_auto] xl:gap-10">
           <div className="flex min-w-0 flex-col items-stretch gap-5">
@@ -369,7 +348,7 @@ export const HomeScreen = () => {
                 </p>
               ) : null}
             </div>
-            <div className="inline-flex w-fit items-center gap-1 rounded-full border border-zinc-200 bg-white p-1 text-xs shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+            <div className="inline-flex w-fit items-center gap-0.5 rounded-full bg-zinc-200/60 p-0.5 font-eudoxus text-xs dark:bg-zinc-800/60">
               <button
                 type="button"
                 onClick={() =>
@@ -378,10 +357,10 @@ export const HomeScreen = () => {
                     to: activeBlockName ?? "Current Block",
                   })
                 }
-                className={`rounded-full px-3 py-1.5 font-semibold transition-colors ${
+                className={`rounded-full px-3 py-1.5 font-medium tracking-wide transition-all ${
                   !isAllDayMode
-                    ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                    : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                    ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-zinc-100"
+                    : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
                 }`}
                 aria-pressed={!isAllDayMode}
               >
@@ -395,10 +374,10 @@ export const HomeScreen = () => {
                     to: "All Day",
                   })
                 }
-                className={`rounded-full px-3 py-1.5 font-semibold transition-colors ${
+                className={`rounded-full px-3 py-1.5 font-medium tracking-wide transition-all ${
                   isAllDayMode
-                    ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                    : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                    ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-zinc-100"
+                    : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
                 }`}
                 aria-pressed={isAllDayMode}
               >
@@ -426,6 +405,15 @@ export const HomeScreen = () => {
               <TasksFrontPage activeBlockName={displayedBlockName} />
             </div>
           </div>
+          <button
+            type="button"
+            onClick={() =>
+              window.dispatchEvent(new CustomEvent("dbd:open-settings"))
+            }
+            className="absolute right-0 bottom-0"
+          >
+            <IoSettings className="text-2xl" />
+          </button>
           <aside
             onContextMenu={openClockMenu}
             className="flex justify-start xl:shrink-0 xl:justify-end"

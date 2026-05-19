@@ -1,6 +1,11 @@
-import { motion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
-import { IoSettings } from "react-icons/io5";
+import { AnimatePresence, motion } from "motion/react";
+import { useEffect, useId, useRef, useState } from "react";
+import {
+  IoCloudOutline,
+  IoColorPaletteOutline,
+  IoBrushOutline,
+  IoSettings,
+} from "react-icons/io5";
 import { IconPicker } from "../components/base/input/icon-picker";
 import {
   clearBlocksUserCss,
@@ -29,46 +34,32 @@ import {
   type CategoryTone,
 } from "../lib/taskCategories";
 
-function SectionCard({
-  id,
-  title,
-  subtitle,
-  children,
-}: {
-  id: string;
-  title: string;
-  subtitle?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section
-      id={id}
-      className="scroll-mt-24 rounded-2xl bg-zinc-50 p-5  backdrop-blur dark:bg-zinc-900/60"
-    >
-      <h2 className="font-display text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
-        {title}
-      </h2>
-      {subtitle ? (
-        <p className="mt-1 text-base text-zinc-600 dark:text-zinc-400">
-          {subtitle}
-        </p>
-      ) : null}
-      <div className="mt-4">{children}</div>
-    </section>
-  );
-}
+type SettingsSection = "weather" | "categories" | "blocks-css";
 
-const settingsSections = [
-  { id: "weather-location", label: "Weather" },
-  { id: "category-styles", label: "Category Styles" },
-  { id: "blocks-custom-css", label: "Blocks CSS" },
+const SECTIONS: {
+  id: SettingsSection;
+  label: string;
+  icon: React.ReactNode;
+}[] = [
+  { id: "weather", label: "Weather", icon: <IoCloudOutline /> },
+  {
+    id: "categories",
+    label: "Categories",
+    icon: <IoColorPaletteOutline />,
+  },
+  { id: "blocks-css", label: "Blocks CSS", icon: <IoBrushOutline /> },
 ];
 
 export const SettingsScreen = ({ modal = false }: { modal?: boolean }) => {
+  const uid = useId();
+  const [activeSection, setActiveSection] =
+    useState<SettingsSection>("weather");
+
   const [latInput, setLatInput] = useState("");
   const [lonInput, setLonInput] = useState("");
   const [saveError, setSaveError] = useState<string | null>(null);
   const [savedFlash, setSavedFlash] = useState(false);
+
   const [blocksCssInput, setBlocksCssInput] = useState("");
   const [blocksCssSavedFlash, setBlocksCssSavedFlash] = useState(false);
   const [blocksCssUploadError, setBlocksCssUploadError] = useState<
@@ -88,6 +79,7 @@ export const SettingsScreen = ({ modal = false }: { modal?: boolean }) => {
   );
   const [uploadMode, setUploadMode] = useState<"append" | "replace">("append");
   const cssFileInputRef = useRef<HTMLInputElement>(null);
+
   const tasks = useTasksStore((s) => s.tasks);
   const [categoryConfigs, setCategoryConfigs] = useState(() =>
     getCategoryConfigs(),
@@ -143,6 +135,8 @@ export const SettingsScreen = ({ modal = false }: { modal?: boolean }) => {
     setCategoryMessage(null);
   }, [selectedCategory, categoryConfigs]);
 
+  // ── Weather handlers ──
+
   const onSaveWeatherLocation = () => {
     setSaveError(null);
     const lat = Number(latInput.trim());
@@ -170,6 +164,8 @@ export const SettingsScreen = ({ modal = false }: { modal?: boolean }) => {
     setLatInput("");
     setLonInput("");
   };
+
+  // ── Blocks CSS handlers ──
 
   const onSaveBlocksCss = () => {
     setBlocksUserCss(blocksCssInput);
@@ -221,6 +217,8 @@ export const SettingsScreen = ({ modal = false }: { modal?: boolean }) => {
       );
     }
   };
+
+  // ── Category handlers ──
 
   const onSelectCategory = (name: string) => {
     setSelectedCategory(name);
@@ -276,482 +274,700 @@ export const SettingsScreen = ({ modal = false }: { modal?: boolean }) => {
     setCategoryMessage("Category style removed.");
   };
 
-  const scrollToSection = (id: string) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  // ── Stable IDs for a11y ──
+
+  const latId = `${uid}-lat`;
+  const lonId = `${uid}-lon`;
+  const weatherHintId = `${uid}-weather-hint`;
+  const catSelectId = `${uid}-cat-select`;
+  const catNameId = `${uid}-cat-name`;
+  const catToneId = `${uid}-cat-tone`;
+  const catColorId = `${uid}-cat-color`;
+  const catTextColorId = `${uid}-cat-text-color`;
+  const cssTextareaId = `${uid}-css-textarea`;
+  const earlyMorningBgId = `${uid}-em-bg`;
+  const earlyMorningBgDarkId = `${uid}-em-bg-dark`;
+  const afternoonBgId = `${uid}-af-bg`;
+  const afternoonBgDarkId = `${uid}-af-bg-dark`;
+
+  // ── Section content renderers ──
+
+  const renderWeather = () => (
+    <div className="space-y-5">
+      <div>
+        <h2 className="font-display text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
+          Weather
+        </h2>
+        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+          Use a fixed location for consistent forecast data across sessions.
+        </p>
+      </div>
+
+      <div
+        id={weatherHintId}
+        className="rounded-xl border border-blue-100 bg-blue-50/70 p-3 text-sm text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200"
+        role="note"
+      >
+        Leave these empty to use your device location (if permitted).
+        Coordinates are useful when planning for a different city.
+      </div>
+
+      <fieldset
+        className="flex flex-col gap-3 border-none p-0"
+        aria-describedby={weatherHintId}
+      >
+        <legend className="sr-only">Location coordinates</legend>
+        <div className="flex flex-col gap-1">
+          <label
+            htmlFor={latId}
+            className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+          >
+            Latitude
+          </label>
+          <input
+            id={latId}
+            type="text"
+            inputMode="decimal"
+            autoComplete="off"
+            value={latInput}
+            onChange={(e) => setLatInput(e.target.value)}
+            placeholder="e.g. 34.0549"
+            aria-invalid={
+              saveError?.toLowerCase().includes("latitude") || undefined
+            }
+            className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition-shadow focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label
+            htmlFor={lonId}
+            className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+          >
+            Longitude
+          </label>
+          <input
+            id={lonId}
+            type="text"
+            inputMode="decimal"
+            autoComplete="off"
+            value={lonInput}
+            onChange={(e) => setLonInput(e.target.value)}
+            placeholder="e.g. -118.2452"
+            aria-invalid={
+              saveError?.toLowerCase().includes("longitude") || undefined
+            }
+            className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition-shadow focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+          />
+        </div>
+      </fieldset>
+
+      <div aria-live="polite">
+        {saveError ? (
+          <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+            {saveError}
+          </p>
+        ) : null}
+        {savedFlash ? (
+          <p
+            className="text-sm text-emerald-600 dark:text-emerald-400"
+            role="status"
+          >
+            Weather settings saved. Weather will refresh.
+          </p>
+        ) : null}
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={onSaveWeatherLocation}
+          className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+        >
+          Save Coordinates
+        </button>
+        <button
+          type="button"
+          onClick={onUseDeviceLocation}
+          className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+        >
+          Use device location
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderCategories = () => (
+    <div className="space-y-5">
+      <div>
+        <h2 className="font-display text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
+          Category Styles
+        </h2>
+        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+          Customize how task categories appear across calendar and task views.
+        </p>
+      </div>
+
+      <div
+        className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+        role="note"
+      >
+        Workflow tip: pick a consistent color language (for example work = cool
+        tones, personal = warm tones) to make scanning your day faster.
+      </div>
+
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="flex flex-col gap-1">
+          <label
+            htmlFor={catSelectId}
+            className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+          >
+            Category
+          </label>
+          <select
+            id={catSelectId}
+            value={selectedCategory}
+            onChange={(e) => onSelectCategory(e.target.value)}
+            className="min-w-[200px] rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition-shadow focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+          >
+            <option value="">Select category…</option>
+            {availableCategories.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <button
+          type="button"
+          onClick={onStartNewCategory}
+          className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+        >
+          New style
+        </button>
+      </div>
+
+      <fieldset className="border-none p-0">
+        <legend className="sr-only">Category appearance</legend>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor={catNameId}
+              className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+            >
+              Category name
+            </label>
+            <input
+              id={catNameId}
+              type="text"
+              value={categoryNameInput}
+              onChange={(e) => {
+                setCategoryNameInput(e.target.value);
+                setCategoryMessage(null);
+              }}
+              placeholder="Work, School, Fitness…"
+              className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition-shadow focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor={catToneId}
+              className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+            >
+              Tone
+            </label>
+            <select
+              id={catToneId}
+              value={categoryTone}
+              onChange={(e) =>
+                setCategoryTone(e.target.value as CategoryTone)
+              }
+              className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition-shadow focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+            >
+              <option value="soft">Soft</option>
+              <option value="solid">Solid</option>
+            </select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor={catColorId}
+              className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+            >
+              Color (hex)
+            </label>
+            <input
+              id={catColorId}
+              type="text"
+              value={categoryColorInput}
+              onChange={(e) => {
+                setCategoryColorInput(e.target.value);
+                setCategoryMessage(null);
+              }}
+              placeholder="#6366f1"
+              aria-description="6-digit hex color, e.g. #6366f1"
+              className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition-shadow focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor={catTextColorId}
+              className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+            >
+              Text color (hex)
+            </label>
+            <input
+              id={catTextColorId}
+              type="text"
+              value={categoryTextColorInput}
+              onChange={(e) => {
+                setCategoryTextColorInput(e.target.value);
+                setCategoryMessage(null);
+              }}
+              placeholder="#ffffff"
+              aria-description="6-digit hex color, e.g. #ffffff"
+              className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition-shadow focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <span
+              className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+              id={`${uid}-icon-label`}
+            >
+              Icon (optional)
+            </span>
+            <div
+              className="mt-1"
+              role="group"
+              aria-labelledby={`${uid}-icon-label`}
+            >
+              <IconPicker
+                value={categoryIconInput}
+                onChange={(next) => {
+                  setCategoryIconInput(next);
+                  setCategoryMessage(null);
+                }}
+                onClear={() => {
+                  setCategoryIconInput("");
+                  setCategoryMessage(null);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      </fieldset>
+
+      <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-900">
+        <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+          Preview
+        </p>
+        <span
+          className="mt-2 inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-wide"
+          role="img"
+          aria-label={`Preview of ${categoryNameInput.trim() || "Category"} badge`}
+          style={{
+            backgroundColor:
+              categoryTone === "solid"
+                ? categoryColorInput
+                : `${categoryColorInput}2e`,
+            color:
+              categoryTone === "solid"
+                ? categoryTextColorInput || "#ffffff"
+                : categoryTextColorInput || categoryColorInput,
+            borderColor:
+              categoryTone === "solid"
+                ? `${categoryColorInput}aa`
+                : `${categoryColorInput}6f`,
+          }}
+        >
+          {categoryIconInput.trim() ? (
+            <span className="inline-flex items-center" aria-hidden="true">
+              {renderCategoryIcon(categoryIconInput.trim(), "h-3.5 w-3.5")}
+            </span>
+          ) : null}
+          <span>{categoryNameInput.trim() || "Category"}</span>
+        </span>
+        {categoryIconInput.trim() ? (
+          <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+            Icon key:{" "}
+            <span className="font-semibold text-zinc-700 dark:text-zinc-200">
+              {getCategoryIconOption(categoryIconInput.trim())?.label ??
+                categoryIconInput.trim()}
+            </span>
+          </p>
+        ) : null}
+      </div>
+
+      <div aria-live="polite">
+        {categoryMessage ? (
+          <p
+            className="text-sm text-zinc-700 dark:text-zinc-300"
+            role={
+              categoryMessage.includes("removed") ||
+              categoryMessage.includes("saved")
+                ? "status"
+                : "alert"
+            }
+          >
+            {categoryMessage}
+          </p>
+        ) : null}
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={onSaveCategoryStyle}
+          className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+        >
+          Save Category Styles
+        </button>
+        <button
+          type="button"
+          onClick={onDeleteCategoryStyle}
+          className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+        >
+          Delete Category Styles
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderBlocksCss = () => (
+    <div className="space-y-5">
+      <div>
+        <h2 className="font-display text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
+          Blocks CSS
+        </h2>
+        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+          Add optional CSS rules for the Blocks screen. Rules are saved locally
+          on this device.
+        </p>
+      </div>
+
+      <div
+        className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+        role="note"
+      >
+        Start small: save a few lines, inspect the Blocks screen, then iterate.
+        You can upload snippets to append or fully replace your current custom
+        CSS.
+      </div>
+
+      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        Common selectors:{" "}
+        <code className="rounded bg-zinc-100 px-1 py-0.5 text-xs text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">
+          #block-screen
+        </code>
+        ,{" "}
+        <code className="rounded bg-zinc-100 px-1 py-0.5 text-xs text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">
+          .block-screen__title
+        </code>
+        ,{" "}
+        <code className="rounded bg-zinc-100 px-1 py-0.5 text-xs text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">
+          .block-screen__row--early-morning
+        </code>
+        .
+      </p>
+
+      <fieldset className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-900">
+        <legend className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+          Quick variables
+        </legend>
+        <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor={earlyMorningBgId}
+              className="text-xs text-zinc-600 dark:text-zinc-300"
+            >
+              Early morning bg
+            </label>
+            <input
+              id={earlyMorningBgId}
+              type="text"
+              value={blocksEarlyMorningBg}
+              onChange={(e) => setBlocksEarlyMorningBg(e.target.value)}
+              className="rounded-lg border border-zinc-200 bg-white px-2 py-1.5 text-xs text-zinc-900 outline-none transition-shadow focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor={earlyMorningBgDarkId}
+              className="text-xs text-zinc-600 dark:text-zinc-300"
+            >
+              Early morning bg (dark)
+            </label>
+            <input
+              id={earlyMorningBgDarkId}
+              type="text"
+              value={blocksEarlyMorningBgDark}
+              onChange={(e) => setBlocksEarlyMorningBgDark(e.target.value)}
+              className="rounded-lg border border-zinc-200 bg-white px-2 py-1.5 text-xs text-zinc-900 outline-none transition-shadow focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor={afternoonBgId}
+              className="text-xs text-zinc-600 dark:text-zinc-300"
+            >
+              Afternoon bg
+            </label>
+            <input
+              id={afternoonBgId}
+              type="text"
+              value={blocksAfternoonBg}
+              onChange={(e) => setBlocksAfternoonBg(e.target.value)}
+              className="rounded-lg border border-zinc-200 bg-white px-2 py-1.5 text-xs text-zinc-900 outline-none transition-shadow focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor={afternoonBgDarkId}
+              className="text-xs text-zinc-600 dark:text-zinc-300"
+            >
+              Afternoon bg (dark)
+            </label>
+            <input
+              id={afternoonBgDarkId}
+              type="text"
+              value={blocksAfternoonBgDark}
+              onChange={(e) => setBlocksAfternoonBgDark(e.target.value)}
+              className="rounded-lg border border-zinc-200 bg-white px-2 py-1.5 text-xs text-zinc-900 outline-none transition-shadow focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+            />
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onInsertBlocksVariableSnippet}
+          className="mt-3 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+        >
+          Insert variable snippet
+        </button>
+      </fieldset>
+
+      <div className="flex flex-col gap-1">
+        <label
+          htmlFor={cssTextareaId}
+          className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+        >
+          CSS
+        </label>
+        <textarea
+          id={cssTextareaId}
+          value={blocksCssInput}
+          onChange={(e) => setBlocksCssInput(e.target.value)}
+          spellCheck={false}
+          rows={12}
+          placeholder={`.block-screen__title {\n  letter-spacing: 0.12em;\n}\n\n#block-screen .block-screen__row p:first-child {\n  font-weight: 700;\n}`}
+          className="min-h-[200px] w-full resize-y rounded-lg border border-zinc-200 bg-white px-3 py-2 font-mono text-sm text-zinc-900 outline-none transition-shadow focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+        />
+      </div>
+
+      <input
+        ref={cssFileInputRef}
+        type="file"
+        accept=".css,text/css,text/plain,.txt"
+        onChange={onUploadBlocksCssFile}
+        className="sr-only"
+        aria-label="Upload CSS file"
+        tabIndex={-1}
+      />
+
+      <div aria-live="polite">
+        {blocksCssSavedFlash ? (
+          <p
+            className="text-sm text-emerald-600 dark:text-emerald-400"
+            role="status"
+          >
+            Blocks appearance updated.
+          </p>
+        ) : null}
+        {blocksCssUploadError ? (
+          <p
+            className="text-sm text-red-600 dark:text-red-400"
+            role="alert"
+          >
+            {blocksCssUploadError}
+          </p>
+        ) : null}
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={onSaveBlocksCss}
+          className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+        >
+          Save Blocks CSS
+        </button>
+        <button
+          type="button"
+          onClick={onClearBlocksCss}
+          className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+        >
+          Clear
+        </button>
+        <button
+          type="button"
+          onClick={() => openCssUploadPicker("append")}
+          className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+        >
+          Upload snippet (append)
+        </button>
+        <button
+          type="button"
+          onClick={() => openCssUploadPicker("replace")}
+          className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+        >
+          Upload snippet (replace)
+        </button>
+      </div>
+    </div>
+  );
+
+  const sectionContent: Record<SettingsSection, () => React.ReactNode> = {
+    weather: renderWeather,
+    categories: renderCategories,
+    "blocks-css": renderBlocksCss,
   };
 
   return (
     <main
-      className={`flex flex-col items-start justify-start gap-5 overflow-x-hidden p-4 ${
+      aria-label="Settings"
+      className={`flex h-full flex-col overflow-hidden ${
         modal ? "min-h-0" : "min-h-screen"
       }`}
     >
-      <motion.div
-        className="inline-block origin-center"
-        key={Math.random()}
-        initial={{ opacity: 0, x: -100, rotate: -120 }}
-        animate={{ opacity: 1, x: 0, rotate: 0 }}
-        exit={{ opacity: 0, x: -100, rotate: -120 }}
-        transition={{
-          duration: 0.85,
-          delay: 0.1,
-          type: "spring",
-          stiffness: 200,
-          damping: 20,
-        }}
-      >
-        <IoSettings className="text-6xl hover:animate-spin text-zinc-900" />
-      </motion.div>
-      <motion.p
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeInOut" }}
-        className="text-6xl font-bold flex flex-row font-display"
-      >
-        {"Settings".split("").map((char, i) => (
-          <motion.p
-            key={i + Math.random()}
-            initial={{ opacity: 0, y: 5 + Math.random() * 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+      {/* ── Header ── */}
+      <div className="shrink-0 border-b border-zinc-100 px-6 py-5 dark:border-zinc-800/60">
+        <div className="flex items-center gap-3">
+          <motion.div
+            className="inline-block origin-center"
+            initial={{ opacity: 0, x: -100, rotate: -120 }}
+            animate={{ opacity: 1, x: 0, rotate: 0 }}
+            exit={{ opacity: 0, x: -100, rotate: -120 }}
             transition={{
-              duration: Math.random() * 0.5 + 0.2,
+              duration: 0.85,
+              delay: 0.1,
               type: "spring",
               stiffness: 200,
               damping: 20,
-              delay: Math.random() * 0.5 + i * 0.1,
             }}
+            aria-hidden="true"
           >
-            {char}
-          </motion.p>
-        ))}
-      </motion.p>
+            <IoSettings className="text-3xl hover:animate-spin text-zinc-900 dark:text-zinc-100" />
+          </motion.div>
 
-      <div className="w-full overflow-x-auto pb-1 lg:hidden">
-        <div className="flex min-w-max gap-2">
-          {settingsSections.map((section) => (
-            <button
-              key={section.id}
-              type="button"
-              onClick={() => scrollToSection(section.id)}
-              className="rounded-full  px-3 py-1.5 text-xs font-semibold text-zinc-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:border-blue-700/60 dark:hover:bg-blue-950/40 dark:hover:text-blue-300"
-            >
-              {section.label}
-            </button>
-          ))}
+          <h1 className="flex flex-row text-3xl font-bold font-display text-zinc-900 dark:text-zinc-100">
+            {"Settings".split("").map((char, i) => (
+              <motion.span
+                key={`settings-char-${i}`}
+                initial={{ opacity: 0, y: 5 + (i % 3) * 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{
+                  duration: 0.3 + (i % 3) * 0.15,
+                  type: "spring",
+                  stiffness: 200,
+                  damping: 20,
+                  delay: 0.15 + i * 0.08,
+                }}
+              >
+                {char}
+              </motion.span>
+            ))}
+          </h1>
         </div>
       </div>
 
-      <div className="mt-2 flex w-full max-w-6xl flex-col items-start justify-start gap-8 lg:flex-row">
-        <div className="w-full max-w-3xl flex-1 space-y-5">
-          <SectionCard
-            id="weather-location"
-            title="Weather Settings"
-            subtitle="Use a fixed location when you want consistent forecast data across sessions."
-          >
-            <div className="rounded-xl border border-blue-100 bg-blue-50/70 p-3 text-sm text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200">
-              Leave these empty to use your device location (if permitted).
-              Coordinates are useful when planning for a different city than
-              where you currently are.
-            </div>
-            <div className="mt-4 flex flex-col gap-3">
-              <label className="flex flex-col gap-1">
-                <span className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                  Latitude
-                </span>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={latInput}
-                  onChange={(e) => setLatInput(e.target.value)}
-                  placeholder="e.g. 34.0549"
-                  className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-                />
-              </label>
-              <label className="flex flex-col gap-1">
-                <span className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                  Longitude
-                </span>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={lonInput}
-                  onChange={(e) => setLonInput(e.target.value)}
-                  placeholder="e.g. -118.2452"
-                  className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-                />
-              </label>
-            </div>
-            {saveError ? (
-              <p className="mt-3 text-sm text-red-600" role="alert">
-                {saveError}
-              </p>
-            ) : null}
-            {savedFlash ? (
-              <p className="mt-3 text-sm text-emerald-600">
-                Weather settings saved. Weather will refresh.
-              </p>
-            ) : null}
-            <div className="mt-5 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={onSaveWeatherLocation}
-                className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium  text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-              >
-                Save Coordinates
-              </button>
-              <button
-                type="button"
-                onClick={onUseDeviceLocation}
-                className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
-              >
-                Use device location
-              </button>
-            </div>
-          </SectionCard>
-
-          <SectionCard
-            id="category-styles"
-            title="Category Styles"
-            subtitle="Customize how task categories appear across calendar and task views."
-          >
-            <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
-              Workflow tip: pick a consistent color language (for example work =
-              cool tones, personal = warm tones) to make scanning your day
-              faster.
-            </div>
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              <select
-                value={selectedCategory}
-                onChange={(e) => onSelectCategory(e.target.value)}
-                className="min-w-[220px] rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-              >
-                <option value="">Select category…</option>
-                {availableCategories.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={onStartNewCategory}
-                className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
-              >
-                New style
-              </button>
-            </div>
-            <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
-              <label className="flex flex-col gap-1">
-                <span className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                  Category name
-                </span>
-                <input
-                  type="text"
-                  value={categoryNameInput}
-                  onChange={(e) => {
-                    setCategoryNameInput(e.target.value);
-                    setCategoryMessage(null);
-                  }}
-                  placeholder="Work, School, Fitness…"
-                  className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-                />
-              </label>
-              <label className="flex flex-col gap-1">
-                <span className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                  Tone
-                </span>
-                <select
-                  value={categoryTone}
-                  onChange={(e) =>
-                    setCategoryTone(e.target.value as CategoryTone)
-                  }
-                  className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-                >
-                  <option value="soft">Soft</option>
-                  <option value="solid">Solid</option>
-                </select>
-              </label>
-              <label className="flex flex-col gap-1">
-                <span className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                  Color (hex)
-                </span>
-                <input
-                  type="text"
-                  value={categoryColorInput}
-                  onChange={(e) => {
-                    setCategoryColorInput(e.target.value);
-                    setCategoryMessage(null);
-                  }}
-                  placeholder="#6366f1"
-                  className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-                />
-              </label>
-              <label className="flex flex-col gap-1">
-                <span className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                  Text color (hex)
-                </span>
-                <input
-                  type="text"
-                  value={categoryTextColorInput}
-                  onChange={(e) => {
-                    setCategoryTextColorInput(e.target.value);
-                    setCategoryMessage(null);
-                  }}
-                  placeholder="#ffffff"
-                  className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-                />
-              </label>
-              <div className="md:col-span-2">
-                <span className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                  Icon (optional)
-                </span>
-                <div className="mt-1">
-                  <IconPicker
-                    value={categoryIconInput}
-                    onChange={(next) => {
-                      setCategoryIconInput(next);
-                      setCategoryMessage(null);
-                    }}
-                    onClear={() => {
-                      setCategoryIconInput("");
-                      setCategoryMessage(null);
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="mt-4 rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-900">
-              <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                Preview
-              </p>
-              <span
-                className="mt-2 inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-wide"
-                style={{
-                  backgroundColor:
-                    categoryTone === "solid"
-                      ? categoryColorInput
-                      : `${categoryColorInput}2e`,
-                  color:
-                    categoryTone === "solid"
-                      ? categoryTextColorInput || "#ffffff"
-                      : categoryTextColorInput || categoryColorInput,
-                  borderColor:
-                    categoryTone === "solid"
-                      ? `${categoryColorInput}aa`
-                      : `${categoryColorInput}6f`,
-                }}
-              >
-                {categoryIconInput.trim() ? (
-                  <span className="inline-flex items-center">
-                    {renderCategoryIcon(
-                      categoryIconInput.trim(),
-                      "h-3.5 w-3.5",
-                    )}
-                  </span>
-                ) : null}
-                <span>{categoryNameInput.trim() || "Category"}</span>
-              </span>
-              {categoryIconInput.trim() ? (
-                <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
-                  Icon key:{" "}
-                  <span className="font-semibold text-zinc-700 dark:text-zinc-200">
-                    {getCategoryIconOption(categoryIconInput.trim())?.label ??
-                      categoryIconInput.trim()}
-                  </span>
-                </p>
-              ) : null}
-            </div>
-            {categoryMessage ? (
-              <p className="mt-3 text-sm text-zinc-700 dark:text-zinc-300">
-                {categoryMessage}
-              </p>
-            ) : null}
-            <div className="mt-4 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={onSaveCategoryStyle}
-                className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-              >
-                Save Category Styles
-              </button>
-              <button
-                type="button"
-                onClick={onDeleteCategoryStyle}
-                className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
-              >
-                Delete Category Styles
-              </button>
-            </div>
-          </SectionCard>
-
-          <SectionCard
-            id="blocks-custom-css"
-            title="Blocks CSS"
-            subtitle="Add optional CSS rules for the Blocks screen. Rules are saved locally on this device."
-          >
-            <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
-              Start small: save a few lines, inspect the Blocks screen, then
-              iterate. You can upload snippets to append or fully replace your
-              current custom CSS.
-            </div>
-            <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
-              Common selectors:{" "}
-              <code className="rounded bg-zinc-100 px-1 py-0.5 text-xs text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">
-                #block-screen
-              </code>
-              ,{" "}
-              <code className="rounded bg-zinc-100 px-1 py-0.5 text-xs text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">
-                .block-screen__title
-              </code>
-              ,{" "}
-              <code className="rounded bg-zinc-100 px-1 py-0.5 text-xs text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">
-                .block-screen__row--early-morning
-              </code>
-              .
-            </p>
-            <div className="mt-4 rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-900">
-              <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                Quick variables
-              </p>
-              <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2">
-                <label className="flex flex-col gap-1">
-                  <span className="text-xs text-zinc-600 dark:text-zinc-300">
-                    Early morning bg
-                  </span>
-                  <input
-                    type="text"
-                    value={blocksEarlyMorningBg}
-                    onChange={(e) => setBlocksEarlyMorningBg(e.target.value)}
-                    className="rounded-lg border border-zinc-200 bg-white px-2 py-1.5 text-xs text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
-                  />
-                </label>
-                <label className="flex flex-col gap-1">
-                  <span className="text-xs text-zinc-600 dark:text-zinc-300">
-                    Early morning bg (dark)
-                  </span>
-                  <input
-                    type="text"
-                    value={blocksEarlyMorningBgDark}
-                    onChange={(e) =>
-                      setBlocksEarlyMorningBgDark(e.target.value)
-                    }
-                    className="rounded-lg border border-zinc-200 bg-white px-2 py-1.5 text-xs text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
-                  />
-                </label>
-                <label className="flex flex-col gap-1">
-                  <span className="text-xs text-zinc-600 dark:text-zinc-300">
-                    Afternoon bg
-                  </span>
-                  <input
-                    type="text"
-                    value={blocksAfternoonBg}
-                    onChange={(e) => setBlocksAfternoonBg(e.target.value)}
-                    className="rounded-lg border border-zinc-200 bg-white px-2 py-1.5 text-xs text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
-                  />
-                </label>
-                <label className="flex flex-col gap-1">
-                  <span className="text-xs text-zinc-600 dark:text-zinc-300">
-                    Afternoon bg (dark)
-                  </span>
-                  <input
-                    type="text"
-                    value={blocksAfternoonBgDark}
-                    onChange={(e) => setBlocksAfternoonBgDark(e.target.value)}
-                    className="rounded-lg border border-zinc-200 bg-white px-2 py-1.5 text-xs text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
-                  />
-                </label>
-              </div>
-              <button
-                type="button"
-                onClick={onInsertBlocksVariableSnippet}
-                className="mt-3 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
-              >
-                Insert variable snippet
-              </button>
-            </div>
-            <label className="mt-4 flex flex-col gap-1">
-              <span className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                CSS
-              </span>
-              <textarea
-                value={blocksCssInput}
-                onChange={(e) => setBlocksCssInput(e.target.value)}
-                spellCheck={false}
-                rows={12}
-                placeholder={`.block-screen__title {\n  letter-spacing: 0.12em;\n}\n\n#block-screen .block-screen__row p:first-child {\n  font-weight: 700;\n}`}
-                className="min-h-[200px] w-full resize-y rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 font-mono text-sm text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
-              />
-            </label>
-            <input
-              ref={cssFileInputRef}
-              type="file"
-              accept=".css,text/css,text/plain,.txt"
-              onChange={onUploadBlocksCssFile}
-              className="hidden"
-            />
-            {blocksCssSavedFlash ? (
-              <p className="mt-3 text-sm text-emerald-600">
-                Blocks appearance updated.
-              </p>
-            ) : null}
-            {blocksCssUploadError ? (
-              <p className="mt-3 text-sm text-red-600" role="alert">
-                {blocksCssUploadError}
-              </p>
-            ) : null}
-            <div className="mt-4 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={onSaveBlocksCss}
-                className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-              >
-                Save Blocks CSS
-              </button>
-              <button
-                type="button"
-                onClick={onClearBlocksCss}
-                className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
-              >
-                Clear
-              </button>
-              <button
-                type="button"
-                onClick={() => openCssUploadPicker("append")}
-                className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
-              >
-                Upload snippet (append)
-              </button>
-              <button
-                type="button"
-                onClick={() => openCssUploadPicker("replace")}
-                className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
-              >
-                Upload snippet (replace)
-              </button>
-            </div>
-          </SectionCard>
-        </div>
-
-        <aside className="sticky top-5 hidden w-full max-w-[240px] self-start rounded-2xl border border-zinc-200 bg-white/90 p-4 shadow-sm backdrop-blur lg:block dark:border-zinc-800 dark:bg-zinc-900/80">
-          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-            On this page
-          </p>
-          <nav className="mt-3 flex flex-col gap-2">
-            {settingsSections.map((section) => (
+      {/* ── Mobile section pills (below md) ── */}
+      <nav
+        aria-label="Settings sections"
+        className="shrink-0 overflow-x-auto border-b border-zinc-100 px-4 py-2 md:hidden dark:border-zinc-800/60"
+      >
+        <div className="flex min-w-max gap-1.5">
+          {SECTIONS.map((section) => {
+            const isActive = activeSection === section.id;
+            return (
               <button
                 key={section.id}
                 type="button"
-                onClick={() => scrollToSection(section.id)}
-                className="rounded-md px-2 py-1.5 text-left text-sm font-medium text-zinc-700 transition-colors hover:bg-blue-50 hover:text-blue-700 dark:text-zinc-300 dark:hover:bg-blue-950/40 dark:hover:text-blue-300"
+                onClick={() => setActiveSection(section.id)}
+                aria-current={isActive ? "true" : undefined}
+                className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 ${
+                  isActive
+                    ? "bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300"
+                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                }`}
               >
+                <span className="text-base">{section.icon}</span>
                 {section.label}
               </button>
-            ))}
-          </nav>
-        </aside>
+            );
+          })}
+        </div>
+      </nav>
+
+      {/* ── Body: sidebar + content ── */}
+      <div className="flex min-h-0 flex-1">
+        {/* Desktop sidebar */}
+        <nav
+          aria-label="Settings sections"
+          className="hidden w-52 shrink-0 flex-col border-r border-zinc-100 bg-zinc-50/50 p-3 md:flex dark:border-zinc-800/60 dark:bg-zinc-900/30"
+        >
+          <div className="flex flex-col gap-0.5">
+            {SECTIONS.map((section) => {
+              const isActive = activeSection === section.id;
+              return (
+                <button
+                  key={section.id}
+                  type="button"
+                  onClick={() => setActiveSection(section.id)}
+                  aria-current={isActive ? "true" : undefined}
+                  className={`group relative flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 ${
+                    isActive
+                      ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-800 dark:text-zinc-100"
+                      : "text-zinc-500 hover:bg-white/60 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-200"
+                  }`}
+                >
+                  <span
+                    className={`absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r transition-all ${
+                      isActive
+                        ? "bg-blue-500 opacity-100"
+                        : "opacity-0"
+                    }`}
+                    aria-hidden="true"
+                  />
+                  <span
+                    className={`text-lg transition-colors ${
+                      isActive
+                        ? "text-blue-600 dark:text-blue-400"
+                        : "text-zinc-400 group-hover:text-zinc-600 dark:text-zinc-500 dark:group-hover:text-zinc-300"
+                    }`}
+                  >
+                    {section.icon}
+                  </span>
+                  {section.label}
+                </button>
+              );
+            })}
+          </div>
+        </nav>
+
+        {/* Content pane */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="mx-auto max-w-2xl px-6 py-6">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeSection}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
+              >
+                {sectionContent[activeSection]()}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
       </div>
     </main>
   );

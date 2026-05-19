@@ -10,7 +10,7 @@ import {
   WiShowers,
   WiThunderstorm,
 } from "react-icons/wi";
-import type { WeatherState } from "../hooks/useWeather";
+import type { WeatherState } from "@/types";
 
 const iconSize = (compact: boolean) => (compact ? "h-5 w-5" : "h-8 w-8");
 

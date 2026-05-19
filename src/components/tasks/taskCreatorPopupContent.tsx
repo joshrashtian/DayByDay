@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { AddTaskPayload, TaskKind } from "../../types/task";
+import type { AddTaskPayload, TaskKind } from "@/types";
 import { TaskCreatorPopupForm } from "./TaskCreatorPopupForm";
 
 type Args = {

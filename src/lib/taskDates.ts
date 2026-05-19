@@ -1,9 +1,6 @@
 import { DateTime } from "luxon";
-import {
-  normalizeRecurrenceWeekdays,
-  type Task,
-  type TaskRecurrence,
-} from "../types/task";
+import type { Task, TaskRecurrence } from "@/types";
+import { normalizeRecurrenceWeekdays } from "../types/task";
 
 const TIME_PARSE_FORMATS = ["h:mma", "h:mm a", "ha", "h a", "HH:mm", "H:mm"] as const;
 

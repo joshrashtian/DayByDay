@@ -1,12 +1,10 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { AddTaskPayload, Task, UpdateTaskPayload } from "@/types";
 import {
   normalizeTaskTags,
   parseTaskKind,
   parseTaskRecurrence,
-  type AddTaskPayload,
-  type Task,
-  type UpdateTaskPayload,
 } from "../types/task";
 import { normalizeTaskBlock } from "../lib/taskBlocks";
 import { advanceRecurrenceDate } from "../lib/taskDates";

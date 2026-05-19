@@ -8,17 +8,15 @@ import {
 import {
   buildClockStylePrototype,
   defaultClockStyles,
-  type ClockStylePack,
-  type ClockStylePrototype,
-  type ClockStylePrototypeInput,
 } from "./clockStyleDefaults";
+import type { ClockStylePack, ClockStylePrototype, ClockStylePrototypeInput } from "@/types";
 export type {
   ClockStylePack,
   ClockStylePrototype,
   ClockStylePrototypeInput,
   ClockStyleSource,
   ClockTemplate,
-} from "./clockStyleDefaults";
+} from "@/types";
 
 type StyleContextType = {
   style?: string;

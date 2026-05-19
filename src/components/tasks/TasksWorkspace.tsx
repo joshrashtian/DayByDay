@@ -14,7 +14,7 @@ import { TasksHeader } from "./TasksHeader";
 import { useContextMenu } from "../../providers/ContextMenuProvider";
 import { usePopup } from "../../providers/PopupProvider";
 import { useTasksStore } from "../../stores/tasksStore";
-import type { Task } from "../../types/task";
+import type { Task } from "@/types";
 import {
   IoCheckmarkCircle,
   IoCheckmarkCircleOutline,

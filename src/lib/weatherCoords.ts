@@ -1,8 +1,10 @@
+import type { ManualWeatherCoords } from "@/types";
+
+export type { ManualWeatherCoords } from "@/types";
+
 export const WEATHER_MANUAL_COORDS_STORAGE_KEY = "dbd.weather.manualCoords";
 
 export const WEATHER_COORDS_CHANGED = "dbd-weather-coords-changed";
-
-export type ManualWeatherCoords = { lat: number; lon: number };
 
 function parseStored(raw: string | null): ManualWeatherCoords | null {
   if (!raw) return null;
