@@ -25,6 +25,7 @@ export type TasksHeaderProps = {
   groupSort: GroupSortConfig;
   onGroupSortChange: (config: GroupSortConfig) => void;
   viewMode: TaskViewMode;
+  hideCategoryFilter?: boolean;
 };
 
 const shellInputClass =
@@ -48,6 +49,7 @@ export function TasksHeader({
   groupSort,
   onGroupSortChange,
   viewMode,
+  hideCategoryFilter = false,
 }: TasksHeaderProps) {
   const blockItems: MultiSelectItemType[] = blocks.map((block) => ({
     id: block,
@@ -105,21 +107,23 @@ export function TasksHeader({
               />
             </div>
 
-            <div className="min-w-48 max-w-64">
-              <MultiSelect
-                items={categoryItems}
-                selectedKeys={categoryFilters}
-                onSelectionChange={(keys) =>
-                  onCategoryFiltersChange(selectionToSet(keys, categories))
-                }
-                placeholder="All categories"
-                showFooter
-                size="sm"
-                selectedCountFormatter={(count) =>
-                  count === 1 ? "1 category" : `${count} categories`
-                }
-              />
-            </div>
+            {!hideCategoryFilter ? (
+              <div className="min-w-48 max-w-64">
+                <MultiSelect
+                  items={categoryItems}
+                  selectedKeys={categoryFilters}
+                  onSelectionChange={(keys) =>
+                    onCategoryFiltersChange(selectionToSet(keys, categories))
+                  }
+                  placeholder="All categories"
+                  showFooter
+                  size="sm"
+                  selectedCountFormatter={(count) =>
+                    count === 1 ? "1 category" : `${count} categories`
+                  }
+                />
+              </div>
+            ) : null}
 
             <button
               type="button"

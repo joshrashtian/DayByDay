@@ -89,7 +89,7 @@ export default function App() {
                 }
               />
               <Route
-                path="/tasks"
+                path="/tasks/*"
                 element={
                   <AnimatedPage>
                     <TasksScreen />

@@ -21,6 +21,7 @@ type TasksState = {
   toggleTask: (id: string) => void;
   removeTask: (id: string) => void;
   setTaskCategory: (taskId: string, category: string | undefined) => void;
+  removeCategoryFromAllTasks: (categoryName: string) => void;
   setTaskBlock: (taskId: string, block: string | undefined) => void;
   setTaskTags: (taskId: string, tags: string[] | undefined) => void;
 };
@@ -166,6 +167,19 @@ export const useTasksStore = create<TasksState>()(
               : t,
           ),
         })),
+
+      removeCategoryFromAllTasks: (categoryName) =>
+        set((s) => {
+          const key = categoryName.trim().toLowerCase();
+          if (!key) return s;
+          return {
+            tasks: s.tasks.map((t) => {
+              const taskCategory = t.category?.trim().toLowerCase();
+              if (!taskCategory || taskCategory !== key) return t;
+              return { ...t, category: undefined, updatedAt: new Date() };
+            }),
+          };
+        }),
 
       setTaskBlock: (taskId, block) =>
         set((s) => ({

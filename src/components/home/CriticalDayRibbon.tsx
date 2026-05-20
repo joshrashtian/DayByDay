@@ -57,7 +57,13 @@ function randomNegativeSkewRange(): [number, number] {
   return deep < shallow ? [deep, shallow] : [shallow, deep];
 }
 
-export function CriticalHeaderRibbon() {
+type CriticalHeaderRibbonProps = {
+  ribbonContainerClassName?: string;
+};
+
+export function CriticalHeaderRibbon({
+  ribbonContainerClassName = "",
+}: CriticalHeaderRibbonProps) {
   const critical = useCriticalForDay();
   const [skewRange, setSkewRange] = useState<[number, number]>(() =>
     randomNegativeSkewRange(),
@@ -157,22 +163,23 @@ export function CriticalHeaderRibbon() {
           damping: 30,
           delay: 0.06,
         }}
-        className="-mb-2.5 pr-0.5 text-right text-[20px] font-black italic tracking-[0.28em] font-baron text-red-500"
+        className="mb-1.5 pr-0.5 text-right text-[20px] font-black italic leading-none tracking-[0.18em] font-baron text-red-500"
       >
         CRITICAL REMINDER
       </motion.p>
 
-      <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{
-          type: "spring",
-          stiffness: 420,
-          damping: 26,
-        }}
-        style={{ maxWidth: "min(22rem, 100%)" }}
-        className="flex items-stretch overflow-hidden"
-      >
+      <div className={ribbonContainerClassName}>
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{
+            type: "spring",
+            stiffness: 420,
+            damping: 26,
+          }}
+          style={{ maxWidth: "min(22rem, 100%)" }}
+          className="flex items-stretch overflow-hidden"
+        >
         <div className="relative flex shrink-0 flex-col justify-center overflow-hidden px-4 py-2.5">
           <div
             ref={ribbonLeftBgRef}
@@ -249,7 +256,8 @@ export function CriticalHeaderRibbon() {
             )}
           </div>
         </div>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   );
 }

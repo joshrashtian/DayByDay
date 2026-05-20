@@ -159,6 +159,43 @@ export function removeCategoryConfigByName(name: string): void {
   );
 }
 
+export function categoriesMatch(
+  a: string | undefined,
+  b: string | undefined,
+): boolean {
+  const left = normalizeCategoryName(a)?.toLowerCase();
+  const right = normalizeCategoryName(b)?.toLowerCase();
+  if (!left || !right) return false;
+  return left === right;
+}
+
+export function countTasksInCategory(tasks: Task[], name: string): number {
+  return tasks.filter((task) => categoriesMatch(task.category, name)).length;
+}
+
+export function categoryToSlug(name: string): string {
+  return encodeURIComponent(name.trim());
+}
+
+export function slugToCategory(slug: string): string | undefined {
+  try {
+    const decoded = decodeURIComponent(slug).trim();
+    return decoded.length > 0 ? decoded : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export function deleteCategoryEntirely(
+  name: string,
+  removeFromTasks: (categoryName: string) => void,
+): void {
+  const normalized = normalizeCategoryName(name);
+  if (!normalized) return;
+  removeFromTasks(normalized);
+  removeCategoryConfigByName(normalized);
+}
+
 export function getCategoryConfigByName(name: string): CategoryConfig | undefined {
   const normalized = normalizeCategoryName(name);
   if (!normalized) return undefined;

@@ -6,6 +6,7 @@ import {
   isTaskDueToday,
 } from "../../lib/taskDates";
 import { collectTaskBlocks } from "../../lib/taskBlocks";
+import { collectAvailableCategories } from "../../lib/taskCategories";
 import { TaskCreator } from "./TaskCreator";
 import { taskCreatorPopupContent } from "./taskCreatorPopupContent";
 import { taskEditorPopupContent } from "./taskEditorPopupContent";
@@ -34,6 +35,8 @@ type Props = {
   topPadding?: "header" | "comfortable" | "none";
   contentWidth?: "narrow" | "wide";
   composerLayout?: "inline" | "bottomChat" | "none";
+  initialCategoryFilter?: string;
+  lockCategoryFilter?: boolean;
 };
 
 function taskMatchesSearch(task: Task, query: string): boolean {
@@ -78,17 +81,6 @@ function normalizedCategoryName(task: Task): string | undefined {
   return value ? value : undefined;
 }
 
-function collectCategories(tasks: Task[]): string[] {
-  const byLower = new Map<string, string>();
-  for (const t of tasks) {
-    const c = t.category?.trim();
-    if (c && !byLower.has(c.toLowerCase())) byLower.set(c.toLowerCase(), c);
-  }
-  return [...byLower.values()].sort((a, b) =>
-    a.localeCompare(b, undefined, { sensitivity: "base" }),
-  );
-}
-
 function isHistoricalTask(task: Task): boolean {
   if (task.dueDate) {
     const due = DateTime.fromJSDate(task.dueDate).startOf("day");
@@ -102,6 +94,8 @@ export function TasksWorkspace({
   topPadding = "comfortable",
   contentWidth = "wide",
   composerLayout = "inline",
+  initialCategoryFilter,
+  lockCategoryFilter = false,
 }: Props) {
   const { tasks, addTask, toggleTask, removeTask, setTaskTags, updateTask } =
     useTasksStore(
@@ -131,9 +125,10 @@ export function TasksWorkspace({
 
   const [taskSearch, setTaskSearch] = useState("");
   const [blockFilters, setBlockFilters] = useState<Set<string>>(new Set());
-  const [categoryFilters, setCategoryFilters] = useState<Set<string>>(
-    new Set(),
-  );
+  const [categoryFilters, setCategoryFilters] = useState<Set<string>>(() => {
+    const trimmed = initialCategoryFilter?.trim();
+    return trimmed ? new Set([trimmed]) : new Set();
+  });
   const [dueTodayOnly, setDueTodayOnly] = useState(false);
   const [statusFilter, setStatusFilter] = useState<
     "all" | "unfinished" | "completed" | "history"
@@ -145,7 +140,17 @@ export function TasksWorkspace({
     useState<GroupSortConfig>(DEFAULT_GROUP_SORT);
 
   const blocks = useMemo(() => collectTaskBlocks(tasks), [tasks]);
-  const categories = useMemo(() => collectCategories(tasks), [tasks]);
+  const categories = useMemo(
+    () => collectAvailableCategories(tasks),
+    [tasks],
+  );
+
+  useEffect(() => {
+    const trimmed = initialCategoryFilter?.trim();
+    if (!trimmed) return;
+    setCategoryFilters(new Set([trimmed]));
+    setViewMode("all");
+  }, [initialCategoryFilter]);
 
   useEffect(() => {
     setBlockFilters((current) => {
@@ -211,7 +216,7 @@ export function TasksWorkspace({
     const knownGroups =
       viewMode === "block"
         ? collectTaskBlocks(visibleTasks)
-        : collectCategories(visibleTasks);
+        : collectAvailableCategories(visibleTasks);
     const groups = new Map<
       string,
       {
@@ -279,6 +284,7 @@ export function TasksWorkspace({
           groupSort={groupSort}
           onGroupSortChange={setGroupSort}
           viewMode={viewMode}
+          hideCategoryFilter={lockCategoryFilter}
         />
         <div className="min-h-0 flex flex-1 overflow-hidden">
           <div

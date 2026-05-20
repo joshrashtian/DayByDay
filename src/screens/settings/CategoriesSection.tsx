@@ -8,6 +8,8 @@ import { useTasksStore } from "../../stores/tasksStore";
 import { useSettingsStore } from "../../stores/settingsStore";
 import {
   collectAvailableCategories,
+  countTasksInCategory,
+  deleteCategoryEntirely,
   getCategoryConfigByName,
   getCategoryConfigs,
   removeCategoryConfigByName,
@@ -19,6 +21,9 @@ import {
 export function CategoriesSection() {
   const uid = useId();
   const tasks = useTasksStore((s) => s.tasks);
+  const removeCategoryFromAllTasks = useTasksStore(
+    (s) => s.removeCategoryFromAllTasks,
+  );
   const storedCategoryConfigs = useSettingsStore((s) => s.categoryConfigs);
   const [categoryConfigs, setCategoryConfigs] = useState(() =>
     getCategoryConfigs(),
@@ -31,6 +36,8 @@ export function CategoriesSection() {
   const [categoryTone, setCategoryTone] = useState<CategoryTone>("soft");
   const [categoryIconInput, setCategoryIconInput] = useState("");
   const [categoryMessage, setCategoryMessage] = useState<string | null>(null);
+  const [pendingStyleDelete, setPendingStyleDelete] = useState(false);
+  const [pendingFullDelete, setPendingFullDelete] = useState(false);
 
   useEffect(() => {
     setCategoryConfigs(getCategoryConfigs());
@@ -59,6 +66,8 @@ export function CategoriesSection() {
   const onSelectCategory = (name: string) => {
     setSelectedCategory(name);
     setCategoryMessage(null);
+    setPendingStyleDelete(false);
+    setPendingFullDelete(false);
   };
 
   const onStartNewCategory = () => {
@@ -69,6 +78,8 @@ export function CategoriesSection() {
     setCategoryTone("soft");
     setCategoryIconInput("");
     setCategoryMessage(null);
+    setPendingStyleDelete(false);
+    setPendingFullDelete(false);
   };
 
   const onSaveCategoryStyle = () => {
@@ -105,9 +116,41 @@ export function CategoriesSection() {
       setCategoryMessage("Select a category to delete.");
       return;
     }
+    if (!pendingStyleDelete) {
+      setPendingStyleDelete(true);
+      setPendingFullDelete(false);
+      setCategoryMessage(
+        `Remove saved style for “${trimmed}”? Tasks keep the category label.`,
+      );
+      return;
+    }
     removeCategoryConfigByName(trimmed);
     onStartNewCategory();
+    setPendingStyleDelete(false);
     setCategoryMessage("Category style removed.");
+  };
+
+  const onDeleteCategoryFully = () => {
+    const trimmed = (selectedCategory || categoryNameInput).trim();
+    if (!trimmed) {
+      setCategoryMessage("Select a category to delete.");
+      return;
+    }
+    const count = countTasksInCategory(tasks, trimmed);
+    if (!pendingFullDelete) {
+      setPendingFullDelete(true);
+      setPendingStyleDelete(false);
+      setCategoryMessage(
+        count > 0
+          ? `Delete “${trimmed}” from all ${count} task${count === 1 ? "" : "s"} and remove its style?`
+          : `Delete “${trimmed}” and remove its style?`,
+      );
+      return;
+    }
+    deleteCategoryEntirely(trimmed, removeCategoryFromAllTasks);
+    onStartNewCategory();
+    setPendingFullDelete(false);
+    setCategoryMessage(`Deleted “${trimmed}”.`);
   };
 
   const catSelectId = `${uid}-cat-select`;
@@ -345,7 +388,14 @@ export function CategoriesSection() {
           onClick={onDeleteCategoryStyle}
           className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
         >
-          Delete Category Styles
+          {pendingStyleDelete ? "Confirm remove style" : "Remove style only"}
+        </button>
+        <button
+          type="button"
+          onClick={onDeleteCategoryFully}
+          className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-700 transition-colors hover:bg-rose-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-500 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950/60"
+        >
+          {pendingFullDelete ? "Confirm delete category" : "Delete category"}
         </button>
       </div>
     </div>

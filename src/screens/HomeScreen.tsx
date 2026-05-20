@@ -314,13 +314,15 @@ export const HomeScreen = () => {
             </div>
             <div
               onContextMenu={openRibbonMenu}
-              className={`w-fit ${ribbonStyleClass}`}
+              className="w-fit"
               style={{
                 transform: `scale(${visualPrefs.ribbonScale})`,
                 transformOrigin: "left top",
               }}
             >
-              <CriticalHeaderRibbon />
+              <CriticalHeaderRibbon
+                ribbonContainerClassName={ribbonStyleClass}
+              />
             </div>
             <div
               onContextMenu={openTasksMenu}

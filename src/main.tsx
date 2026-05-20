@@ -7,20 +7,23 @@ import PopupProvider from "./providers/PopupProvider";
 import { DayTransitionProvider } from "./providers/DayTransitionProvider";
 import { ProfileProvider } from "./providers/ProfileProvider";
 import { StyleProvider } from "./providers/StyleProvider";
+import GuideProvider from "./providers/GlobalHelpProvider";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <HashRouter>
       <StyleProvider>
-        <ContextMenuProvider>
-          <PopupProvider>
-            <DayTransitionProvider>
-              <ProfileProvider>
-                <App />
-              </ProfileProvider>
-            </DayTransitionProvider>
-          </PopupProvider>
-        </ContextMenuProvider>
+        <GuideProvider>
+          <ContextMenuProvider>
+            <PopupProvider>
+              <DayTransitionProvider>
+                <ProfileProvider>
+                  <App />
+                </ProfileProvider>
+              </DayTransitionProvider>
+            </PopupProvider>
+          </ContextMenuProvider>
+        </GuideProvider>
       </StyleProvider>
     </HashRouter>
   </React.StrictMode>,
