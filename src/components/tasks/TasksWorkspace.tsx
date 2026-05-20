@@ -9,19 +9,26 @@ import { collectTaskBlocks } from "../../lib/taskBlocks";
 import { TaskCreator } from "./TaskCreator";
 import { taskCreatorPopupContent } from "./taskCreatorPopupContent";
 import { taskEditorPopupContent } from "./taskEditorPopupContent";
-import { TaskItem } from "./TaskItem";
+import { TaskEntriesList } from "./TaskEntriesList";
 import { TasksHeader } from "./TasksHeader";
+import type { TaskViewMode } from "./taskView";
+import {
+  buildTaskListEntries,
+  countTaskListEntries,
+} from "../../lib/recurringTasks";
+import {
+  DEFAULT_GROUP_SORT,
+  DEFAULT_TASK_SORT,
+  sortTaskGroups,
+  type GroupSortConfig,
+  type TaskSortConfig,
+} from "../../lib/taskSort";
+import { TasksSideRail } from "./TasksSideRail";
 import { useContextMenu } from "../../providers/ContextMenuProvider";
 import { usePopup } from "../../providers/PopupProvider";
 import { useTasksStore } from "../../stores/tasksStore";
 import type { Task } from "@/types";
-import {
-  IoCheckmarkCircle,
-  IoCheckmarkCircleOutline,
-  IoGrid,
-  IoList,
-  IoTimeOutline,
-} from "react-icons/io5";
+import { IoAdd } from "react-icons/io5";
 
 type Props = {
   topPadding?: "header" | "comfortable" | "none";
@@ -124,12 +131,18 @@ export function TasksWorkspace({
 
   const [taskSearch, setTaskSearch] = useState("");
   const [blockFilters, setBlockFilters] = useState<Set<string>>(new Set());
-  const [categoryFilters, setCategoryFilters] = useState<Set<string>>(new Set());
+  const [categoryFilters, setCategoryFilters] = useState<Set<string>>(
+    new Set(),
+  );
   const [dueTodayOnly, setDueTodayOnly] = useState(false);
   const [statusFilter, setStatusFilter] = useState<
     "all" | "unfinished" | "completed" | "history"
   >("all");
-  const [viewMode, setViewMode] = useState<"block" | "category">("block");
+  const [viewMode, setViewMode] = useState<TaskViewMode>("all");
+  const [sortMenuOpen, setSortMenuOpen] = useState(false);
+  const [taskSort, setTaskSort] = useState<TaskSortConfig>(DEFAULT_TASK_SORT);
+  const [groupSort, setGroupSort] =
+    useState<GroupSortConfig>(DEFAULT_GROUP_SORT);
 
   const blocks = useMemo(() => collectTaskBlocks(tasks), [tasks]);
   const categories = useMemo(() => collectCategories(tasks), [tasks]);
@@ -187,15 +200,26 @@ export function TasksWorkspace({
     ],
   );
 
+  const flatListEntries = useMemo(
+    () => buildTaskListEntries(visibleTasks, taskSort),
+    [visibleTasks, taskSort],
+  );
+
   const groupedVisibleTasks = useMemo(() => {
+    if (viewMode === "all") return [];
+
     const knownGroups =
       viewMode === "block"
         ? collectTaskBlocks(visibleTasks)
         : collectCategories(visibleTasks);
-    const orderByLower = new Map(
-      knownGroups.map((name, index) => [name.toLowerCase(), index]),
-    );
-    const groups = new Map<string, { label: string; tasks: Task[] }>();
+    const groups = new Map<
+      string,
+      {
+        label: string;
+        tasks: Task[];
+        entries: ReturnType<typeof buildTaskListEntries>;
+      }
+    >();
 
     for (const task of visibleTasks) {
       const groupName =
@@ -208,23 +232,16 @@ export function TasksWorkspace({
       if (existing) {
         existing.tasks.push(task);
       } else {
-        groups.set(key, { label, tasks: [task] });
+        groups.set(key, { label, tasks: [task], entries: [] });
       }
     }
 
-    return [...groups.values()].sort((a, b) => {
-      const aUnassigned = a.label === "Unassigned";
-      const bUnassigned = b.label === "Unassigned";
-      if (aUnassigned && !bUnassigned) return 1;
-      if (!aUnassigned && bUnassigned) return -1;
-      const aOrder =
-        orderByLower.get(a.label.toLowerCase()) ?? Number.MAX_SAFE_INTEGER;
-      const bOrder =
-        orderByLower.get(b.label.toLowerCase()) ?? Number.MAX_SAFE_INTEGER;
-      if (aOrder !== bOrder) return aOrder - bOrder;
-      return a.label.localeCompare(b.label, undefined, { sensitivity: "base" });
-    });
-  }, [visibleTasks, viewMode]);
+    for (const group of groups.values()) {
+      group.entries = buildTaskListEntries(group.tasks, taskSort);
+    }
+
+    return sortTaskGroups([...groups.values()], groupSort, knownGroups);
+  }, [visibleTasks, viewMode, taskSort, groupSort]);
 
   const topClass =
     topPadding === "header"
@@ -241,21 +258,8 @@ export function TasksWorkspace({
 
   return (
     <main
-      className={`relative pb-40 flex w-full ${mainClass} overflow-hidden bg-linear-to-br from-zinc-100 via-zinc-50 to-sky-100/40 dark:from-zinc-950 dark:via-zinc-900 dark:to-sky-950/30`}
+      className={`relative pb-40 flex w-full ${mainClass} overflow-hidden `}
     >
-      <div
-        className="pointer-events-none absolute -right-24 top-1/4 h-80 w-80 rounded-full bg-sky-200/35 blur-3xl dark:bg-sky-900/25"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute -left-16 bottom-1/4 h-72 w-72 rounded-full bg-violet-200/30 blur-3xl dark:bg-violet-950/30"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute left-1/3 top-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-emerald-200/20 blur-3xl dark:bg-emerald-900/15"
-        aria-hidden
-      />
-
       <div className={`relative z-10 flex min-h-0 flex-1 flex-col ${topClass}`}>
         <TasksHeader
           taskSearch={taskSearch}
@@ -268,6 +272,13 @@ export function TasksWorkspace({
           onDueTodayOnlyChange={setDueTodayOnly}
           blocks={blocks}
           categories={categories}
+          sortMenuOpen={sortMenuOpen}
+          onSortMenuOpenChange={setSortMenuOpen}
+          taskSort={taskSort}
+          onTaskSortChange={setTaskSort}
+          groupSort={groupSort}
+          onGroupSortChange={setGroupSort}
+          viewMode={viewMode}
         />
         <div className="min-h-0 flex flex-1 overflow-hidden">
           <div
@@ -277,6 +288,7 @@ export function TasksWorkspace({
                 {
                   id: "add-task-popup",
                   label: "Add task (full form)…",
+                  icon: <IoAdd />,
                   onSelect: openTaskFormPopup,
                 },
               ]);
@@ -293,35 +305,73 @@ export function TasksWorkspace({
                 />
               ) : null}
               <div className="flex flex-col gap-6 pb-8">
-                {groupedVisibleTasks.map((group) => (
+                {viewMode === "all" ? (
                   <section
-                    key={group.label}
                     className="rounded-2xl border border-white/50 bg-white/25 p-3 shadow-[0_6px_24px_rgba(15,15,15,0.05)] backdrop-blur-sm dark:border-white/10 dark:bg-zinc-900/20"
-                    aria-label={`${group.label} task container`}
+                    aria-label="All tasks"
                   >
                     <header className="mb-3 flex items-center justify-between px-1">
                       <h3 className="text-sm font-semibold tracking-wide text-zinc-800 dark:text-zinc-100">
-                        {group.label}
+                        All tasks
                       </h3>
                       <span className="rounded-full bg-zinc-500/15 px-2 py-0.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                        {group.tasks.length}{" "}
-                        {group.tasks.length === 1 ? "task" : "tasks"}
+                        {(() => {
+                          const rowCount =
+                            countTaskListEntries(flatListEntries);
+                          const total = visibleTasks.length;
+                          return rowCount === total
+                            ? `${total} ${total === 1 ? "task" : "tasks"}`
+                            : `${rowCount} series · ${total} occurrences`;
+                        })()}
                       </span>
                     </header>
-                    <ul className="flex w-full flex-col gap-3">
-                      {group.tasks.map((task) => (
-                        <TaskItem
-                          key={task.id}
-                          task={task}
-                          onToggle={() => toggleTask(task.id)}
-                          onDelete={() => removeTask(task.id)}
-                          onEditTask={() => openTaskEditorPopup(task)}
-                          onSetTags={(tags) => setTaskTags(task.id, tags)}
-                        />
-                      ))}
-                    </ul>
+                    {flatListEntries.length > 0 ? (
+                      <TaskEntriesList
+                        entries={flatListEntries}
+                        onToggle={toggleTask}
+                        onDelete={removeTask}
+                        onEditTask={openTaskEditorPopup}
+                        onSetTags={setTaskTags}
+                      />
+                    ) : (
+                      <p className="px-1 py-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
+                        No tasks match your filters.
+                      </p>
+                    )}
                   </section>
-                ))}
+                ) : (
+                  groupedVisibleTasks.map((group) => (
+                    <section
+                      key={group.label}
+                      className="rounded-2xl border border-white/50 bg-white/25 p-3 shadow-[0_6px_24px_rgba(15,15,15,0.05)] backdrop-blur-sm dark:border-white/10 dark:bg-zinc-900/20"
+                      aria-label={`${group.label} task container`}
+                    >
+                      <header className="mb-3 flex items-center justify-between px-1">
+                        <h3 className="text-sm font-semibold tracking-wide text-zinc-800 dark:text-zinc-100">
+                          {group.label}
+                        </h3>
+                        {(() => {
+                          const rowCount = countTaskListEntries(group.entries);
+                          const total = group.tasks.length;
+                          return (
+                            <span className="rounded-full bg-zinc-500/15 px-2 py-0.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                              {rowCount === total
+                                ? `${total} ${total === 1 ? "task" : "tasks"}`
+                                : `${rowCount} series · ${total} occurrences`}
+                            </span>
+                          );
+                        })()}
+                      </header>
+                      <TaskEntriesList
+                        entries={group.entries}
+                        onToggle={toggleTask}
+                        onDelete={removeTask}
+                        onEditTask={openTaskEditorPopup}
+                        onSetTags={setTaskTags}
+                      />
+                    </section>
+                  ))
+                )}
               </div>
             </div>
           </div>
@@ -339,96 +389,18 @@ export function TasksWorkspace({
           </div>
         ) : null}
       </div>
-      <nav
-        className={`fixed right-4 duration-1000 ease-in-out transition-all top-1/2 z-30 hidden -translate-y-1/2 flex-col gap-2 rounded-full p-2 shadow-xl backdrop-blur-md sm:flex ${
-          viewMode === "block" ? "bg-blue-500" : "bg-purple-500"
-        }`}
-        aria-label="Tasks sidebar controls"
-      >
-        <button
-          type="button"
-          title="Block view"
-          aria-label="Block view"
-          aria-pressed={viewMode === "block"}
-          onClick={() => setViewMode("block")}
-          className={`inline-flex h-11 w-11 items-center justify-center rounded-full transition-colors ${
-            viewMode === "block"
-              ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25"
-              : "bg-white/70 text-zinc-700 hover:bg-white dark:bg-zinc-900/70 dark:text-zinc-200 dark:hover:bg-zinc-900"
-          }`}
-        >
-          <IoGrid className="h-5 w-5" aria-hidden />
-        </button>
-        <button
-          type="button"
-          title="Category view"
-          aria-label="Category view"
-          aria-pressed={viewMode === "category"}
-          onClick={() => setViewMode("category")}
-          className={`inline-flex h-11 w-11 items-center justify-center rounded-full transition-colors ${
-            viewMode === "category"
-              ? "bg-violet-500 text-white shadow-lg shadow-violet-500/25"
-              : "bg-white/70 text-zinc-700 hover:bg-white dark:bg-zinc-900/70 dark:text-zinc-200 dark:hover:bg-zinc-900"
-          }`}
-        >
-          <IoList className="h-5 w-5" aria-hidden />
-        </button>
-        <div className="w-full h-0.5 my-2 bg-white/30 -skew-12 rounded-full"></div>
-        <button
-          type="button"
-          title="Unfinished tasks"
-          aria-label="Unfinished tasks"
-          aria-pressed={statusFilter === "unfinished"}
-          onClick={() =>
-            setStatusFilter((current) =>
-              current === "unfinished" ? "all" : "unfinished",
-            )
-          }
-          className={`inline-flex h-11 w-11 items-center justify-center rounded-full transition-colors ${
-            statusFilter === "unfinished"
-              ? "bg-amber-500 text-white shadow-lg shadow-amber-500/25"
-              : "bg-white/70 text-zinc-700 hover:bg-white dark:bg-zinc-900/70 dark:text-zinc-200 dark:hover:bg-zinc-900"
-          }`}
-        >
-          <IoCheckmarkCircleOutline className="h-5 w-5" aria-hidden />
-        </button>
-        <button
-          type="button"
-          title="Completed tasks"
-          aria-label="Completed tasks"
-          aria-pressed={statusFilter === "completed"}
-          onClick={() =>
-            setStatusFilter((current) =>
-              current === "completed" ? "all" : "completed",
-            )
-          }
-          className={`inline-flex h-11 w-11 items-center justify-center rounded-full transition-colors ${
-            statusFilter === "completed"
-              ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/25"
-              : "bg-white/70 text-zinc-700 hover:bg-white dark:bg-zinc-900/70 dark:text-zinc-200 dark:hover:bg-zinc-900"
-          }`}
-        >
-          <IoCheckmarkCircle className="h-5 w-5" aria-hidden />
-        </button>
-        <button
-          type="button"
-          title="History"
-          aria-label="History tasks"
-          aria-pressed={statusFilter === "history"}
-          onClick={() =>
-            setStatusFilter((current) =>
-              current === "history" ? "all" : "history",
-            )
-          }
-          className={`inline-flex h-11 w-11 items-center justify-center rounded-full transition-colors ${
-            statusFilter === "history"
-              ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/25"
-              : "bg-white/70 text-zinc-700 hover:bg-white dark:bg-zinc-900/70 dark:text-zinc-200 dark:hover:bg-zinc-900"
-          }`}
-        >
-          <IoTimeOutline className="h-5 w-5" aria-hidden />
-        </button>
-      </nav>
+      <TasksSideRail
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
+        sortMenuOpen={sortMenuOpen}
+        onSortMenuOpenChange={setSortMenuOpen}
+        taskSort={taskSort}
+        onTaskSortChange={setTaskSort}
+        groupSort={groupSort}
+        onGroupSortChange={setGroupSort}
+      />
     </main>
   );
 }

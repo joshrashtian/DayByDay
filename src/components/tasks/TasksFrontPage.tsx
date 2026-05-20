@@ -1,14 +1,21 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { useShallow } from "zustand/react/shallow";
+import { usePopup } from "../../providers/PopupProvider";
 import { useTasksStore } from "../../stores/tasksStore";
+import { taskEditorPopupContent } from "./taskEditorPopupContent";
+import { formatTaskDue, isTaskOverdue, isTaskDueToday } from "../../lib/taskDates";
 import {
-  formatTaskDue,
-  isCompletedTaskFromPreviousDay,
-  isTaskOverdue,
-  isTaskDueToday,
-} from "../../lib/taskDates";
-import { IoCheckmarkCircleOutline, IoPencil } from "react-icons/io5";
+  IoCheckmarkCircle,
+  IoCheckmarkCircleOutline,
+  IoCreateOutline,
+} from "react-icons/io5";
+import { HomePomodoroPanel, HomePomodoroToggle } from "../home/HomePomodoroRail";
+import { getBlockScopedSidebarTasks } from "../../lib/sidebarTasks";
+import { useHomeFocusStore } from "../../stores/homeFocusStore";
+import { usePomodoroStore } from "../../stores/pomodoroStore";
+import { TASK_ICON_LG_CLASS } from "./taskView";
+import { Tooltip, TooltipTrigger } from "../base/tooltip/tooltip";
 
 type Props = {
   activeBlockName?: string;
@@ -16,44 +23,34 @@ type Props = {
 
 export const TasksFrontPage = ({ activeBlockName }: Props) => {
   const { tasks } = useTasksStore(useShallow((s) => ({ tasks: s.tasks })));
-  const { toggleTask } = useTasksStore(
-    useShallow((s) => ({ toggleTask: s.toggleTask })),
+  const { toggleTask, updateTask } = useTasksStore(
+    useShallow((s) => ({ toggleTask: s.toggleTask, updateTask: s.updateTask })),
   );
-  const [focusedTaskId, setFocusedTaskId] = useState<string | null>(null);
-  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
-  const [isPointerDragging, setIsPointerDragging] = useState(false);
+  const { open: openPopup, close: closePopup } = usePopup();
+  const openTaskEditor = useCallback(
+    (taskId: string) => {
+      const task = tasks.find((t) => t.id === taskId);
+      if (!task) return;
+      openPopup(taskEditorPopupContent({ task, updateTask, closePopup }));
+    },
+    [tasks, openPopup, updateTask, closePopup],
+  );
+  const focusedTaskId = useHomeFocusStore((s) => s.focusedTaskId);
+  const setFocusedTaskId = useHomeFocusStore((s) => s.setFocusedTaskId);
+  const draggedTaskId = useHomeFocusStore((s) => s.draggedTaskId);
+  const isPointerDragging = useHomeFocusStore((s) => s.isPointerDragging);
+  const dragPointer = useHomeFocusStore((s) => s.dragPointer);
+  const dragGrabOffset = useHomeFocusStore((s) => s.dragGrabOffset);
+  const updateDragPointer = useHomeFocusStore((s) => s.updateDragPointer);
+  const endTaskDrag = useHomeFocusStore((s) => s.endTaskDrag);
   const [isDropActive, setIsDropActive] = useState(false);
-  const [dragPointer, setDragPointer] = useState({ x: 0, y: 0 });
+  const pomodoroPanelOpen = usePomodoroStore((s) => s.panelOpen);
+  const setLinkedTaskTitle = usePomodoroStore((s) => s.setLinkedTaskTitle);
   const dropZoneRef = useRef<HTMLDivElement | null>(null);
 
-  const tasksInBlock = useMemo(
-    () =>
-      tasks.filter((task) => {
-        if (!activeBlockName) return true;
-        return (
-          task.block?.trim().toLowerCase() === activeBlockName.toLowerCase()
-        );
-      }),
-    [tasks, activeBlockName],
-  );
-
   const sortedTasks = useMemo(
-    () =>
-      [...tasksInBlock]
-        .filter((task) => {
-          if (isCompletedTaskFromPreviousDay(task)) return false;
-          if (!task.done) return true;
-          return isTaskDueToday(task.dueDate);
-        })
-        .sort((a, b) => {
-          const aDue = a.dueDate?.getTime() ?? Number.MAX_SAFE_INTEGER;
-          const bDue = b.dueDate?.getTime() ?? Number.MAX_SAFE_INTEGER;
-
-          if (aDue !== bDue) return aDue - bDue;
-
-          return b.updatedAt.getTime() - a.updatedAt.getTime();
-        }),
-    [tasksInBlock],
+    () => getBlockScopedSidebarTasks(tasks, activeBlockName),
+    [tasks, activeBlockName],
   );
 
   useEffect(() => {
@@ -97,19 +94,17 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
         const exists = sortedTasks.some((task) => task.id === draggedTaskId);
         if (exists) setFocusedTaskId(draggedTaskId);
       }
-      setIsPointerDragging(false);
-      setDraggedTaskId(null);
+      endTaskDrag();
       setIsDropActive(false);
     };
 
     const onPointerMove = (e: PointerEvent) => {
-      setDragPointer({ x: e.clientX, y: e.clientY });
+      updateDragPointer(e.clientX, e.clientY);
       setIsDropActive(isInDropZone(e.clientX, e.clientY));
     };
     const onPointerUp = (e: PointerEvent) => finishDrag(e.clientX, e.clientY);
     const onPointerCancel = () => {
-      setIsPointerDragging(false);
-      setDraggedTaskId(null);
+      endTaskDrag();
       setIsDropActive(false);
     };
 
@@ -122,13 +117,28 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
       window.removeEventListener("pointerup", onPointerUp);
       window.removeEventListener("pointercancel", onPointerCancel);
     };
-  }, [isPointerDragging, draggedTaskId, sortedTasks]);
+  }, [
+    isPointerDragging,
+    draggedTaskId,
+    sortedTasks,
+    setFocusedTaskId,
+    endTaskDrag,
+    updateDragPointer,
+  ]);
 
   const focusedTask = useMemo(
     () => sortedTasks.find((task) => task.id === focusedTaskId),
     [sortedTasks, focusedTaskId],
   );
   const visibleFocusedTask = focusedTask ?? null;
+
+  useEffect(() => {
+    if (visibleFocusedTask && !visibleFocusedTask.done) {
+      setLinkedTaskTitle(visibleFocusedTask.title);
+    } else {
+      setLinkedTaskTitle(undefined);
+    }
+  }, [visibleFocusedTask, setLinkedTaskTitle]);
 
   const activeCount = sortedTasks.filter((task) => !task.done).length;
   const draggedTask = useMemo(
@@ -142,22 +152,14 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
     <div className="font-eudoxus">
       {isPointerDragging && draggedTask ? (
         <motion.div
-          className="pointer-events-none fixed z-999 w-56 rounded-xl border border-zinc-300/90 bg-white/95 px-3 py-2 shadow-[0_18px_50px_-20px_rgba(15,23,42,0.55)] sm:w-72 dark:border-zinc-600 dark:bg-zinc-900/90"
+          className="pointer-events-none fixed left-0 top-0 z-999 w-56 rounded-xl border border-zinc-300/90 bg-white/95 px-3 py-2 shadow-[0_18px_50px_-20px_rgba(15,23,42,0.55)] sm:w-72 dark:border-zinc-600 dark:bg-zinc-900/90"
           style={{
-            left: dragPointer.x + 12,
-            top: dragPointer.y + 12,
+            left: dragPointer.x - dragGrabOffset.x,
+            top: dragPointer.y - dragGrabOffset.y,
           }}
-          initial={{ opacity: 0.8, scale: 0.98 }}
-          animate={{
-            opacity: 1,
-            scale: 1.02,
-            rotate: [0, -1.6, 1.6, -1, 1, 0],
-          }}
-          transition={{
-            opacity: { duration: 0.12 },
-            scale: { duration: 0.12 },
-            rotate: { duration: 0.42, repeat: Infinity, ease: "easeInOut" },
-          }}
+          initial={{ opacity: 0.92 }}
+          animate={{ opacity: 1 }}
+          transition={{ opacity: { duration: 0.12 } }}
         >
           <div className="mb-1 flex items-center justify-between gap-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
             <span>
@@ -178,28 +180,63 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
           </p>
         </motion.div>
       ) : null}
-      <div className="flex min-h-120 flex-col gap-4 sm:gap-6">
-        <div className="flex flex-col items-start gap-1">
-          <p className="font-baron text-lg font-bold uppercase tracking-[0.14em] text-zinc-800 dark:text-zinc-200">
-            {activeBlockName ? `${activeBlockName} Tasks` : "All Tasks"}
-          </p>
-          <p className="font-eudoxus text-xs tracking-wide text-zinc-400 dark:text-zinc-500">
-            {sortedTasks.length} total &middot; {activeCount} active
-          </p>
+      <motion.div layout className="flex min-h-100 flex-col gap-4 sm:min-h-112 sm:gap-5">
+        <div className="flex w-full items-start justify-between gap-3">
+          <div className="min-w-0 flex flex-col items-start gap-1">
+            <p className="font-baron text-lg font-bold uppercase tracking-[0.14em] text-zinc-800 dark:text-zinc-200">
+              {activeBlockName ? `${activeBlockName} Tasks` : "All Tasks"}
+            </p>
+            <p className="font-eudoxus text-xs tracking-wide text-zinc-400 dark:text-zinc-500">
+              {sortedTasks.length} total &middot; {activeCount} active
+            </p>
+          </div>
+          <div className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-zinc-200/60 p-0.5 dark:bg-zinc-800/60">
+            <HomePomodoroToggle />
+          </div>
         </div>
 
-        <div
+        <motion.div
+          layout
           ref={dropZoneRef}
-          className={`w-full rounded-2xl px-2 py-3 transition-colors sm:px-4 sm:py-4 ${
+          className={`relative min-h-44 w-full rounded-2xl px-2 py-4 transition-colors sm:min-h-40 sm:px-4 ${
             isDropActive
               ? "border border-sky-400 bg-sky-50/60 dark:border-sky-400 dark:bg-sky-950/30"
               : ""
-          }`}
+          } ${pomodoroPanelOpen ? "bg-zinc-50/50 dark:bg-zinc-900/30" : ""}`}
         >
+          <HomePomodoroPanel
+            linkedTaskTitle={
+              visibleFocusedTask && !visibleFocusedTask.done
+                ? visibleFocusedTask.title
+                : undefined
+            }
+          />
           {!visibleFocusedTask ? (
-            <p className="text-base font-quantify text-zinc-500 dark:text-zinc-400"></p>
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`flex min-h-32 flex-col items-center justify-center gap-2 px-4 text-center sm:min-h-28 ${pomodoroPanelOpen ? "pointer-events-none opacity-40" : ""}`}
+            >
+              <p className="font-ppneue text-xl font-medium text-zinc-500 dark:text-zinc-400">
+                {sortedTasks.length === 0
+                  ? "Nothing here yet"
+                  : activeCount === 0
+                    ? "All caught up"
+                    : "Pick a task to focus"}
+              </p>
+              <p className="font-eudoxus text-xs text-zinc-400 dark:text-zinc-500">
+                {sortedTasks.length === 0
+                  ? "Add a task from the sidebar or Tasks page."
+                  : activeCount === 0
+                    ? "Every task in this view is done for today."
+                    : "Swipe up Today in the sidebar or drag a task here."}
+              </p>
+            </motion.div>
           ) : (
-            <div className="flex min-h-48 flex-col items-center justify-between gap-4 sm:min-h-44">
+            <motion.div
+              layout
+              className={`flex min-h-36 flex-col items-center justify-between gap-4 sm:min-h-32 ${pomodoroPanelOpen ? "pointer-events-none opacity-40" : ""}`}
+            >
               <div>
                 <h2 className="wrap-break-word text-center text-3xl font-semibold font-ppneue text-zinc-900 dark:text-zinc-50 sm:text-5xl">
                   {visibleFocusedTask.title}
@@ -226,88 +263,71 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
                 </div>
               </div>
               <div className="flex w-full flex-col items-center justify-between gap-3 sm:flex-row sm:gap-0">
-                <h3
-                  className={`text-center font-baron text-2xl tracking-[0.08em] sm:text-3xl ${isTaskOverdue(visibleFocusedTask.dueDate) ? "text-red-500" : "text-zinc-500"}`}
-                >
-                  {isTaskOverdue(visibleFocusedTask.dueDate)
-                    ? "OVERDUE"
-                    : "DUE TODAY"}
-                </h3>
-                <ol className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    className="rounded-full bg-white p-2 text-3xl text-zinc-500 duration-500 hover:bg-yellow-600 hover:text-white sm:text-4xl dark:bg-zinc-700/70 dark:text-zinc-300"
+                {isTaskOverdue(visibleFocusedTask.dueDate) ||
+                isTaskDueToday(visibleFocusedTask.dueDate) ? (
+                  <h3
+                    className={`text-center font-baron text-2xl tracking-[0.08em] sm:text-3xl ${isTaskOverdue(visibleFocusedTask.dueDate) ? "text-red-500" : "text-zinc-500"}`}
                   >
-                    <IoPencil />
-                  </button>
-                  <button
-                    onClick={() => toggleTask(visibleFocusedTask.id)}
-                    type="button"
-                    className="rounded-full bg-white p-2 text-3xl text-zinc-500 duration-500 hover:bg-green-600 hover:text-white sm:text-4xl dark:bg-zinc-700/70 dark:text-zinc-300"
+                    {isTaskOverdue(visibleFocusedTask.dueDate)
+                      ? "OVERDUE"
+                      : "DUE TODAY"}
+                  </h3>
+                ) : null}
+                <ol className="flex items-center gap-2">
+                  <Tooltip
+                    title="Edit task"
+                    description="Change title, due date, and details"
+                    placement="top"
+                    delay={250}
+                  >
+                    <TooltipTrigger
+                      aria-label="Edit task"
+                      onPress={() => openTaskEditor(visibleFocusedTask.id)}
+                      className="inline-flex items-center justify-center rounded-full bg-white p-3 text-zinc-500 transition-colors hover:bg-amber-500 hover:text-white dark:bg-zinc-700/70 dark:text-zinc-300 dark:hover:bg-amber-600"
+                    >
+                      <IoCreateOutline className={TASK_ICON_LG_CLASS} aria-hidden />
+                    </TooltipTrigger>
+                  </Tooltip>
+                  <Tooltip
                     title={
                       visibleFocusedTask.done
                         ? "Mark as active"
-                        : "Mark as complete"
+                        : "Mark complete"
                     }
+                    description={
+                      visibleFocusedTask.done
+                        ? "Move this task back to your active list"
+                        : "Finish this task for today"
+                    }
+                    placement="top"
+                    delay={250}
                   >
-                    <IoCheckmarkCircleOutline />
-                  </button>
+                    <TooltipTrigger
+                      aria-label={
+                        visibleFocusedTask.done
+                          ? "Mark as active"
+                          : "Mark as complete"
+                      }
+                      onPress={() => toggleTask(visibleFocusedTask.id)}
+                      className="inline-flex items-center justify-center rounded-full bg-white p-3 text-zinc-500 transition-colors hover:bg-emerald-600 hover:text-white dark:bg-zinc-700/70 dark:text-zinc-300 dark:hover:bg-emerald-600"
+                    >
+                      {visibleFocusedTask.done ? (
+                        <IoCheckmarkCircle className={TASK_ICON_LG_CLASS} aria-hidden />
+                      ) : (
+                        <IoCheckmarkCircleOutline
+                          className={TASK_ICON_LG_CLASS}
+                          aria-hidden
+                        />
+                      )}
+                    </TooltipTrigger>
+                  </Tooltip>
                 </ol>
               </div>
-            </div>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
 
-        <div className="mt-auto w-full max-w-full">
-          <h3 className="mb-3 font-baron text-xs font-bold uppercase tracking-[0.18em] text-zinc-400 dark:text-zinc-500">
-            Task List
-          </h3>
-          <div className="max-h-72 max-w-none space-y-2 overflow-y-scroll pr-1 no-scrollbar sm:max-w-sm">
-            {sortedTasks.map((task) => (
-              <button
-                key={task.id}
-                type="button"
-                onPointerDown={(e) => {
-                  setDraggedTaskId(task.id);
-                  setIsPointerDragging(true);
-                  setDragPointer({ x: e.clientX, y: e.clientY });
-                }}
-                className={`w-full rounded-xl border px-3 py-2 text-left transition-colors ${
-                  focusedTaskId === task.id
-                    ? "border-sky-400 bg-sky-50 dark:border-sky-500 dark:bg-sky-950/25"
-                    : "border-zinc-200/90 bg-white/85 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900/65 dark:hover:bg-zinc-900"
-                } ${task.done ? "opacity-60" : ""} cursor-grab active:cursor-grabbing`}
-              >
-                <div className="mb-0.5 flex items-center justify-between gap-2 font-eudoxus text-[10px] font-medium uppercase tracking-[0.1em] text-zinc-400 dark:text-zinc-500">
-                  <span>
-                    {task.critical
-                      ? "Critical"
-                      : task.priority
-                        ? `${task.priority} priority`
-                        : "No priority"}
-                  </span>
-                  <span>
-                    {task.dueDate ? formatTaskDue(task.dueDate) : "No time"}
-                  </span>
-                </div>
-                <p className="truncate font-ppneue text-[13px] font-medium text-zinc-800 dark:text-zinc-100">
-                  {task.title}
-                </p>
-              </button>
-            ))}
-            {sortedTasks.length === 0 ? (
-              <div className="py-6 pl-1">
-                <p className="font-ppneue text-base font-medium text-zinc-400 dark:text-zinc-500">
-                  Nothing here yet.
-                </p>
-                <p className="mt-1 font-eudoxus text-xs text-zinc-300 dark:text-zinc-600">
-                  Add a task below to get started.
-                </p>
-              </div>
-            ) : null}
-          </div>
-        </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

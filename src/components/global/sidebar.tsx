@@ -20,6 +20,7 @@ import {
   type SidebarNavItem,
 } from "./sidebar/SidebarNavItem";
 import { SidebarModeToggle } from "./sidebar/SidebarModeToggle";
+import { SidebarTasksDrawer } from "./sidebar/SidebarTasksDrawer";
 
 const taskDefaultNavItems: SidebarNavItem[] = [
   { label: "Home", icon: <IoHomeOutline />, link: "/" },
@@ -211,7 +212,7 @@ const SideBar = ({
           <motion.nav
             key="sidebar-nav"
             aria-label="Primary navigation"
-            className="relative flex flex-col justify-between border-r border-zinc-200/70 bg-white/85 px-3 py-3 shadow-lg backdrop-blur-sm"
+            className="relative flex h-dvh max-h-dvh flex-col overflow-hidden border-r border-zinc-200/70 bg-white/85 px-3 py-3 shadow-lg backdrop-blur-sm"
             style={{ width: resolvedWidth }}
             initial={{ x: -24 }}
             animate={{ x: 0 }}
@@ -239,7 +240,7 @@ const SideBar = ({
             }}
             onPointerCancel={() => setSwipeStartX(null)}
           >
-            <div className="flex flex-col gap-3">
+            <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain">
               <SidebarModeToggle
                 showLabel={showLabel}
                 sidebarMode={sidebarMode}
@@ -275,19 +276,26 @@ const SideBar = ({
               </Reorder.Group>
             </div>
 
-            <div className="flex flex-col gap-1">
-              {utilityNavItems.map((item) => (
-                <div key={item.link}>
-                  <SidebarNavItemView
-                    item={item}
-                    showLabel={showLabel}
-                    sidebarOpen={sidebarOpen}
-                    onOpenProfile={onOpenProfile}
-                    onOpenSettings={onOpenSettings}
-                  />
-                </div>
-              ))}
+            <div
+              className={`relative shrink-0 ${sidebarMode === "tasks" ? "pb-[52px]" : ""}`}
+            >
+              <div className="flex flex-col gap-1">
+                {utilityNavItems.map((item) => (
+                  <div key={item.link}>
+                    <SidebarNavItemView
+                      item={item}
+                      showLabel={showLabel}
+                      sidebarOpen={sidebarOpen}
+                      onOpenProfile={onOpenProfile}
+                      onOpenSettings={onOpenSettings}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
+            {sidebarMode === "tasks" ? (
+              <SidebarTasksDrawer showLabel={showLabel} />
+            ) : null}
             <div
               aria-label="Resize sidebar"
               onPointerDown={(event) => {

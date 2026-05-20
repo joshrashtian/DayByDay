@@ -144,7 +144,14 @@ export type WeatherState =
 
 // ── Clock / Date Corner ───────────────────────────────────────────────────
 
-export type ClockTemplate = "minimal" | "p5" | "basic";
+export type ClockTemplate =
+  | "minimal"
+  | "p5"
+  | "basic"
+  | "terminal"
+  | "orbit"
+  | "neon"
+  | "editorial";
 
 export type ClockStyleSource = "core" | "user" | "marketplace";
 

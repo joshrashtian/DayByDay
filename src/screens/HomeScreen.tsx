@@ -13,7 +13,17 @@ import {
   getBlockConfigByName,
 } from "../lib/taskBlocks";
 import { useSettingsStore } from "../stores/settingsStore";
-import { IoSettings } from "react-icons/io5";
+import { isClockTemplate } from "../providers/clockStyleDefaults";
+import type { ClockTemplate } from "@/types";
+const CLOCK_MENU_LABELS: Record<ClockTemplate, string> = {
+  minimal: "Style: Default",
+  p5: "Style: Persona 5",
+  basic: "Style: Basic",
+  terminal: "Style: Terminal",
+  orbit: "Style: Orbit",
+  neon: "Style: Neon",
+  editorial: "Style: Editorial",
+};
 
 function nowMinuteOfDay(): number {
   const now = new Date();
@@ -210,27 +220,15 @@ export const HomeScreen = () => {
   const openClockMenu = (event: React.MouseEvent<HTMLDivElement>) => {
     context.openMenu(event, [
       { id: "clock-header", type: "header", header: "Clock" },
-      {
-        id: "clock-style-p5",
-        type: "item",
-        label: "Style: Persona 5",
-        onSelect: () =>
-          setVisualPrefs((prev) => ({ ...prev, clockStyle: "p5" })),
-      },
-      {
-        id: "clock-style-min",
-        type: "item",
-        label: "Style: Minimal",
-        onSelect: () =>
-          setVisualPrefs((prev) => ({ ...prev, clockStyle: "minimal" })),
-      },
-      {
-        id: "clock-style-basic",
-        type: "item",
-        label: "Style: Basic",
-        onSelect: () =>
-          setVisualPrefs((prev) => ({ ...prev, clockStyle: "basic" })),
-      },
+      ...(Object.entries(CLOCK_MENU_LABELS) as [ClockTemplate, string][]).map(
+        ([styleId, label]) => ({
+          id: `clock-style-${styleId}`,
+          type: "item" as const,
+          label,
+          onSelect: () =>
+            setVisualPrefs((prev) => ({ ...prev, clockStyle: styleId })),
+        }),
+      ),
       { id: "clock-break", type: "break" },
       {
         id: "clock-size-small",
@@ -263,7 +261,10 @@ export const HomeScreen = () => {
             <div
               onContextMenu={openBlockMenu}
               className={`flex w-fit max-w-full flex-row flex-wrap items-start justify-start gap-1.5 p-4 px-5 text-left font-bold sm:gap-2 sm:p-6 sm:px-10 ${blockClasses.containerClassName}`}
-              style={{ transform: `scale(${visualPrefs.blockScale})` }}
+              style={{
+                transform: `scale(${visualPrefs.blockScale})`,
+                transformOrigin: "left top",
+              }}
             >
               <h1 className={blockClasses.titleClassName}>
                 {isAllDayMode ? "All Day" : (activeBlockName ?? "Anytime")}
@@ -332,15 +333,6 @@ export const HomeScreen = () => {
               <TasksFrontPage activeBlockName={displayedBlockName} />
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() =>
-              window.dispatchEvent(new CustomEvent("dbd:open-settings"))
-            }
-            className="absolute right-0 bottom-0"
-          >
-            <IoSettings className="text-2xl" />
-          </button>
           <aside
             onContextMenu={openClockMenu}
             className="flex justify-start xl:shrink-0 xl:justify-end"
@@ -354,12 +346,9 @@ export const HomeScreen = () => {
               onVariantChange={(nextStyle) =>
                 setVisualPrefs((prev) => ({
                   ...prev,
-                  clockStyle:
-                    nextStyle === "minimal" ||
-                    nextStyle === "p5" ||
-                    nextStyle === "basic"
-                      ? nextStyle
-                      : prev.clockStyle,
+                  clockStyle: isClockTemplate(nextStyle)
+                    ? nextStyle
+                    : prev.clockStyle,
                 }))
               }
             />

@@ -1,6 +1,11 @@
-import { IoCalendarOutline, IoSearch } from "react-icons/io5";
+import { IoCalendarOutline, IoSearch, IoSwapVertical } from "react-icons/io5";
+import type { TaskViewMode } from "./taskView";
+import { TASK_ICON_CLASS } from "./taskView";
 import type { Selection } from "react-aria-components";
 import { MultiSelect, type MultiSelectItemType } from "../base/input/multi-select";
+import type { GroupSortConfig, TaskSortConfig } from "../../lib/taskSort";
+import { sortLabel } from "../../lib/taskSort";
+import { TasksSortMenu } from "./TasksSortMenu";
 
 export type TasksHeaderProps = {
   taskSearch: string;
@@ -13,6 +18,13 @@ export type TasksHeaderProps = {
   onDueTodayOnlyChange: (value: boolean) => void;
   blocks: string[];
   categories: string[];
+  sortMenuOpen: boolean;
+  onSortMenuOpenChange: (open: boolean) => void;
+  taskSort: TaskSortConfig;
+  onTaskSortChange: (config: TaskSortConfig) => void;
+  groupSort: GroupSortConfig;
+  onGroupSortChange: (config: GroupSortConfig) => void;
+  viewMode: TaskViewMode;
 };
 
 const shellInputClass =
@@ -29,6 +41,13 @@ export function TasksHeader({
   onDueTodayOnlyChange,
   blocks,
   categories,
+  sortMenuOpen,
+  onSortMenuOpenChange,
+  taskSort,
+  onTaskSortChange,
+  groupSort,
+  onGroupSortChange,
+  viewMode,
 }: TasksHeaderProps) {
   const blockItems: MultiSelectItemType[] = blocks.map((block) => ({
     id: block,
@@ -55,7 +74,7 @@ export function TasksHeader({
         <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
           <label className="relative block min-w-0 flex-1 sm:min-w-[200px]">
             <IoSearch
-              className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-zinc-400 dark:text-zinc-500"
+              className={`pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 ${TASK_ICON_CLASS}`}
               aria-hidden
             />
             <input
@@ -112,14 +131,44 @@ export function TasksHeader({
                   : "border-white/70 bg-white/50 text-zinc-800 ring-1 ring-white/30 backdrop-blur-xl hover:bg-white/70 dark:border-white/15 dark:bg-zinc-900/40 dark:text-zinc-100 dark:hover:bg-zinc-900/60"
               }`}
             >
-              <IoCalendarOutline
-                className="h-4 w-4 shrink-0 opacity-90"
-                aria-hidden
-              />
+              <IoCalendarOutline className={`${TASK_ICON_CLASS} opacity-90`} aria-hidden />
               Due Today
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onSortMenuOpenChange(!sortMenuOpen)}
+              aria-pressed={sortMenuOpen}
+              aria-expanded={sortMenuOpen}
+              className={`inline-flex shrink-0 items-center gap-1.5 rounded-2xl border px-3 py-2.5 text-sm font-medium transition-colors sm:hidden ${
+                sortMenuOpen
+                  ? "border-zinc-500/50 bg-zinc-500/15 text-zinc-950 ring-2 ring-zinc-400/35 dark:text-zinc-100"
+                  : "border-white/70 bg-white/50 text-zinc-800 ring-1 ring-white/30 backdrop-blur-xl hover:bg-white/70 dark:border-white/15 dark:bg-zinc-900/40 dark:text-zinc-100 dark:hover:bg-zinc-900/60"
+              }`}
+            >
+              <IoSwapVertical className={`${TASK_ICON_CLASS} opacity-90`} aria-hidden />
+              Sort
             </button>
           </div>
         </div>
+
+        {sortMenuOpen ? (
+          <div className="sm:hidden">
+            <TasksSortMenu
+              open={sortMenuOpen}
+              onClose={() => onSortMenuOpenChange(false)}
+              taskSort={taskSort}
+              onTaskSortChange={onTaskSortChange}
+              groupSort={groupSort}
+              onGroupSortChange={onGroupSortChange}
+              hideSectionOrder={viewMode === "all"}
+              className="w-full"
+            />
+            <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+              {sortLabel(taskSort)}
+            </p>
+          </div>
+        ) : null}
       </div>
     </header>
   );

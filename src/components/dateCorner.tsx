@@ -1,8 +1,9 @@
-import { useRef, useState, type PointerEvent } from "react";
+import { useRef, useState, type PointerEvent, type ReactNode } from "react";
 import { WeatherBadge } from "./WeatherBadge";
 import { useWeather } from "../hooks/useWeather";
 import { useStyle } from "../providers/StyleProvider";
 import { useContextMenu } from "../providers/ContextMenuProvider";
+import type { ClockStylePrototype, ClockTemplate } from "@/types";
 import { IoSunnyOutline } from "react-icons/io5";
 import { IoMdClock } from "react-icons/io";
 
@@ -13,6 +14,17 @@ type Props = {
   onScaleChange?: (nextScale: number) => void;
   onVariantChange?: (nextVariant: string) => void;
 };
+
+const CLOCK_STYLE_OPTIONS: { id: ClockTemplate; label: string; icon?: ReactNode }[] =
+  [
+    { id: "minimal", label: "Default", icon: <IoMdClock /> },
+    { id: "p5", label: "Persona 5" },
+    { id: "basic", label: "Basic", icon: <IoSunnyOutline /> },
+    { id: "terminal", label: "Terminal" },
+    { id: "orbit", label: "Orbit" },
+    { id: "neon", label: "Neon" },
+    { id: "editorial", label: "Editorial" },
+  ];
 
 export const DateCorner = ({
   variant: variantOverride,
@@ -69,6 +81,10 @@ export const DateCorner = ({
   const weekday = today
     .toLocaleDateString("en-US", { weekday: "long" })
     .toUpperCase();
+  const monthShort = today
+    .toLocaleDateString("en-US", { month: "short" })
+    .toUpperCase();
+  const monthLong = today.toLocaleDateString("en-US", { month: "long" });
   const month = today.getMonth() + 1;
   const day = today.getDate().toString().padStart(2, "0");
 
@@ -77,6 +93,28 @@ export const DateCorner = ({
     isDragging ? "" : stylePrototype.wrapperIdleClassName
   }`;
 
+  const weatherBadge = (
+    <WeatherBadge
+      weather={weather}
+      compact
+      className={stylePrototype.weatherClassName}
+      iconClassName={stylePrototype.weatherIconClassName}
+      temperatureClassName={stylePrototype.weatherTemperatureClassName}
+    />
+  );
+
+  const resizeHandle = (
+    <button
+      type="button"
+      className={stylePrototype.resizeHandleClassName}
+      aria-label="Resize date corner"
+      onPointerDown={onResizeStart}
+      onPointerMove={onResizeMove}
+      onPointerUp={onResizeEnd}
+      onPointerCancel={onResizeEnd}
+    />
+  );
+
   const onContextMenu = (e: React.MouseEvent<HTMLDivElement>) =>
     context.openMenu(e, [
       {
@@ -84,27 +122,13 @@ export const DateCorner = ({
         type: "header",
         header: "Clock Styles",
       },
-      {
-        id: "Default",
-        label: "Default",
-        onSelect: () => applyVariant("minimal"),
-        icon: <IoMdClock />,
-        type: "item",
-      },
-
-      {
-        id: "P5",
-        label: "Persona 5 Style",
-        onSelect: () => applyVariant("p5"),
-        type: "item",
-      },
-      {
-        id: "Minimal",
-        label: "Minimal",
-        onSelect: () => applyVariant("basic"),
-        icon: <IoSunnyOutline />,
-        type: "item",
-      },
+      ...CLOCK_STYLE_OPTIONS.map((option) => ({
+        id: option.id,
+        label: option.label,
+        onSelect: () => applyVariant(option.id),
+        icon: option.icon,
+        type: "item" as const,
+      })),
       {
         id: "Break1",
         type: "break",
@@ -134,94 +158,199 @@ export const DateCorner = ({
       },
     ]);
 
-  if (stylePrototype.template === "p5") {
-    return (
-      <div className={root}>
-        <div
-          onContextMenu={onContextMenu}
-          className={wrapperClassName}
-          style={{
-            transform: `scale(${resolvedScale})`,
-            transformOrigin: stylePrototype.transformOrigin,
-          }}
-        >
-          <div className={stylePrototype.dateRowClassName}>
-            <div className={stylePrototype.dateRowCardClassName}>
-              <div className={stylePrototype.dateRowCardInnerClassName}>
-                <span className={stylePrototype.dateTextClassName}>
-                  <span className={stylePrototype.monthClassName}>
-                    {month}/
-                  </span>
-                  <span className={stylePrototype.dayClassName}>{day}</span>
+  const shell = (content: ReactNode) => (
+    <div
+      onContextMenu={onContextMenu}
+      className={wrapperClassName}
+      style={{
+        transform: `scale(${resolvedScale})`,
+        transformOrigin: stylePrototype.transformOrigin,
+      }}
+    >
+      {content}
+      {resizeHandle}
+    </div>
+  );
+
+  return (
+    <div className={root}>
+      {renderClockBody(stylePrototype, {
+        month,
+        monthShort,
+        monthLong,
+        day,
+        weekday,
+        weatherBadge,
+        shell,
+      })}
+    </div>
+  );
+};
+
+type ClockBodyProps = {
+  month: number;
+  monthShort: string;
+  monthLong: string;
+  day: string;
+  weekday: string;
+  weatherBadge: ReactNode;
+  shell: (content: ReactNode) => ReactNode;
+};
+
+function renderClockBody(
+  style: ClockStylePrototype,
+  props: ClockBodyProps,
+): ReactNode {
+  const { month, monthShort, monthLong, day, weekday, weatherBadge, shell } =
+    props;
+
+  switch (style.template) {
+    case "p5":
+      return shell(
+        <>
+          <div className={style.dateRowClassName}>
+            <div className={style.dateRowCardClassName}>
+              <div className={style.dateRowCardInnerClassName}>
+                <span className={style.dateTextClassName}>
+                  <span className={style.monthClassName}>{month}/</span>
+                  <span className={style.dayClassName}>{day}</span>
                 </span>
               </div>
             </div>
           </div>
-          <div className={stylePrototype.weekdayRowClassName}>
-            <span className={stylePrototype.weekdayClassName}>{weekday}</span>
-            <WeatherBadge
-              weather={weather}
-              compact
-              className={stylePrototype.weatherClassName}
-              iconClassName={stylePrototype.weatherIconClassName}
-              temperatureClassName={stylePrototype.weatherTemperatureClassName}
+          <div className={style.weekdayRowClassName}>
+            <span className={style.weekdayClassName}>{weekday}</span>
+            {weatherBadge}
+          </div>
+        </>,
+      );
+
+    case "basic":
+      return shell(
+        <>
+          <div className={style.dateRowClassName}>
+            <div className={style.dateRowCardClassName}>
+              <span className={style.dateTextClassName}>
+                <span className={style.monthClassName}>{month}/</span>
+                <span className={style.dayClassName}>{day}</span>
+              </span>
+            </div>
+          </div>
+          <div className={style.weekdayRowClassName}>
+            <span className={style.weekdayClassName}>{weekday}</span>
+            {weatherBadge}
+          </div>
+        </>,
+      );
+
+    case "terminal":
+      return shell(
+        <>
+          <div className={style.dateRowClassName}>
+            <span className="font-quantify text-[10px] font-bold uppercase tracking-widest text-emerald-600/70">
+              SYS://
+            </span>
+            <span className={style.dateTextClassName}>
+              <span className={style.monthClassName}>
+                {month.toString().padStart(2, "0")}.
+              </span>
+              <span className={style.dayClassName}>{day}</span>
+            </span>
+            <span
+              className="ml-0.5 inline-block h-[1.1em] w-[0.55em] animate-pulse bg-emerald-400/90"
+              aria-hidden
             />
           </div>
+          <div className={style.weekdayRowClassName}>
+            <span className={style.weekdayClassName}>{weekday}</span>
+            {weatherBadge}
+          </div>
+        </>,
+      );
 
-          <button
-            type="button"
-            className={stylePrototype.resizeHandleClassName}
-            aria-label="Resize date corner"
-            onPointerDown={onResizeStart}
-            onPointerMove={onResizeMove}
-            onPointerUp={onResizeEnd}
-            onPointerCancel={onResizeEnd}
-          />
-        </div>
-      </div>
-    );
+    case "orbit":
+      return shell(
+        <>
+          <div className={style.dateRowClassName}>
+            <span
+              className="pointer-events-none absolute inset-1 rounded-full border border-dashed border-amber-700/25 dark:border-amber-200/20"
+              aria-hidden
+            />
+            <span className={style.dateTextClassName}>
+              <span className={style.monthClassName}>{monthShort}</span>
+              <span className={style.dayClassName}>{day}</span>
+            </span>
+          </div>
+          <div className={style.weekdayRowClassName}>
+            <span className={style.weekdayClassName}>{weekday}</span>
+            {weatherBadge}
+          </div>
+        </>,
+      );
+
+    case "neon":
+      return shell(
+        <>
+          <div className={style.dateRowClassName}>
+            <span
+              className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-fuchsia-500/20 blur-2xl"
+              aria-hidden
+            />
+            <span
+              className="pointer-events-none absolute -bottom-4 -left-4 h-16 w-16 rounded-full bg-cyan-400/15 blur-xl"
+              aria-hidden
+            />
+            <span className={style.dateTextClassName}>
+              <span className={style.monthClassName}>{monthShort}</span>
+              <span className={style.dayClassName}>{day}</span>
+            </span>
+          </div>
+          <div className={style.weekdayRowClassName}>
+            <span className={style.weekdayClassName}>{weekday}</span>
+            {weatherBadge}
+          </div>
+        </>,
+      );
+
+    case "editorial":
+      return shell(
+        <>
+          <div className={style.dateRowClassName}>
+            <span className={style.dateTextClassName}>
+              <span className={style.monthClassName}>{monthLong}</span>
+              <span className={style.dayClassName}>{day}</span>
+            </span>
+            <span
+              className="mt-2 h-px w-full bg-zinc-300 dark:bg-zinc-600"
+              aria-hidden
+            />
+          </div>
+          <div className={style.weekdayRowClassName}>
+            <span className={style.weekdayClassName}>{weekday}</span>
+            {weatherBadge}
+          </div>
+        </>,
+      );
+
+    case "minimal":
+    default:
+      return shell(
+        <>
+          <div className={style.dateRowClassName}>
+            <span
+              className={style.dateRowOverlayClassName}
+              aria-hidden
+            />
+            <span className={style.dateTextClassName}>
+              <span className={style.monthClassName}>{month}/</span>
+              <span className={style.dayClassName}>{day}</span>
+            </span>
+          </div>
+          <div className={style.weekdayRowClassName}>
+            <h3 className={style.weekdayClassName}>{weekday}</h3>
+            {weatherBadge}
+          </div>
+        </>,
+      );
   }
-
-  return (
-    <div className={root} onContextMenu={onContextMenu}>
-      <div
-        className={wrapperClassName}
-        style={{
-          transform: `scale(${resolvedScale})`,
-          transformOrigin: stylePrototype.transformOrigin,
-        }}
-      >
-        <div className={stylePrototype.dateRowClassName}>
-          <span
-            className={stylePrototype.dateRowOverlayClassName}
-            aria-hidden
-          />
-          <span className={stylePrototype.dateTextClassName}>
-            <span className={stylePrototype.monthClassName}>{month}/</span>
-            <span className={stylePrototype.dayClassName}>{day}</span>
-          </span>
-        </div>
-        <div className={stylePrototype.weekdayRowClassName}>
-          <h3 className={stylePrototype.weekdayClassName}>{weekday}</h3>
-          <WeatherBadge
-            weather={weather}
-            compact
-            className={stylePrototype.weatherClassName}
-            iconClassName={stylePrototype.weatherIconClassName}
-            temperatureClassName={stylePrototype.weatherTemperatureClassName}
-          />
-        </div>
-
-        <button
-          type="button"
-          className={stylePrototype.resizeHandleClassName}
-          aria-label="Resize date corner"
-          onPointerDown={onResizeStart}
-          onPointerMove={onResizeMove}
-          onPointerUp={onResizeEnd}
-          onPointerCancel={onResizeEnd}
-        />
-      </div>
-    </div>
-  );
-};
+}

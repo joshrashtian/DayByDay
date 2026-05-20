@@ -16,6 +16,8 @@ import SpotifyScreen from "./screens/integrations/SpotifyScreen";
 import ToolkitScreen from "./screens/ToolkitScreen";
 import ToolkitWindowScreen from "./screens/ToolkitWindowScreen";
 import CognitionBar from "./ui/CognitionBar";
+import { GlobalPomodoroDock } from "./components/global/GlobalPomodoroDock";
+import { PomodoroTicker } from "./components/global/PomodoroTicker";
 import { useMenuNavigation } from "./hooks/useMenuNavigation";
 import { useCreateTaskAction } from "./hooks/useCreateTaskAction";
 import { useProfile } from "./providers/ProfileProvider";
@@ -172,6 +174,8 @@ export default function App() {
             ) : null}
           </AnimatePresence>
           <CognitionBar />
+          <PomodoroTicker />
+          <GlobalPomodoroDock />
         </div>
       </div>
     </>

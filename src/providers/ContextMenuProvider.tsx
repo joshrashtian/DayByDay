@@ -140,7 +140,7 @@ export default function ContextMenuProvider({
           ref={menuPanelRef}
           role="menu"
           aria-label="Context menu"
-          className="fixed z-60 min-w-44 overflow-hidden rounded-xl border border-white/70 bg-white/90 py-1 shadow-[0_12px_40px_rgba(15,15,15,0.15),inset_0_1px_0_rgba(255,255,255,0.9)] ring-1 ring-black/5 backdrop-blur-xl dark:border-white/15 dark:bg-zinc-900/95 dark:shadow-[0_16px_48px_rgba(0,0,0,0.5)] dark:ring-white/10"
+          className="fixed z-60 min-w-44 overflow-hidden rounded-xl border border-white/70 bg-white/30 py-1 shadow-[0_12px_40px_rgba(15,15,15,0.15),inset_0_1px_0_rgba(255,255,255,0.9)] ring-1 ring-black/5 backdrop-blur-xl dark:border-white/15 dark:bg-zinc-900/95 dark:shadow-[0_16px_48px_rgba(0,0,0,0.5)] dark:ring-white/10"
           style={{ left: placed.x, top: placed.y }}
           onMouseDown={(e) => e.stopPropagation()}
         >

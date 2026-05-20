@@ -1,5 +1,11 @@
-import { motion } from "motion/react";
-import { IoClose, IoCreateOutline, IoRepeatOutline } from "react-icons/io5";
+import {
+  IoCheckmark,
+  IoClose,
+  IoCreateOutline,
+  IoPencil,
+  IoRepeatOutline,
+  IoTrash,
+} from "react-icons/io5";
 import { renderCategoryIcon } from "../../lib/categoryIcons";
 import { resolveCategoryVisual } from "../../lib/taskCategories";
 import { formatTaskDue, taskDueToIso } from "../../lib/taskDates";
@@ -86,11 +92,8 @@ export function TaskItem({
   };
 
   return (
-    <li
-      className="perspective-[1100px] list-none"
-      style={{ transformStyle: "preserve-3d" }}
-    >
-      <motion.div
+    <li className="list-none">
+      <div
         role="button"
         tabIndex={0}
         onClick={onToggle}
@@ -102,13 +105,15 @@ export function TaskItem({
                     id: "edit-task",
                     label: "Edit task…",
                     onSelect: onEditTask,
+                    icon: <IoPencil />,
                   } as const,
                 ]
               : []),
             {
               id: "toggle",
-              label: isDone ? "Mark not done" : "Mark done",
+              label: isDone ? "Mark Not Done" : "Mark Done",
               onSelect: onToggle,
+              icon: <IoCheckmark />,
             },
             ...(onDelete
               ? [
@@ -117,6 +122,7 @@ export function TaskItem({
                     label: "Delete",
                     onSelect: onDelete,
                     destructive: true,
+                    icon: <IoTrash />,
                   } as const,
                 ]
               : []),
@@ -128,37 +134,21 @@ export function TaskItem({
             onToggle();
           }
         }}
-        className="group relative cursor-pointer overflow-hidden rounded-2xl border border-white/70 bg-white/45 px-4 py-3.5 shadow-[0_4px_24px_rgba(15,15,15,0.06),inset_0_1px_0_rgba(255,255,255,0.85)] outline-none backdrop-blur-xl backdrop-saturate-150 ring-1 ring-white/30 transition-shadow focus-visible:ring-2 focus-visible:ring-zinc-400/50 dark:border-white/15 dark:bg-zinc-900/35 dark:shadow-[0_4px_28px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)] dark:ring-white/10"
-        style={{ transformStyle: "preserve-3d" }}
-        initial={false}
-        whileHover={{
-          rotateX: -4,
-          rotateY: 4.5,
-          scale: 1.02,
-          boxShadow:
-            "0 14px 40px rgba(15,15,15,0.1), inset 0 1px 0 rgba(255,255,255,0.95)",
-          transition: { type: "spring", stiffness: 380, damping: 26 },
-        }}
-        whileTap={{ scale: 0.985 }}
+        className="group relative cursor-pointer overflow-hidden rounded-2xl border border-white/70 bg-white/45 px-4 py-3.5 shadow-[0_4px_24px_rgba(15,15,15,0.06),inset_0_1px_0_rgba(255,255,255,0.85)] outline-none backdrop-blur-xl backdrop-saturate-150 ring-1 ring-white/30 transition-shadow hover:shadow-[0_14px_40px_rgba(15,15,15,0.1)] focus-visible:ring-2 focus-visible:ring-zinc-400/50 active:scale-[0.99] dark:border-white/15 dark:bg-zinc-900/35 dark:shadow-[0_4px_28px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)] dark:ring-white/10 dark:hover:shadow-[0_14px_40px_rgba(0,0,0,0.45)]"
       >
         <div
           className="pointer-events-none absolute inset-0 rounded-2xl bg-linear-to-br from-white/70 via-white/15 to-transparent opacity-80"
-          style={{ transform: "translateZ(12px)" }}
           aria-hidden
         />
         <div
           className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
           style={{
-            transform: "translateZ(8px)",
             background:
               "linear-gradient(135deg, rgba(255,255,255,0.5) 0%, transparent 45%, transparent 55%, rgba(255,255,255,0.12) 100%)",
           }}
           aria-hidden
         />
-        <div
-          className="relative flex min-w-0 flex-col gap-2"
-          style={{ transform: "translateZ(20px)" }}
-        >
+        <div className="relative flex min-w-0 flex-col gap-2">
           <div className="flex min-w-0 items-center gap-3.5">
             <span
               className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors ${
@@ -280,7 +270,7 @@ export function TaskItem({
             ))}
           </div>
         </div>
-      </motion.div>
+      </div>
     </li>
   );
 }
