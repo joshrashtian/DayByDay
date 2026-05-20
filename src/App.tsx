@@ -1,7 +1,7 @@
 import "./App.css";
 import { useEffect, useState } from "react";
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
-import { AnimatePresence } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { IoClose } from "react-icons/io5";
 import { AnimatedPage } from "./components/layout/AnimatedPage";
 import SideBar from "./components/global/sidebar";
@@ -18,6 +18,7 @@ import ToolkitWindowScreen from "./screens/ToolkitWindowScreen";
 import CognitionBar from "./ui/CognitionBar";
 import { GlobalPomodoroDock } from "./components/global/GlobalPomodoroDock";
 import { PomodoroTicker } from "./components/global/PomodoroTicker";
+import { useAppZoom } from "./hooks/useAppZoom";
 import { useMenuNavigation } from "./hooks/useMenuNavigation";
 import { useCreateTaskAction } from "./hooks/useCreateTaskAction";
 import { useProfile } from "./providers/ProfileProvider";
@@ -27,6 +28,7 @@ export default function App() {
   const navigate = useNavigate();
   const { openProfile } = useProfile();
   useMenuNavigation();
+  useAppZoom();
   useCreateTaskAction();
   const [sidebarOffset, setSidebarOffset] = useState(220);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -57,17 +59,17 @@ export default function App() {
   }, [showSettingsModal]);
 
   return (
-    <>
+    <div id="app-zoom-root" className="h-full w-full overflow-hidden">
       <SideBar
         onWidthChange={setSidebarOffset}
         onOpenProfile={openProfile}
         onOpenSettings={() => setShowSettingsModal(true)}
       />
-      <div
-        className="min-h-screen transition-[margin] duration-200"
-        style={{ marginLeft: sidebarOffset }}
+      <motion.div
+        className="flex h-full min-h-0 flex-col overflow-hidden transition-[padding] duration-200"
+        style={{ paddingLeft: sidebarOffset }}
       >
-        <div className="min-h-screen p-4 bg-zinc-50 dark:bg-zinc-950">
+        <motion.div className="flex h-full min-h-0 flex-col overflow-hidden p-4 bg-zinc-50 dark:bg-zinc-950">
           <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
               <Route
@@ -176,8 +178,8 @@ export default function App() {
           <CognitionBar />
           <PomodoroTicker />
           <GlobalPomodoroDock />
-        </div>
-      </div>
-    </>
+        </motion.div>
+      </motion.div>
+    </div>
   );
 }

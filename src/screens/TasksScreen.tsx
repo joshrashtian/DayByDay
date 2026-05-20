@@ -1,7 +1,7 @@
 import { TasksWorkspace } from "../components/tasks/TasksWorkspace";
 import { motion } from "motion/react";
 const TasksScreen = () => (
-  <div className="flex h-dvh min-h-0 flex-col overflow-hidden">
+  <motion.div className="flex h-full min-h-0 flex-col overflow-hidden">
     <header className="shrink-0 px-5 pt-6 sm:px-8 sm:pt-8">
       <div className="mx-auto w-full max-w-3xl text-left xl:max-w-4xl">
         <motion.h1 className="font-display flex flex-row  text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
@@ -24,7 +24,7 @@ const TasksScreen = () => (
       contentWidth="wide"
       composerLayout="none"
     />
-  </div>
+  </motion.div>
 );
 
 export default TasksScreen;

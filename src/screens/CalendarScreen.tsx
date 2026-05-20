@@ -213,7 +213,7 @@ export default function CalendarScreen() {
   };
 
   return (
-    <main className="relative w-full flex h-screen min-h-screen flex-col overflow-hidden bg-zinc-50 dark:bg-zinc-950">
+    <main className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-zinc-50 dark:bg-zinc-950">
       <div
         className="pointer-events-none absolute -right-24 top-1/4 h-80 w-80 rounded-full bg-sky-200/35 blur-3xl dark:bg-sky-900/25"
         aria-hidden

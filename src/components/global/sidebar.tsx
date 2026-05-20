@@ -206,13 +206,13 @@ const SideBar = ({
         : appItems;
 
   return (
-    <div className="fixed bottom-0 left-0 top-0 z-50 flex items-stretch">
+    <div className="fixed inset-y-0 left-0 z-50 flex items-stretch">
       <AnimatePresence initial={false} mode="wait">
         {sidebarOpen ? (
           <motion.nav
             key="sidebar-nav"
             aria-label="Primary navigation"
-            className="relative flex h-dvh max-h-dvh flex-col overflow-hidden border-r border-zinc-200/70 bg-white/85 px-3 py-3 shadow-lg backdrop-blur-sm"
+            className="relative flex h-full flex-col overflow-hidden border-r border-zinc-200/70 bg-white/85 px-3 py-3 shadow-lg backdrop-blur-sm"
             style={{ width: resolvedWidth }}
             initial={{ x: -24 }}
             animate={{ x: 0 }}

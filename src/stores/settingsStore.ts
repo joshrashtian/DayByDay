@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { clampAppZoom } from "@/lib/appZoom";
 import type {
   BlockConfig,
   CategoryConfig,
@@ -184,7 +185,7 @@ export const useSettingsStore = create<SettingsState>()(
         })),
       setDayTransitionEnabled: (enabled) =>
         set({ dayTransitionEnabled: enabled }),
-      setZoomLevel: (level) => set({ zoomLevel: level }),
+      setZoomLevel: (level) => set({ zoomLevel: clampAppZoom(level) }),
       setSidebar: (partial) =>
         set((s) => ({ sidebar: { ...s.sidebar, ...partial } })),
       setPinnedToolkitPanels: (panelIds) =>

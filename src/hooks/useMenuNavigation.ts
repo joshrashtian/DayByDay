@@ -1,15 +1,19 @@
 import { useNavigate } from "react-router-dom";
 import { listen } from "@tauri-apps/api/event";
 import { useEffect } from "react";
+import {
+  APP_ZOOM_DEFAULT,
+  APP_ZOOM_STEP,
+  applyAppZoomToDocument,
+  clampAppZoom,
+} from "../lib/appZoom";
 import { useSettingsStore } from "../stores/settingsStore";
 
-const DEFAULT_ZOOM = 1;
-const MIN_ZOOM = 0.7;
-const MAX_ZOOM = 1.6;
-const ZOOM_STEP = 0.1;
-
-function clampZoom(value: number) {
-  return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value));
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  if (target.isContentEditable) return true;
+  const tag = target.tagName;
+  return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
 }
 
 export function useMenuNavigation() {
@@ -18,20 +22,40 @@ export function useMenuNavigation() {
   useEffect(() => {
     let unlistenNavigate: (() => void) | undefined;
     let unlistenZoom: (() => void) | undefined;
-    let zoomLevel = DEFAULT_ZOOM;
+    let zoomLevel = clampAppZoom(useSettingsStore.getState().zoomLevel);
 
     const applyZoom = (value: number) => {
-      zoomLevel = clampZoom(value);
-      document.documentElement.style.zoom = zoomLevel.toFixed(2);
+      zoomLevel = clampAppZoom(value);
       useSettingsStore.getState().setZoomLevel(zoomLevel);
+      applyAppZoomToDocument(zoomLevel);
     };
 
-    const savedZoom = useSettingsStore.getState().zoomLevel;
-    if (Number.isFinite(savedZoom) && savedZoom !== DEFAULT_ZOOM) {
-      applyZoom(savedZoom);
-    } else {
-      applyZoom(DEFAULT_ZOOM);
-    }
+    applyZoom(zoomLevel);
+
+    const onWheel = (event: WheelEvent) => {
+      // macOS trackpad pinch → ctrl+wheel (same as Chrome/Safari).
+      if (!event.ctrlKey) return;
+      if (isEditableTarget(event.target)) return;
+      event.preventDefault();
+      const direction = event.deltaY > 0 ? -1 : 1;
+      applyZoom(zoomLevel + direction * APP_ZOOM_STEP);
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey)) return;
+      if (isEditableTarget(event.target)) return;
+
+      if (event.key === "=" || event.key === "+") {
+        event.preventDefault();
+        applyZoom(zoomLevel + APP_ZOOM_STEP);
+      } else if (event.key === "-" || event.key === "_") {
+        event.preventDefault();
+        applyZoom(zoomLevel - APP_ZOOM_STEP);
+      } else if (event.key === "0") {
+        event.preventDefault();
+        applyZoom(APP_ZOOM_DEFAULT);
+      }
+    };
 
     listen<string>("navigate", (event) => {
       switch (event.payload) {
@@ -67,22 +91,34 @@ export function useMenuNavigation() {
     listen<string>("menu-zoom", (event) => {
       switch (event.payload) {
         case "in":
-          applyZoom(zoomLevel + ZOOM_STEP);
+          applyZoom(zoomLevel + APP_ZOOM_STEP);
           break;
         case "out":
-          applyZoom(zoomLevel - ZOOM_STEP);
+          applyZoom(zoomLevel - APP_ZOOM_STEP);
           break;
         case "reset":
-          applyZoom(DEFAULT_ZOOM);
+          applyZoom(APP_ZOOM_DEFAULT);
           break;
       }
     }).then((fn) => {
       unlistenZoom = fn;
     });
 
+    window.addEventListener("wheel", onWheel, { passive: false });
+
+    const isTauri =
+      typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+    if (!isTauri) {
+      window.addEventListener("keydown", onKeyDown);
+    }
+
     return () => {
       unlistenNavigate?.();
       unlistenZoom?.();
+      window.removeEventListener("wheel", onWheel);
+      if (!isTauri) {
+        window.removeEventListener("keydown", onKeyDown);
+      }
     };
   }, [navigate]);
 }

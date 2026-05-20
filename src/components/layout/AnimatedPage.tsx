@@ -8,7 +8,7 @@ type Props = {
 export function AnimatedPage({ children }: Props) {
   return (
     <motion.div
-      className="min-h-dvh w-full flex flex-col"
+      className="flex h-full min-h-0 w-full flex-col"
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
