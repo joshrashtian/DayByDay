@@ -23,17 +23,23 @@ type Props = {
 
 export const TasksFrontPage = ({ activeBlockName }: Props) => {
   const { tasks } = useTasksStore(useShallow((s) => ({ tasks: s.tasks })));
-  const { toggleTask, updateTask } = useTasksStore(
-    useShallow((s) => ({ toggleTask: s.toggleTask, updateTask: s.updateTask })),
+  const { toggleTask, updateTask, removeTask } = useTasksStore(
+    useShallow((s) => ({
+      toggleTask: s.toggleTask,
+      updateTask: s.updateTask,
+      removeTask: s.removeTask,
+    })),
   );
   const { open: openPopup, close: closePopup } = usePopup();
   const openTaskEditor = useCallback(
     (taskId: string) => {
       const task = tasks.find((t) => t.id === taskId);
       if (!task) return;
-      openPopup(taskEditorPopupContent({ task, updateTask, closePopup }));
+      openPopup(
+        taskEditorPopupContent({ task, updateTask, removeTask, closePopup }),
+      );
     },
-    [tasks, openPopup, updateTask, closePopup],
+    [tasks, openPopup, updateTask, removeTask, closePopup],
   );
   const focusedTaskId = useHomeFocusStore((s) => s.focusedTaskId);
   const setFocusedTaskId = useHomeFocusStore((s) => s.setFocusedTaskId);

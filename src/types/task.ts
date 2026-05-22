@@ -59,7 +59,8 @@ export function parseTaskKind(raw: unknown): TaskKind | undefined {
     raw === "event" ||
     raw === "reminder" ||
     raw === "habit" ||
-    raw === "class"
+    raw === "class" ||
+    raw === "ics"
   )
     return raw;
   if (raw === "todo") return "task";

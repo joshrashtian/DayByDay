@@ -4,8 +4,10 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
+  type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
@@ -17,6 +19,14 @@ export type PopupApi = {
 };
 
 const PopupContext = createContext<PopupApi | null>(null);
+
+/** Dialog element ref for anchoring overlays (select menus, etc.) inside popups. */
+export const PopupDialogRefContext =
+  createContext<RefObject<HTMLDivElement | null> | null>(null);
+
+export function usePopupDialogRef(): RefObject<HTMLDivElement | null> | null {
+  return useContext(PopupDialogRefContext);
+}
 
 export function usePopup(): PopupApi {
   const ctx = useContext(PopupContext);
@@ -32,6 +42,7 @@ export function usePopupOptional(): PopupApi | null {
 
 export default function PopupProvider({ children }: { children: ReactNode }) {
   const [content, setContent] = useState<ReactNode>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   const close = useCallback(() => setContent(null), []);
   const open = useCallback((node: ReactNode) => setContent(node), []);
@@ -86,20 +97,24 @@ export default function PopupProvider({ children }: { children: ReactNode }) {
               exit={{ opacity: 0 }}
               onClick={close}
             />
-            <motion.div
-              role="dialog"
-              aria-modal="true"
-              className="relative z-10 flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-white/70 bg-white/95 shadow-[0_-8px_48px_rgba(15,15,15,0.18)] ring-1 ring-black/5 backdrop-blur-xl dark:border-white/15 dark:bg-zinc-900/95 dark:shadow-[0_-12px_56px_rgba(0,0,0,0.55)] dark:ring-white/10 sm:rounded-3xl sm:shadow-[0_24px_64px_rgba(15,15,15,0.2)]"
-              initial={{ y: 28, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 18, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 420, damping: 32 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain">
-                {content}
-              </div>
-            </motion.div>
+            <PopupDialogRefContext.Provider value={dialogRef}>
+              <motion.div
+                ref={dialogRef}
+                role="dialog"
+                aria-modal="true"
+                data-popup-dialog
+                className="relative z-10 flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-white/70 bg-white/95 shadow-[0_-8px_48px_rgba(15,15,15,0.18)] ring-1 ring-black/5 backdrop-blur-xl dark:border-white/15 dark:bg-zinc-900/95 dark:shadow-[0_-12px_56px_rgba(0,0,0,0.55)] dark:ring-white/10 sm:rounded-3xl sm:shadow-[0_24px_64px_rgba(15,15,15,0.2)]"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="no-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain">
+                  {content}
+                </div>
+              </motion.div>
+            </PopupDialogRefContext.Provider>
           </motion.div>
         ) : null}
       </AnimatePresence>,

@@ -7,7 +7,7 @@
 // ── Tasks ─────────────────────────────────────────────────────────────────
 
 export type TaskPriority = "low" | "medium" | "high";
-export type TaskKind = "task" | "event" | "reminder" | "habit" | "class";
+export type TaskKind = "task" | "event" | "reminder" | "habit" | "class" | "ics";
 
 export type RecurrenceFrequency = "daily" | "weekly" | "monthly";
 export type RecurrenceWeekday = 1 | 2 | 3 | 4 | 5 | 6 | 7;
@@ -48,6 +48,18 @@ export type Task = {
   recurrence?: TaskRecurrence;
   lastCompletedAt?: Date;
   recurringSourceId?: string;
+  /** Stable UID from an imported `.ics` event — used for dedup on re-import. */
+  icsUid?: string;
+};
+
+export type ImportIcsTaskPayload = {
+  title: string;
+  dueDate: Date;
+  endDate?: Date;
+  category?: string;
+  classLocation?: string;
+  description?: string;
+  icsUid: string;
 };
 
 export type AddTaskPayload = {
@@ -184,6 +196,18 @@ export type ClockStylePrototypeInput = {
 } & Partial<Omit<ClockStylePrototype, "id" | "template" | "source">>;
 
 export type ClockStylePack = Record<string, ClockStylePrototypeInput>;
+
+// ── Calendar integrations ─────────────────────────────────────────────────
+
+export type CalendarProvider = "google";
+
+export type ConnectedCalendar = {
+  id: string;
+  provider: CalendarProvider;
+  name: string;
+  color?: string;
+  enabled: boolean;
+};
 
 // ── Home Visual Styles ────────────────────────────────────────────────────
 

@@ -4,16 +4,22 @@ import {
   useEffect,
   useRef,
   useState,
+  type CSSProperties,
   type MouseEvent as ReactMouseEvent,
 } from "react";
 import { IoAdd, IoClose, IoDocument } from "react-icons/io5";
 import type { CalendarTaskRow, Task } from "@/types";
 import { tasksByDueDateKeyInRange } from "../../../lib/calendarUtils";
-import { getCategoryIconOption, renderCategoryIcon } from "../../../lib/categoryIcons";
+import {
+  getCategoryIconOption,
+  renderCategoryIcon,
+} from "../../../lib/categoryIcons";
 import { getTaskKindVisual } from "../../../lib/taskKinds";
 import { resolveCategoryVisual } from "../../../lib/taskCategories";
+import { isIcsTask } from "../../../lib/icsTasks";
 import { formatTaskDue } from "../../../lib/taskDates";
 import { useContextMenu } from "../../../providers/ContextMenuProvider";
+import { Tooltip } from "../../base/tooltip/tooltip";
 import BottomSheet from "../../../ui/BottomSheet";
 import { completedCheckeredStyle } from "./_shared";
 
@@ -21,6 +27,69 @@ function categoryIconTitlePrefix(icon: string | undefined): string {
   if (!icon) return "";
   if (getCategoryIconOption(icon)) return "";
   return `${icon} `;
+}
+
+function weekEventTooltipContent(
+  task: Task,
+  displayDueDate: Date,
+): { title: string; description?: string } {
+  const time = DateTime.fromJSDate(displayDueDate).toFormat("h:mm a");
+  const kindVisual = getTaskKindVisual(task.kind);
+  const title = [
+    time,
+    task.kind !== "task" ? kindVisual.label : null,
+    task.title,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  const detailLines: string[] = [];
+  if (task.critical) {
+    detailLines.push("Critical");
+  } else if (task.priority) {
+    detailLines.push(
+      `${task.priority.charAt(0).toUpperCase()}${task.priority.slice(1)} priority`,
+    );
+  }
+  if (task.description?.trim()) {
+    detailLines.push(task.description.trim());
+  }
+
+  return {
+    title,
+    description: detailLines.length > 0 ? detailLines.join("\n\n") : undefined,
+  };
+}
+
+function weekAllDayEventTooltipContent(task: Task): {
+  title: string;
+  description?: string;
+} {
+  const kindVisual = getTaskKindVisual(task.kind);
+  const title = [
+    "All day",
+    task.kind !== "task" ? kindVisual.label : null,
+    task.title,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  const detailLines: string[] = [];
+  if (task.critical) {
+    detailLines.push("Critical");
+  } else if (task.priority) {
+    detailLines.push(
+      `${task.priority.charAt(0).toUpperCase()}${task.priority.slice(1)} priority`,
+    );
+  }
+  if (task.description?.trim()) {
+    detailLines.push(task.description.trim());
+  }
+
+  return {
+    title,
+    description: detailLines.length > 0 ? detailLines.join("\n\n") : undefined,
+  };
 }
 
 type WeekViewProps = {
@@ -141,6 +210,155 @@ type MinuteRange = {
   endMinuteExclusive: number;
 };
 
+const MINUTES_PER_DAY = 24 * 60;
+const SLOTS_PER_DAY = MINUTES_PER_DAY / 15;
+const MIN_SLOT_HEIGHT_PX = 28;
+
+const SMOOTH_DRAG_SPRING = {
+  type: "spring" as const,
+  stiffness: 260,
+  damping: 32,
+  mass: 0.7,
+};
+
+const PREVIEW_ENTER_EASE = [0.22, 1, 0.36, 1] as const;
+
+function minuteRangeToPercent(range: MinuteRange): {
+  top: number;
+  height: number;
+} {
+  return {
+    top: (range.startMinute / MINUTES_PER_DAY) * 100,
+    height:
+      ((range.endMinuteExclusive - range.startMinute) / MINUTES_PER_DAY) * 100,
+  };
+}
+
+function rangesOverlap(a: MinuteRange, b: MinuteRange): boolean {
+  return (
+    a.startMinute < b.endMinuteExclusive && a.endMinuteExclusive > b.startMinute
+  );
+}
+
+type TimedEventLayout = {
+  row: CalendarTaskRow;
+  range: MinuteRange;
+  column: number;
+  columnCount: number;
+};
+
+function layoutDayTimedEvents(rows: CalendarTaskRow[]): {
+  layouts: TimedEventLayout[];
+  hiddenCount: number;
+} {
+  const items = rows
+    .filter((row) => !isDateOnlyDue(DateTime.fromJSDate(row.displayDueDate)))
+    .map((row) => ({ row, range: resolveRowMinuteRange(row) }))
+    .sort(
+      (a, b) =>
+        a.range.startMinute - b.range.startMinute ||
+        a.row.rowKey.localeCompare(b.row.rowKey),
+    );
+
+  const placed: Array<{ range: MinuteRange; column: number }> = [];
+  const layouts: TimedEventLayout[] = [];
+
+  for (const item of items) {
+    const overlappingPlaced = placed.filter((entry) =>
+      rangesOverlap(item.range, entry.range),
+    );
+    const usedColumns = new Set(overlappingPlaced.map((entry) => entry.column));
+    let column = 0;
+    while (usedColumns.has(column) && column < 2) column += 1;
+    if (column >= 2) continue;
+
+    const concurrentCount = items.filter((other) =>
+      rangesOverlap(item.range, other.range),
+    ).length;
+
+    placed.push({ range: item.range, column });
+    layouts.push({
+      row: item.row,
+      range: item.range,
+      column,
+      columnCount: Math.min(2, concurrentCount),
+    });
+  }
+
+  return {
+    layouts,
+    hiddenCount: items.length - layouts.length,
+  };
+}
+
+function resolveEventBlockStyle(
+  task: Task,
+  categoryVisual: ReturnType<typeof resolveCategoryVisual>,
+): CSSProperties | undefined {
+  if (task.done) return completedCheckeredStyle;
+  if (task.critical) return undefined;
+  if (categoryVisual) {
+    return {
+      backgroundColor: categoryVisual.bg,
+      color: categoryVisual.text,
+      borderLeftColor: categoryVisual.accent,
+    };
+  }
+  if (task.kind === "event") {
+    return {
+      backgroundColor: "rgba(14, 165, 233, 0.18)",
+      borderLeftColor: "rgba(14, 165, 233, 0.65)",
+    };
+  }
+  if (task.kind === "reminder") {
+    return {
+      backgroundColor: "rgba(245, 158, 11, 0.18)",
+      borderLeftColor: "rgba(245, 158, 11, 0.65)",
+    };
+  }
+  if (task.kind === "habit") {
+    return {
+      backgroundColor: "rgba(139, 92, 246, 0.18)",
+      borderLeftColor: "rgba(139, 92, 246, 0.65)",
+    };
+  }
+  if (task.kind === "class") {
+    return {
+      backgroundColor: "rgba(99, 102, 241, 0.2)",
+      borderLeftColor: "rgba(99, 102, 241, 0.65)",
+    };
+  }
+  if (task.kind === "ics") {
+    return {
+      backgroundColor: "rgba(20, 184, 166, 0.16)",
+      borderLeftColor: "rgba(20, 184, 166, 0.7)",
+    };
+  }
+  return undefined;
+}
+
+function eventContentDensity(durationMinutes: number): {
+  titleClass: string;
+  showMeta: boolean;
+} {
+  if (durationMinutes <= 30) {
+    return {
+      titleClass: "line-clamp-1 text-[11px] font-semibold leading-tight",
+      showMeta: false,
+    };
+  }
+  if (durationMinutes <= 75) {
+    return {
+      titleClass: "line-clamp-2 text-xs font-semibold leading-snug",
+      showMeta: false,
+    };
+  }
+  return {
+    titleClass: "line-clamp-3 text-xs font-semibold leading-snug",
+    showMeta: true,
+  };
+}
+
 function resolveRowMinuteRange(row: CalendarTaskRow): MinuteRange {
   const start = DateTime.fromJSDate(row.displayDueDate);
   const taskDue = row.task.dueDate
@@ -254,59 +472,62 @@ function resolveCreateRangeFromDragSelection(selection: WeekDragSelection): {
   return { start, end };
 }
 
-type FragmentQuarterRowProps = {
-  minuteOfDay: number;
-  days: DateTime[];
-  byDay: Map<string, CalendarTaskRow[]>;
+type WeekDayTimeColumnProps = {
+  day: DateTime;
+  dayIndex: number;
+  rows: CalendarTaskRow[];
+  quarterSlots: number[];
+  previewRange: WeekPreviewRange | null;
+  disableTooltips: boolean;
+  editingTaskId: string | null;
   onSlotContextMenu: (
     e: ReactMouseEvent<HTMLDivElement>,
-    day: DateTime,
     minuteOfDay: number,
   ) => void;
   onEventContextMenu: (
     e: ReactMouseEvent<HTMLButtonElement>,
     row: CalendarTaskRow,
   ) => void;
-  onSlotMouseDown: (day: DateTime, minuteOfDay: number) => void;
-  onSlotMouseEnter: (day: DateTime, minuteOfDay: number) => void;
-  onEventMoveStart: (
-    row: CalendarTaskRow,
-    day: DateTime,
-    minuteOfDay: number,
-  ) => void;
+  onSlotMouseDown: (minuteOfDay: number) => void;
+  onSlotMouseEnter: (minuteOfDay: number) => void;
+  onEventMoveStart: (row: CalendarTaskRow, minuteOfDay: number) => void;
   onEventResizeStart: (
     row: CalendarTaskRow,
-    day: DateTime,
     minuteOfDay: number,
     edge: "start" | "end",
   ) => void;
   onEventClick: (row: CalendarTaskRow) => void;
-  previewRange: WeekPreviewRange | null;
 };
 
-function FragmentQuarterRow({
-  minuteOfDay,
-  days,
-  byDay,
-  onSlotContextMenu,
+function WeekEventBlock({
+  layout,
+  disableTooltips,
+  isBeingEdited,
+  readOnly = false,
   onEventContextMenu,
-  onSlotMouseDown,
-  onSlotMouseEnter,
   onEventMoveStart,
   onEventResizeStart,
   onEventClick,
-  previewRange,
-}: FragmentQuarterRowProps) {
+}: {
+  layout: TimedEventLayout;
+  disableTooltips: boolean;
+  isBeingEdited: boolean;
+  readOnly?: boolean;
+  onEventContextMenu: (
+    e: ReactMouseEvent<HTMLButtonElement>,
+    row: CalendarTaskRow,
+  ) => void;
+  onEventMoveStart: (row: CalendarTaskRow, minuteOfDay: number) => void;
+  onEventResizeStart: (
+    row: CalendarTaskRow,
+    minuteOfDay: number,
+    edge: "start" | "end",
+  ) => void;
+  onEventClick: (row: CalendarTaskRow) => void;
+}) {
   const dragHoldTimeoutRef = useRef<number | null>(null);
   const consumedByDragRef = useRef(false);
   const HOLD_TO_DRAG_MS = 110;
-  const SMOOTH_DRAG_SPRING = {
-    type: "spring" as const,
-    stiffness: 260,
-    damping: 32,
-    mass: 0.7,
-  };
-  const PREVIEW_ENTER_EASE = [0.22, 1, 0.36, 1] as const;
 
   const clearDragHoldTimeout = () => {
     if (dragHoldTimeoutRef.current == null) return;
@@ -316,230 +537,268 @@ function FragmentQuarterRow({
 
   useEffect(() => () => clearDragHoldTimeout(), []);
 
-  const isHourLine = minuteOfDay % 60 === 0;
+  if (isBeingEdited) return null;
+
+  const { row, range, column, columnCount } = layout;
+  const { top, height } = minuteRangeToPercent(range);
+  const widthPct = 100 / columnCount;
+  const leftPct = column * widthPct;
+  const durationMinutes = range.endMinuteExclusive - range.startMinute;
+  const categoryVisual = resolveCategoryVisual(row.task.category);
+  const kindVisual = getTaskKindVisual(row.task.kind);
+  const tooltipContent = weekEventTooltipContent(row.task, row.displayDueDate);
+  const density = eventContentDensity(durationMinutes);
+  const timeLabel = DateTime.fromJSDate(row.displayDueDate).toFormat("h:mm a");
+  const hasOverlap = columnCount > 1;
+
   return (
-    <>
-      <div className="border-r border-zinc-200/80 bg-zinc-50/55 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-500 dark:border-white/10 dark:bg-zinc-900/35 dark:text-zinc-400">
-        {isHourLine ? minuteOfDayToLabel(minuteOfDay) : ""}
-      </div>
-      {days.map((day, dayIndex) => {
-        const key = day.toISODate() ?? "";
-        const slotStartMinute = minuteOfDay;
-        const slotEndMinuteExclusive = minuteOfDay + 15;
-        const slotTasks = (byDay.get(key) ?? []).filter((row) => {
-          const dt = DateTime.fromJSDate(row.displayDueDate);
-          if (isDateOnlyDue(dt)) return false;
-          const range = resolveRowMinuteRange(row);
-          return (
-            slotStartMinute < range.endMinuteExclusive &&
-            slotEndMinuteExclusive > range.startMinute
-          );
-        });
-        const inPreview = (() => {
-          if (!previewRange) return false;
-          if (previewRange.dayIso !== key) return false;
-          return (
-            minuteOfDay >= previewRange.startMinute &&
-            minuteOfDay < previewRange.endMinuteExclusive
-          );
-        })();
-        const isPreviewStart =
-          inPreview && previewRange?.startMinute === minuteOfDay;
-        const isPreviewEnd =
-          inPreview && previewRange?.endMinuteExclusive === minuteOfDay + 15;
-        return (
+    <Tooltip
+      title={tooltipContent.title}
+      description={tooltipContent.description}
+      placement="top"
+      delay={400}
+      isDisabled={disableTooltips}
+    >
+      <motion.button
+        layout="position"
+        transition={SMOOTH_DRAG_SPRING}
+        type="button"
+        onMouseDown={(e) => {
+          if (readOnly) return;
+          if (e.button !== 0) return;
+          e.stopPropagation();
+          e.preventDefault();
+          consumedByDragRef.current = false;
+          clearDragHoldTimeout();
+          const releasePendingDrag = () => clearDragHoldTimeout();
+          window.addEventListener("mouseup", releasePendingDrag, { once: true });
+          dragHoldTimeoutRef.current = window.setTimeout(() => {
+            consumedByDragRef.current = true;
+            onEventMoveStart(row, range.startMinute);
+          }, HOLD_TO_DRAG_MS);
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (consumedByDragRef.current) {
+            consumedByDragRef.current = false;
+            return;
+          }
+          onEventClick(row);
+        }}
+        onContextMenu={(e) => {
+          e.stopPropagation();
+          onEventContextMenu(e, row);
+        }}
+        className={`pointer-events-auto absolute overflow-hidden rounded-md border-l-2 px-1.5 py-1 text-left shadow-sm ${
+          hasOverlap ? "border-dashed border-l-zinc-400/35" : "border-solid"
+        } ${readOnly ? "cursor-default" : ""} ${
+          row.task.done
+            ? "bg-emerald-500/20 text-emerald-900 line-through dark:bg-emerald-500/25 dark:text-emerald-100"
+            : row.task.critical
+              ? "border-l-red-500/70 bg-red-500/20 text-red-700 dark:bg-red-500/30 dark:text-red-200"
+              : "border-l-zinc-400/50 text-zinc-800 dark:text-zinc-100"
+        }`}
+        style={{
+          top: `${top}%`,
+          height: `${height}%`,
+          left: `calc(${leftPct}% + 2px)`,
+          width: `calc(${widthPct}% - 4px)`,
+          ...resolveEventBlockStyle(row.task, categoryVisual),
+        }}
+      >
+        <span
+          className={`absolute inset-x-1 top-0 z-10 h-1.5 rounded-full bg-transparent ${
+            readOnly ? "pointer-events-none" : "cursor-ns-resize"
+          }`}
+          onMouseDown={(e) => {
+            if (readOnly) return;
+            if (e.button !== 0) return;
+            e.stopPropagation();
+            e.preventDefault();
+            onEventResizeStart(row, range.startMinute, "start");
+          }}
+        />
+        <div className="flex h-full min-h-0 flex-col gap-0.5 overflow-hidden">
+          <div className="flex shrink-0 items-center gap-1">
+            {categoryVisual?.icon ? (
+              <span className="inline-flex shrink-0 items-center">
+                {renderCategoryIcon(categoryVisual.icon, "h-3 w-3")}
+              </span>
+            ) : null}
+            {row.task.kind !== "task" ? (
+              <span
+                className="inline-flex shrink-0 items-center opacity-80"
+                aria-label={kindVisual.label}
+              >
+                <kindVisual.Icon className="h-3 w-3" aria-hidden />
+              </span>
+            ) : null}
+            <span className="shrink-0 text-[10px] font-medium tabular-nums opacity-80">
+              {timeLabel}
+            </span>
+          </div>
+          <p className={density.titleClass}>
+            {`${categoryIconTitlePrefix(categoryVisual?.icon)}${row.task.title}`}
+          </p>
+          {density.showMeta && row.task.description?.trim() ? (
+            <p className="line-clamp-2 text-[10px] leading-snug opacity-75">
+              {row.task.description.trim()}
+            </p>
+          ) : null}
+          {density.showMeta && row.task.priority ? (
+            <p className="text-[10px] capitalize leading-none opacity-70">
+              {row.task.priority} priority
+            </p>
+          ) : null}
+        </div>
+        <span
+          className={`absolute inset-x-1 bottom-0 z-10 h-1.5 rounded-full bg-transparent ${
+            readOnly ? "pointer-events-none" : "cursor-ns-resize"
+          }`}
+          onMouseDown={(e) => {
+            if (readOnly) return;
+            if (e.button !== 0) return;
+            e.stopPropagation();
+            e.preventDefault();
+            onEventResizeStart(
+              row,
+              range.endMinuteExclusive - 15,
+              "end",
+            );
+          }}
+        />
+      </motion.button>
+    </Tooltip>
+  );
+}
+
+function WeekDayTimeColumn({
+  day,
+  dayIndex,
+  rows,
+  quarterSlots,
+  previewRange,
+  disableTooltips,
+  editingTaskId,
+  onSlotContextMenu,
+  onEventContextMenu,
+  onSlotMouseDown,
+  onSlotMouseEnter,
+  onEventMoveStart,
+  onEventResizeStart,
+  onEventClick,
+}: WeekDayTimeColumnProps) {
+  const key = day.toISODate() ?? "";
+  const { layouts, hiddenCount } = layoutDayTimedEvents(rows);
+  const dayPreview =
+    previewRange?.dayIso === key
+      ? minuteRangeToPercent({
+          startMinute: previewRange.startMinute,
+          endMinuteExclusive: previewRange.endMinuteExclusive,
+        })
+      : null;
+
+  return (
+    <div
+      className={`relative min-h-0 border-r border-zinc-200/80 dark:border-white/10 ${
+        dayIndex % 2 === 0
+          ? "bg-zinc-50/35 dark:bg-zinc-900/20"
+          : "bg-white/55 dark:bg-zinc-900/10"
+      }`}
+      style={{
+        gridRow: `3 / span ${SLOTS_PER_DAY}`,
+        gridColumn: dayIndex + 2,
+      }}
+    >
+      <div className="absolute inset-0 grid grid-rows-[repeat(96,minmax(0,1fr))]">
+        {quarterSlots.map((minuteOfDay) => (
           <div
-            key={`${key}-${minuteOfDay}`}
-            className={`relative min-h-[24px] border-r border-zinc-200/80 p-0 dark:border-white/10 ${
-              dayIndex % 2 === 0
-                ? "bg-zinc-50/35 dark:bg-zinc-900/20"
-                : "bg-white/55 dark:bg-zinc-900/10"
-            }`}
+            key={`${key}-slot-${minuteOfDay}`}
+            className="min-h-0"
             onMouseDown={(e) => {
               if (e.button !== 0) return;
-              onSlotMouseDown(day, minuteOfDay);
+              onSlotMouseDown(minuteOfDay);
               e.preventDefault();
             }}
-            onContextMenu={(e) => onSlotContextMenu(e, day, minuteOfDay)}
-            onMouseEnter={() => onSlotMouseEnter(day, minuteOfDay)}
-          >
-            {inPreview ? (
-              <motion.div
-                layout
-                initial={{ opacity: 0.5, y: 2 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  layout: SMOOTH_DRAG_SPRING,
-                  opacity: { duration: 0.14, ease: PREVIEW_ENTER_EASE },
-                  y: { duration: 0.14, ease: PREVIEW_ENTER_EASE },
-                }}
-                className={`pointer-events-none absolute inset-x-0 top-0 bottom-0  border-sky-500/45 bg-sky-500/20 dark:border-sky-300/45 dark:bg-sky-400/20 ${
-                  isPreviewStart ? "rounded-t-md" : ""
-                } ${isPreviewEnd ? "rounded-b-md" : ""}`}
-              >
-                {isPreviewStart ? (
-                  <motion.span
-                    initial={{ opacity: 0, x: -2 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.12, ease: PREVIEW_ENTER_EASE }}
-                    className="absolute left-1.5 top-0.5  px-1 py-px text-[9px] font-semibold leading-none text-sky-900 italic font-display dark:bg-sky-400/90 dark:text-zinc-950"
-                  >
+            onContextMenu={(e) => onSlotContextMenu(e, minuteOfDay)}
+            onMouseEnter={() => onSlotMouseEnter(minuteOfDay)}
+          />
+        ))}
+      </div>
+
+      <LayoutGroup id={`week-events-${key}`}>
+        <div className="pointer-events-none absolute inset-0 z-10">
+          {layouts.map((layout) => (
+            <WeekEventBlock
+              key={layout.row.rowKey}
+              layout={layout}
+              disableTooltips={disableTooltips}
+              isBeingEdited={editingTaskId === layout.row.task.id}
+              readOnly={isIcsTask(layout.row.task)}
+              onEventContextMenu={onEventContextMenu}
+              onEventMoveStart={onEventMoveStart}
+              onEventResizeStart={onEventResizeStart}
+              onEventClick={onEventClick}
+            />
+          ))}
+
+          {dayPreview ? (
+            <motion.div
+              layout
+              initial={{ opacity: 0.5, y: 2 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                layout: SMOOTH_DRAG_SPRING,
+                opacity: { duration: 0.14, ease: PREVIEW_ENTER_EASE },
+                y: { duration: 0.14, ease: PREVIEW_ENTER_EASE },
+              }}
+              className="pointer-events-none absolute overflow-hidden rounded-md border border-sky-500/45 bg-sky-500/20 dark:border-sky-300/45 dark:bg-sky-400/20"
+              style={{
+                top: `${dayPreview.top}%`,
+                height: `${dayPreview.height}%`,
+                left: "2px",
+                width: "calc(100% - 4px)",
+              }}
+            >
+              {previewRange ? (
+                <>
+                  <span className="absolute left-1.5 top-0.5 px-1 py-px text-[9px] font-semibold leading-none text-sky-900 italic font-display dark:text-zinc-950">
                     {minuteOfDayToClockLabel(previewRange.startMinute)}
-                  </motion.span>
-                ) : null}
-                {isPreviewEnd ? (
-                  <motion.span
-                    initial={{ opacity: 0, x: -2 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.12, ease: PREVIEW_ENTER_EASE }}
-                    className="absolute left-1.5 bottom-0.5 rounded  px-1 py-px text-[9px] font-semibold leading-none italic font-display text-sky-900 dark:bg-sky-400/90 dark:text-zinc-950"
-                  >
+                  </span>
+                  <span className="absolute bottom-0.5 left-1.5 px-1 py-px text-[9px] font-semibold leading-none text-sky-900 italic font-display dark:text-zinc-950">
                     {minuteOfDayToClockLabel(previewRange.endMinuteExclusive)}
-                  </motion.span>
-                ) : null}
-              </motion.div>
-            ) : null}
-            <div className="flex h-full flex-col gap-0.5">
-              <div className="flex min-h-0 flex-1 gap-0.5">
-                {slotTasks.slice(0, 2).map((row) =>
-                (() => {
-                  const hasOverlap = slotTasks.length > 1;
-                  const range = resolveRowMinuteRange(row);
-                  const isStartSlot = range.startMinute === minuteOfDay;
-                  const isEndSlot =
-                    range.endMinuteExclusive === minuteOfDay + 15;
-                  const categoryVisual = resolveCategoryVisual(
-                    row.task.category,
-                  );
-                  const kindVisual = getTaskKindVisual(row.task.kind);
-                  return (
-                    <motion.button
-                      layout="position"
-                      transition={SMOOTH_DRAG_SPRING}
-                      key={row.rowKey}
-                      type="button"
-                      onMouseDown={(e) => {
-                        if (e.button !== 0) return;
-                        e.stopPropagation();
-                        e.preventDefault();
-                        consumedByDragRef.current = false;
-                        clearDragHoldTimeout();
-                        const releasePendingDrag = () => clearDragHoldTimeout();
-                        window.addEventListener("mouseup", releasePendingDrag, {
-                          once: true,
-                        });
-                        dragHoldTimeoutRef.current = window.setTimeout(() => {
-                          consumedByDragRef.current = true;
-                          onEventMoveStart(row, day, minuteOfDay);
-                        }, HOLD_TO_DRAG_MS);
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (consumedByDragRef.current) {
-                          consumedByDragRef.current = false;
-                          return;
-                        }
-                        onEventClick(row);
-                      }}
-                      onContextMenu={(e) => {
-                        e.stopPropagation();
-                        onEventContextMenu(e, row);
-                      }}
-                      className={`relative min-h-[24px] ${
-                        hasOverlap ? "min-w-0 flex-1" : "w-full"
-                      } truncate border-l-2 border-dashed border-l-zinc-400/35 px-1.5 py-0.5 text-left text-sm leading-tight ${
-                        row.task.done
-                          ? "bg-emerald-500/20 text-emerald-900 line-through dark:bg-emerald-500/25 dark:text-emerald-100"
-                          : row.task.critical
-                          ? "bg-red-500/20 text-red-700 dark:bg-red-500/30 dark:text-red-200"
-                          : "text-zinc-800 dark:text-zinc-100"
-                      } ${isStartSlot ? "rounded-t-md" : ""} ${isEndSlot ? "rounded-b-md shadow-xl" : ""}`}
-                      style={
-                        row.task.done
-                          ? completedCheckeredStyle
-                          : row.task.critical
-                            ? undefined
-                            : categoryVisual
-                            ? {
-                                backgroundColor: categoryVisual.bg,
-                                color: categoryVisual.text,
-                                borderLeftColor: categoryVisual.accent,
-                              }
-                            : row.task.kind === "event"
-                              ? {
-                                  backgroundColor: "rgba(14, 165, 233, 0.18)",
-                                  borderLeftColor: "rgba(14, 165, 233, 0.65)",
-                                }
-                              : row.task.kind === "reminder"
-                                ? {
-                                    backgroundColor: "rgba(245, 158, 11, 0.18)",
-                                    borderLeftColor: "rgba(245, 158, 11, 0.65)",
-                                  }
-                                : row.task.kind === "habit"
-                                  ? {
-                                      backgroundColor: "rgba(139, 92, 246, 0.18)",
-                                      borderLeftColor: "rgba(139, 92, 246, 0.65)",
-                                    }
-                                  : row.task.kind === "class"
-                                    ? {
-                                        backgroundColor: "rgba(99, 102, 241, 0.2)",
-                                        borderLeftColor: "rgba(99, 102, 241, 0.65)",
-                                      }
-                            : undefined
-                      }
-                      title={`${DateTime.fromJSDate(row.displayDueDate).toFormat("h:mm a")} ${row.task.title}`}
-                    >
-                      {isStartSlot ? (
-                        <span
-                          className="absolute inset-x-1 top-0 h-1 cursor-ns-resize rounded-full bg-transparent"
-                          onMouseDown={(e) => {
-                            if (e.button !== 0) return;
-                            e.stopPropagation();
-                            e.preventDefault();
-                            onEventResizeStart(row, day, minuteOfDay, "start");
-                          }}
-                        />
-                      ) : null}
-                      {isStartSlot ? (
-                        <span className="inline-flex max-w-full items-center gap-1 truncate">
-                          {categoryVisual?.icon ? (
-                            <span className="inline-flex items-center">
-                              {renderCategoryIcon(categoryVisual.icon)}
-                            </span>
-                          ) : null}
-                          <span className="truncate">
-                            {`${categoryIconTitlePrefix(
-                              categoryVisual?.icon,
-                            )}${DateTime.fromJSDate(row.displayDueDate).toFormat("h:mm a")} [${kindVisual.label}] ${row.task.title}`}
-                          </span>
-                        </span>
-                      ) : null}
-                      {isEndSlot ? (
-                        <span
-                          className="absolute inset-x-1 bottom-0 h-1 cursor-ns-resize rounded-full bg-transparent"
-                          onMouseDown={(e) => {
-                            if (e.button !== 0) return;
-                            e.stopPropagation();
-                            e.preventDefault();
-                            onEventResizeStart(row, day, minuteOfDay, "end");
-                          }}
-                        />
-                      ) : null}
-                    </motion.button>
-                  );
-                })(),
-              )}
-              </div>
-              {slotTasks.length > 2 ? (
-                <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
-                  +{slotTasks.length - 2} more
-                </p>
+                  </span>
+                </>
               ) : null}
-            </div>
-          </div>
-        );
-      })}
-    </>
+            </motion.div>
+          ) : null}
+        </div>
+      </LayoutGroup>
+
+      {hiddenCount > 0 ? (
+        <p className="pointer-events-none absolute inset-x-1 bottom-1 z-20 rounded bg-white/90 px-1 py-0.5 text-center text-[9px] font-medium text-zinc-500 shadow-sm dark:bg-zinc-900/90 dark:text-zinc-400">
+          +{hiddenCount} more
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function WeekTimeLabelsColumn({ quarterSlots }: { quarterSlots: number[] }) {
+  return (
+    <div
+      className="grid grid-rows-[repeat(96,minmax(0,1fr))] border-r border-zinc-200/80 bg-zinc-50/55 dark:border-white/10 dark:bg-zinc-900/35"
+      style={{ gridRow: `3 / span ${SLOTS_PER_DAY}`, gridColumn: 1 }}
+    >
+      {quarterSlots.map((minuteOfDay) => (
+        <div
+          key={`time-${minuteOfDay}`}
+          className="flex min-h-0 items-start px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+        >
+          {minuteOfDay % 60 === 0 ? minuteOfDayToLabel(minuteOfDay) : ""}
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -591,6 +850,8 @@ export function WeekView({
   const editPreviewRange = resolvePreviewRange(editInteraction, editTarget);
   const createPreviewRange = resolveCreatePreviewRange(dragSelection);
   const previewRange = editPreviewRange ?? createPreviewRange;
+  const disableTooltips = Boolean(dragSelection || editInteraction);
+  const editingTaskId = editInteraction?.taskId ?? null;
 
   const openTaskSheet = (task: Task) => {
     setSelectedTask(task);
@@ -608,32 +869,58 @@ export function WeekView({
     setQuickAddTitle("");
   };
 
-  const getWeekTaskContextMenuItems = (task: Task) => [
-    ...(onEditTask
-      ? [
-          {
-            id: `edit-${task.id}`,
-            label: "Edit task…",
-            onSelect: () => onEditTask(task),
-          } as const,
-        ]
-      : []),
-    {
-      id: `toggle-${task.id}`,
-      label: task.done ? "Mark not done" : "Mark done",
-      onSelect: () => onToggleTask(task.id),
-    },
-    ...(onDeleteTask
-      ? [
-          {
-            id: `delete-${task.id}`,
-            label: "Delete",
-            onSelect: () => onDeleteTask(task.id),
-            destructive: true,
-          } as const,
-        ]
-      : []),
-  ];
+  const getWeekTaskContextMenuItems = (task: Task) => {
+    if (isIcsTask(task)) {
+      return [
+        ...(onEditTask
+          ? [
+              {
+                id: `view-${task.id}`,
+                label: "View ICS event…",
+                onSelect: () => onEditTask(task),
+              } as const,
+            ]
+          : []),
+        ...(onDeleteTask
+          ? [
+              {
+                id: `delete-${task.id}`,
+                label: "Remove import",
+                onSelect: () => onDeleteTask(task.id),
+                destructive: true,
+              } as const,
+            ]
+          : []),
+      ];
+    }
+
+    return [
+      ...(onEditTask
+        ? [
+            {
+              id: `edit-${task.id}`,
+              label: "Edit task…",
+              onSelect: () => onEditTask(task),
+            } as const,
+          ]
+        : []),
+      {
+        id: `toggle-${task.id}`,
+        label: task.done ? "Mark not done" : "Mark done",
+        onSelect: () => onToggleTask(task.id),
+      },
+      ...(onDeleteTask
+        ? [
+            {
+              id: `delete-${task.id}`,
+              label: "Delete",
+              onSelect: () => onDeleteTask(task.id),
+              destructive: true,
+            } as const,
+          ]
+        : []),
+    ];
+  };
 
   const resolveQuickAddAnchor = (clientX?: number, clientY?: number) => {
     if (typeof window === "undefined") {
@@ -740,11 +1027,12 @@ export function WeekView({
         </p>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-auto rounded-2xl border border-zinc-200/70 bg-white/75 shadow-[0_8px_30px_rgba(15,23,42,0.06)] ring-1 ring-white/60 dark:border-white/15 dark:bg-zinc-900/45 dark:ring-white/10">
+      <div className="min-h-0 flex-1 overflow-auto rounded-2xl border border-zinc-200/70 bg-white/75 shadow-[0_8px_30px_rgba(15,23,42,0.06)] ring-1 ring-white/60 dark:border-white/15 dark:bg-zinc-900/45 dark:ring-white/10 [&>div]:min-h-full">
         <div
-          className="grid"
+          className="grid min-h-full"
           style={{
             gridTemplateColumns: `74px repeat(${safeDayCount}, minmax(116px, 1fr))`,
+            gridTemplateRows: `auto auto repeat(${SLOTS_PER_DAY}, minmax(${MIN_SLOT_HEIGHT_PX}px, 1fr))`,
             minWidth: `${74 + safeDayCount * 116}px`,
           }}
         >
@@ -819,28 +1107,44 @@ export function WeekView({
                 }`}
               >
                 <div className="flex min-h-[44px] flex-col gap-1">
-                  {allDayItems.slice(0, 2).map((row) => (
-                    <button
-                      key={row.rowKey}
-                      type="button"
-                      onClick={() => openTaskSheet(row.task)}
-                      onContextMenu={(e) =>
-                        openMenu(e, getWeekTaskContextMenuItems(row.task))
-                      }
-                      className={`truncate rounded-md px-1.5 py-1 text-left text-[10px] font-semibold ${
-                        row.task.done
-                          ? "bg-emerald-500/25 text-emerald-900 dark:bg-emerald-500/30 dark:text-emerald-100"
-                          : row.task.critical
-                          ? "bg-red-500/20 text-red-700 dark:bg-red-500/30 dark:text-red-200"
-                          : getTaskKindVisual(row.task.kind).subtleBadgeClass
-                      }`}
-                      style={row.task.done ? completedCheckeredStyle : undefined}
-                    >
-                      <span className={row.task.done ? "line-through" : ""}>
-                        {row.task.title}
-                      </span>
-                    </button>
-                  ))}
+                  {allDayItems.slice(0, 2).map((row) => {
+                    const tooltipContent = weekAllDayEventTooltipContent(
+                      row.task,
+                    );
+                    return (
+                      <Tooltip
+                        key={row.rowKey}
+                        title={tooltipContent.title}
+                        description={tooltipContent.description}
+                        placement="top"
+                        delay={400}
+                        isDisabled={disableTooltips}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => openTaskSheet(row.task)}
+                          onContextMenu={(e) =>
+                            openMenu(e, getWeekTaskContextMenuItems(row.task))
+                          }
+                          className={`truncate rounded-md px-1.5 py-1 text-left text-[10px] font-semibold ${
+                            row.task.done
+                              ? "bg-emerald-500/25 text-emerald-900 dark:bg-emerald-500/30 dark:text-emerald-100"
+                              : row.task.critical
+                                ? "bg-red-500/20 text-red-700 dark:bg-red-500/30 dark:text-red-200"
+                                : getTaskKindVisual(row.task.kind)
+                                    .subtleBadgeClass
+                          }`}
+                          style={
+                            row.task.done ? completedCheckeredStyle : undefined
+                          }
+                        >
+                          <span className={row.task.done ? "line-through" : ""}>
+                            {row.task.title}
+                          </span>
+                        </button>
+                      </Tooltip>
+                    );
+                  })}
                   {allDayItems.length > 2 ? (
                     <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
                       +{allDayItems.length - 2} more
@@ -860,14 +1164,20 @@ export function WeekView({
             );
           })}
 
-          <LayoutGroup id="week-events">
-            {quarterSlots.map((minuteOfDay) => (
-              <FragmentQuarterRow
-                key={`quarter-${minuteOfDay}`}
-                minuteOfDay={minuteOfDay}
-                days={days}
-                byDay={byDay}
-                onSlotContextMenu={(e, day, slotMinuteOfDay) => {
+          <WeekTimeLabelsColumn quarterSlots={quarterSlots} />
+          {days.map((day, dayIndex) => {
+            const key = day.toISODate() ?? "";
+            return (
+              <WeekDayTimeColumn
+                key={`${key}-timed`}
+                day={day}
+                dayIndex={dayIndex}
+                rows={byDay.get(key) ?? []}
+                quarterSlots={quarterSlots}
+                previewRange={previewRange}
+                disableTooltips={disableTooltips}
+                editingTaskId={editingTaskId}
+                onSlotContextMenu={(e, slotMinuteOfDay) => {
                   const start = day
                     .startOf("day")
                     .plus({ minutes: slotMinuteOfDay });
@@ -876,14 +1186,14 @@ export function WeekView({
                     ...(onCreateTimedTask
                       ? [
                           {
-                            id: `add-slot-${day.toISODate()}-${slotMinuteOfDay}`,
+                            id: `add-slot-${key}-${slotMinuteOfDay}`,
                             label: `Add task at ${start.toFormat("h:mm a")}…`,
                             onSelect: () => onCreateTimedTask(start, end),
                           } as const,
                         ]
                       : []),
                     {
-                      id: `open-day-${day.toISODate()}`,
+                      id: `open-day-${key}`,
                       label: "Open day view",
                       onSelect: () => onPickDay(day),
                     },
@@ -892,30 +1202,29 @@ export function WeekView({
                 onEventContextMenu={(e, row) => {
                   openMenu(e, getWeekTaskContextMenuItems(row.task));
                 }}
-                onSlotMouseDown={(day, slotMinuteOfDay) => {
+                onSlotMouseDown={(slotMinuteOfDay) => {
                   if (editInteraction) return;
-                  const dayIso = day.toISODate() ?? "";
                   setDragSelection({
-                    dayIso,
+                    dayIso: key,
                     day,
                     startMinuteOfDay: slotMinuteOfDay,
                     endMinuteOfDay: slotMinuteOfDay,
                   });
                 }}
-                onSlotMouseEnter={(day, slotMinuteOfDay) => {
+                onSlotMouseEnter={(slotMinuteOfDay) => {
                   if (editInteraction) {
                     setEditTarget({ day, minuteOfDay: slotMinuteOfDay });
                     return;
                   }
                   if (!dragSelection) return;
-                  const dayIso = day.toISODate() ?? "";
                   setDragSelection((prev) => {
                     if (!prev) return prev;
-                    if (dayIso !== prev.dayIso) return prev;
+                    if (key !== prev.dayIso) return prev;
                     return { ...prev, endMinuteOfDay: slotMinuteOfDay };
                   });
                 }}
-                onEventMoveStart={(row, day, slotMinuteOfDay) => {
+                onEventMoveStart={(row, slotMinuteOfDay) => {
+                  if (isIcsTask(row.task)) return;
                   if (!onUpdateTaskSchedule || !row.task.dueDate) return;
                   const dueDate = DateTime.fromJSDate(row.task.dueDate);
                   const displayStart = DateTime.fromJSDate(row.displayDueDate);
@@ -934,7 +1243,8 @@ export function WeekView({
                   });
                   setEditTarget({ day, minuteOfDay: slotMinuteOfDay });
                 }}
-                onEventResizeStart={(row, day, slotMinuteOfDay, edge) => {
+                onEventResizeStart={(row, slotMinuteOfDay, edge) => {
+                  if (isIcsTask(row.task)) return;
                   if (!onUpdateTaskSchedule || !row.task.dueDate) return;
                   const dueDate = DateTime.fromJSDate(row.task.dueDate);
                   const displayStart = DateTime.fromJSDate(row.displayDueDate);
@@ -966,10 +1276,9 @@ export function WeekView({
                   setEditTarget({ day, minuteOfDay: slotMinuteOfDay });
                 }}
                 onEventClick={(row) => openTaskSheet(row.task)}
-                previewRange={previewRange}
               />
-            ))}
-          </LayoutGroup>
+            );
+          })}
         </div>
       </div>
       {quickAddDraft ? (

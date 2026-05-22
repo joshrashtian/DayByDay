@@ -2,6 +2,7 @@ import { DateTime } from "luxon";
 import { DEFAULT_BLOCK_SUGGESTIONS } from "../../../lib/taskBlocks";
 import type { TaskPriority } from "@/types";
 import { normalizeTaskTags } from "../../../types/task";
+import { parseLeadingCategoryToken } from "../../global/commandbar/categoryHelpers";
 import {
   applyDueToken,
   parseInlineDueRangeArg,
@@ -159,29 +160,10 @@ export function parseTaskChatInput(raw: string): TaskChatParse {
     }
 
     if (work.startsWith("@@")) {
-      const quoted = work.match(
-        /^@@\s*(?:"([^"]+)"|'([^']+)'|"([^"]+)"|'([^']+)')(\s|$)/,
-      );
-      if (quoted) {
-        const value = (
-          quoted[1] ??
-          quoted[2] ??
-          quoted[3] ??
-          quoted[4] ??
-          ""
-        ).trim();
-        if (value) {
-          category = value;
-          work = work.slice(quoted[0].length);
-          hints.push({ key: "category", label: `Category: ${category}` });
-          return true;
-        }
-      }
-
-      const m = work.match(/^@@([\w.-]+)(\s|$)/);
-      if (m) {
-        category = m[1];
-        work = work.slice(m[0].length);
+      const parsed = parseLeadingCategoryToken(work);
+      if (parsed?.kind === "complete") {
+        category = parsed.value;
+        work = parsed.remaining;
         hints.push({ key: "category", label: `Category: ${category}` });
         return true;
       }
@@ -248,12 +230,20 @@ export function parseTaskChatInput(raw: string): TaskChatParse {
     } else if (work.startsWith("!") && !work.startsWith("!!")) {
       hints.push({ key: "priority", label: "Priority…", partial: true });
     } else if (work.startsWith("@@")) {
-      const rest = work.slice(2);
-      hints.push({
-        key: "category",
-        label: rest ? `Category: ${rest}…` : "Category…",
-        partial: true,
-      });
+      const parsed = parseLeadingCategoryToken(work);
+      if (parsed?.kind === "complete") {
+        category = parsed.value;
+        work = parsed.remaining;
+        hints.push({ key: "category", label: `Category: ${category}` });
+      } else {
+        const fragment =
+          parsed?.kind === "partial" ? parsed.fragment : work.slice(2).trimStart();
+        hints.push({
+          key: "category",
+          label: fragment ? `Category: ${fragment}…` : "Category…",
+          partial: true,
+        });
+      }
     } else if (work.startsWith("%")) {
       const rest = work.slice(1);
       hints.push({

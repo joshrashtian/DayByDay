@@ -1,4 +1,5 @@
 import { useEffect, useId, useState } from "react";
+import { ColorPicker } from "../../components/base/input/color-picker";
 import { IconPicker } from "../../components/base/input/icon-picker";
 import {
   getCategoryIconOption,
@@ -251,43 +252,36 @@ export function CategoriesSection() {
             </select>
           </div>
           <div className="flex flex-col gap-1">
-            <label
-              htmlFor={catColorId}
+            <span
+              id={catColorId}
               className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
             >
-              Color (hex)
-            </label>
-            <input
-              id={catColorId}
-              type="text"
+              Color
+            </span>
+            <ColorPicker
               value={categoryColorInput}
-              onChange={(e) => {
-                setCategoryColorInput(e.target.value);
+              onChange={(next) => {
+                setCategoryColorInput(next);
                 setCategoryMessage(null);
               }}
-              placeholder="#6366f1"
-              aria-description="6-digit hex color, e.g. #6366f1"
-              className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition-shadow focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+              aria-label="Category color"
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label
-              htmlFor={catTextColorId}
+            <span
+              id={catTextColorId}
               className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
             >
-              Text color (hex)
-            </label>
-            <input
-              id={catTextColorId}
-              type="text"
+              Text color
+            </span>
+            <ColorPicker
               value={categoryTextColorInput}
-              onChange={(e) => {
-                setCategoryTextColorInput(e.target.value);
+              onChange={(next) => {
+                setCategoryTextColorInput(next);
                 setCategoryMessage(null);
               }}
-              placeholder="#ffffff"
-              aria-description="6-digit hex color, e.g. #ffffff"
-              className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition-shadow focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+              presets={["#ffffff", "#f4f4f5", "#18181b", "#000000"]}
+              aria-label="Category text color"
             />
           </div>
           <div className="sm:col-span-2">

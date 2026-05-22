@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { AddTaskPayload, Task, UpdateTaskPayload } from "@/types";
+import type { AddTaskPayload, ImportIcsTaskPayload, Task, UpdateTaskPayload } from "@/types";
 import {
   normalizeTaskTags,
   parseTaskKind,
@@ -8,6 +8,7 @@ import {
 } from "../types/task";
 import { normalizeTaskBlock } from "../lib/taskBlocks";
 import { advanceRecurrenceDate } from "../lib/taskDates";
+import { isIcsTask } from "../lib/icsTasks";
 
 const STORAGE_KEY = "daybyday-tasks";
 
@@ -24,6 +25,10 @@ type TasksState = {
   removeCategoryFromAllTasks: (categoryName: string) => void;
   setTaskBlock: (taskId: string, block: string | undefined) => void;
   setTaskTags: (taskId: string, tags: string[] | undefined) => void;
+  importIcsTasks: (
+    payloads: ImportIcsTaskPayload[],
+  ) => { imported: number; skipped: number };
+  removeAllIcsTasks: () => number;
 };
 
 function reviveTask(raw: Record<string, unknown>): Task {
@@ -82,6 +87,11 @@ function reviveTask(raw: Record<string, unknown>): Task {
     typeof rawClassGrade === "string" ? rawClassGrade.trim() : "";
   const classLocation = classLocationFromMetadata || classLocationLegacy;
   const classGrade = classGradeFromMetadata || classGradeLegacy;
+  const icsUidRaw = (raw as Record<string, unknown>).icsUid;
+  const icsUid =
+    typeof icsUidRaw === "string" && icsUidRaw.trim()
+      ? icsUidRaw.trim()
+      : undefined;
   const metadata =
     classLocation || classGrade
       ? {
@@ -124,6 +134,7 @@ function reviveTask(raw: Record<string, unknown>): Task {
     ...(block ? { block } : {}),
     ...(tags ? { tags } : {}),
     ...(recurrence ? { recurrence } : {}),
+    ...(icsUid ? { icsUid } : {}),
   };
   return task;
 }
@@ -149,11 +160,14 @@ function mergePersistedTasks(
 
 export const useTasksStore = create<TasksState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       tasks: [],
 
       setTaskCategory: (taskId, category) =>
-        set((s) => ({
+        set((s) => {
+          const existing = s.tasks.find((t) => t.id === taskId);
+          if (existing && isIcsTask(existing)) return s;
+          return {
           tasks: s.tasks.map((t) =>
             t.id === taskId
               ? {
@@ -166,7 +180,8 @@ export const useTasksStore = create<TasksState>()(
                 }
               : t,
           ),
-        })),
+        };
+        }),
 
       removeCategoryFromAllTasks: (categoryName) =>
         set((s) => {
@@ -182,7 +197,10 @@ export const useTasksStore = create<TasksState>()(
         }),
 
       setTaskBlock: (taskId, block) =>
-        set((s) => ({
+        set((s) => {
+          const existing = s.tasks.find((t) => t.id === taskId);
+          if (existing && isIcsTask(existing)) return s;
+          return {
           tasks: s.tasks.map((t) =>
             t.id === taskId
               ? {
@@ -192,10 +210,14 @@ export const useTasksStore = create<TasksState>()(
                 }
               : t,
           ),
-        })),
+        };
+        }),
 
       setTaskTags: (taskId, tags) =>
-        set((s) => ({
+        set((s) => {
+          const existing = s.tasks.find((t) => t.id === taskId);
+          if (existing && isIcsTask(existing)) return s;
+          return {
           tasks: s.tasks.map((t) =>
             t.id === taskId
               ? {
@@ -205,7 +227,8 @@ export const useTasksStore = create<TasksState>()(
                 }
               : t,
           ),
-        })),
+        };
+        }),
 
       addTask: (payload) => {
         const trimmed = payload.title.trim();
@@ -276,6 +299,8 @@ export const useTasksStore = create<TasksState>()(
 
       updateTask: (taskId, payload) =>
         set((s) => {
+          const existing = s.tasks.find((t) => t.id === taskId);
+          if (existing && isIcsTask(existing)) return s;
           const title = payload.title.trim();
           if (!title) return s;
           const block = normalizeTaskBlock(payload.block);
@@ -347,7 +372,10 @@ export const useTasksStore = create<TasksState>()(
         }),
 
       setTaskSchedule: (taskId, dueDate, endDate) =>
-        set((s) => ({
+        set((s) => {
+          const existing = s.tasks.find((t) => t.id === taskId);
+          if (existing && isIcsTask(existing)) return s;
+          return {
           tasks: s.tasks.map((t) =>
             t.id === taskId
               ? {
@@ -358,12 +386,14 @@ export const useTasksStore = create<TasksState>()(
                 }
               : t,
           ),
-        })),
+        };
+        }),
 
       toggleTask: (id) =>
         set((s) => {
           const task = s.tasks.find((t) => t.id === id);
           if (!task) return s;
+          if (isIcsTask(task)) return s;
           const now = new Date();
           if (!task.done && task.recurrence && task.dueDate) {
             const durationMs = task.endDate
@@ -430,6 +460,69 @@ export const useTasksStore = create<TasksState>()(
         set((s) => ({
           tasks: s.tasks.filter((t) => t.id !== id),
         })),
+
+      importIcsTasks: (payloads) => {
+        const s = get();
+        const existingUids = new Set(
+          s.tasks.flatMap((task) => (task.icsUid ? [task.icsUid] : [])),
+        );
+        const now = new Date();
+        const additions: Task[] = [];
+        let imported = 0;
+        let skipped = 0;
+
+        for (const payload of payloads) {
+          const title = payload.title.trim();
+          if (!title) {
+            skipped += 1;
+            continue;
+          }
+          if (existingUids.has(payload.icsUid)) {
+            skipped += 1;
+            continue;
+          }
+
+          existingUids.add(payload.icsUid);
+          imported += 1;
+          const classLocation = payload.classLocation?.trim() || undefined;
+          const category = payload.category?.trim() || undefined;
+          const description = payload.description?.trim() || undefined;
+
+          additions.push({
+            id: crypto.randomUUID(),
+            kind: "ics",
+            title,
+            done: false,
+            createdAt: now,
+            updatedAt: now,
+            dueDate: payload.dueDate,
+            ...(payload.endDate ? { endDate: payload.endDate } : {}),
+            ...(category ? { category } : {}),
+            ...(description ? { description } : {}),
+            ...(classLocation
+              ? {
+                  classLocation,
+                  metadata: { class: { location: classLocation } },
+                }
+              : {}),
+            icsUid: payload.icsUid,
+          });
+        }
+
+        if (additions.length > 0) {
+          set({ tasks: [...s.tasks, ...additions] });
+        }
+
+        return { imported, skipped };
+      },
+
+      removeAllIcsTasks: () => {
+        const s = get();
+        const remaining = s.tasks.filter((task) => !isIcsTask(task));
+        const removed = s.tasks.length - remaining.length;
+        if (removed > 0) set({ tasks: remaining });
+        return removed;
+      },
     }),
     {
       name: STORAGE_KEY,

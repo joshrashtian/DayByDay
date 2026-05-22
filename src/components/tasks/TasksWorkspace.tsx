@@ -118,7 +118,7 @@ export function TasksWorkspace({
 
   const openTaskEditorPopup = useCallback(
     (task: Task) => {
-      openPopup(taskEditorPopupContent({ task, updateTask, closePopup }));
+      openPopup(taskEditorPopupContent({ task, updateTask, removeTask, closePopup }));
     },
     [openPopup, updateTask, closePopup],
   );

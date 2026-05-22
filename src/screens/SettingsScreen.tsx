@@ -5,12 +5,21 @@ import {
   IoColorPaletteOutline,
   IoBrushOutline,
   IoSettings,
+  IoPersonOutline,
+  IoCalendarOutline,
 } from "react-icons/io5";
 import { WeatherSection } from "./settings/WeatherSection";
 import { CategoriesSection } from "./settings/CategoriesSection";
 import { BlocksCssSection } from "./settings/BlocksCssSection";
+import { ConnectedCalendarsSection } from "./settings/ConnectedCalendarsSection";
+import { ProfileSection } from "./settings/ProfileSection";
 
-type SettingsSection = "weather" | "categories" | "blocks-css";
+type SettingsSection =
+  | "weather"
+  | "categories"
+  | "blocks-css"
+  | "profile"
+  | "connected-calendars";
 
 const SECTIONS: {
   id: SettingsSection;
@@ -24,6 +33,12 @@ const SECTIONS: {
     icon: <IoColorPaletteOutline />,
   },
   { id: "blocks-css", label: "Blocks CSS", icon: <IoBrushOutline /> },
+  { id: "profile", label: "Profile", icon: <IoPersonOutline /> },
+  {
+    id: "connected-calendars",
+    label: "Connected Calendars",
+    icon: <IoCalendarOutline />,
+  },
 ];
 
 export const SettingsScreen = ({ modal = false }: { modal?: boolean }) => {
@@ -34,6 +49,8 @@ export const SettingsScreen = ({ modal = false }: { modal?: boolean }) => {
     weather: () => <WeatherSection />,
     categories: () => <CategoriesSection />,
     "blocks-css": () => <BlocksCssSection />,
+    profile: () => <ProfileSection />,
+    "connected-calendars": () => <ConnectedCalendarsSection />,
   };
 
   return (
@@ -133,9 +150,7 @@ export const SettingsScreen = ({ modal = false }: { modal?: boolean }) => {
                 >
                   <span
                     className={`absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r transition-all ${
-                      isActive
-                        ? "bg-blue-500 opacity-100"
-                        : "opacity-0"
+                      isActive ? "bg-blue-500 opacity-100" : "opacity-0"
                     }`}
                     aria-hidden="true"
                   />

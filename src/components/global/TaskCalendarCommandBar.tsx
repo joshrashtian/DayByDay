@@ -18,6 +18,7 @@ import {
   includesNormalized,
 } from "./commandbar/calendarCommands";
 import {
+  CATEGORY_TOKEN_TAIL_RE,
   extractInlineCategoryQuery,
   formatCategoryToken,
   parseCategoryPartialLabel,
@@ -349,9 +350,7 @@ export function TaskCalendarCommandBar() {
     if (!token) return;
 
     setRaw((prev) => {
-      const replaceTail =
-        /@@(?:"[^"]*"?|'[^']*'?|\u201c[^"]*\u201d?|\u2018[^']*\u2019?|[^\s]*)$/;
-      const maybeReplaced = prev.replace(replaceTail, token);
+      const maybeReplaced = prev.replace(CATEGORY_TOKEN_TAIL_RE, token);
       if (maybeReplaced !== prev) return `${maybeReplaced} `;
       const spacer = prev.trimEnd().length > 0 ? " " : "";
       return `${prev.trimEnd()}${spacer}${token} `;

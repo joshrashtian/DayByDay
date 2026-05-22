@@ -87,7 +87,7 @@ export function TodayTasksPanel({ compact = false }: TodayTasksPanelProps) {
     (taskId: string) => {
       const task = tasks.find((t) => t.id === taskId);
       if (!task) return;
-      openPopup(taskEditorPopupContent({ task, updateTask, closePopup }));
+      openPopup(taskEditorPopupContent({ task, updateTask, removeTask, closePopup }));
     },
     [tasks, openPopup, updateTask, closePopup],
   );

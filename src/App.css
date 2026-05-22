@@ -479,3 +479,22 @@ button {
   width: 0;
   height: 0;
 }
+
+/* Task popup — Untitled select menus aligned to zinc glass UI */
+.task-popup-form [role="option"][data-hovered] > div,
+.task-popup-form [role="option"][data-focused] > div {
+  background-color: rgb(244 244 245);
+}
+
+.dark .task-popup-form [role="option"][data-hovered] > div,
+.dark .task-popup-form [role="option"][data-focused] > div {
+  background-color: rgb(39 39 42);
+}
+
+.task-popup-form [role="option"][data-selected] svg {
+  color: rgb(24 24 27);
+}
+
+.dark .task-popup-form [role="option"][data-selected] svg {
+  color: rgb(244 244 245);
+}

@@ -133,9 +133,16 @@ export default function CalendarScreen() {
 
   const openTaskEditor = useCallback(
     (task: (typeof tasks)[number]) => {
-      openPopup(taskEditorPopupContent({ task, updateTask, closePopup }));
+      openPopup(
+        taskEditorPopupContent({
+          task,
+          updateTask,
+          removeTask,
+          closePopup,
+        }),
+      );
     },
-    [openPopup, updateTask, closePopup],
+    [openPopup, updateTask, removeTask, closePopup],
   );
 
   const monthRef = useMemo(() => focus.startOf("month"), [focus]);
