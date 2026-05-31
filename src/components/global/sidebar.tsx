@@ -51,12 +51,6 @@ const buildPinnedPanelNavItems = (panelIds: string[]): SidebarNavItem[] => {
     }));
 };
 
-const utilityNavItems: SidebarNavItem[] = [
-  { label: "Profile", icon: <IoPersonOutline />, link: "/profile" },
-  { label: "Settings", icon: <IoSettingsOutline />, link: "/settings" },
-  { label: "Help", icon: <IoHelpCircleOutline />, link: "/help" },
-];
-
 const SNAP_WIDTHS = [220, 260] as const;
 const DEFAULT_SIDEBAR_WIDTH = SNAP_WIDTHS[0];
 const LABEL_REVEAL_WIDTH = 180;
@@ -353,10 +347,7 @@ const SideBar = ({
             onPointerUp={(event) => {
               if (edgeSwipeStartX === null) return;
               const deltaX = event.clientX - edgeSwipeStartX;
-              if (
-                deltaX >= EDGE_SWIPE_OPEN_THRESHOLD ||
-                Math.abs(deltaX) < 8
-              ) {
+              if (deltaX >= EDGE_SWIPE_OPEN_THRESHOLD || Math.abs(deltaX) < 8) {
                 setSidebarOpen(true);
               }
               setEdgeSwipeStartX(null);

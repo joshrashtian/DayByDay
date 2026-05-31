@@ -418,9 +418,7 @@ export function TaskCalendarCommandBar() {
 
     if (event.key === "ArrowUp") {
       event.preventDefault();
-      setHighlightedCategoryIndex(
-        Math.max(highlightedCategoryIndex - 1, 0),
-      );
+      setHighlightedCategoryIndex(Math.max(highlightedCategoryIndex - 1, 0));
       return;
     }
 
@@ -446,7 +444,7 @@ export function TaskCalendarCommandBar() {
     <div className="pointer-events-none fixed bottom-3 left-1/2 z-50 w-[min(92vw,760px)] -translate-x-1/2">
       <form
         onSubmit={onSubmit}
-        className="pointer-events-auto relative -skew-x-12 bg-white/90 p-2 px-6 shadow-[0_8px_36px_rgba(15,15,15,0.14)] ring-1 ring-black/5 backdrop-blur-xl dark:border-zinc-700/70 dark:bg-zinc-900/90 dark:ring-white/10"
+        className="pointer-events-auto relative rounded-3xl bg-white/90 p-2 px-6 shadow-[0_8px_36px_rgba(15,15,15,0.14)]  backdrop-blur-xl  dark:bg-zinc-900/90 "
       >
         {activeCategoryQuery !== null ? (
           <CategoryPicker
@@ -458,7 +456,7 @@ export function TaskCalendarCommandBar() {
             applyCategoryToken={applyCategoryToken}
           />
         ) : null}
-        <div className="flex skew-x-12 items-center gap-2">
+        <div className="flex items-center gap-2">
           <div className="group/mode relative">
             <button
               type="button"
