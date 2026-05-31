@@ -2,7 +2,10 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { ConnectedCalendar, CalendarProvider } from "@/types";
 
-const STORAGE_KEY = "daybyday-calendar-integrations";
+import { migrateLocalStorageKey } from "@/lib/storageMigration";
+
+const STORAGE_KEY = "risebyday-calendar-integrations";
+migrateLocalStorageKey("daybyday-calendar-integrations", STORAGE_KEY);
 
 const MOCK_GOOGLE_CALENDARS: ConnectedCalendar[] = [
   {

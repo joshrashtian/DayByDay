@@ -7,19 +7,22 @@ import {
   IoSettings,
   IoPersonOutline,
   IoCalendarOutline,
+  IoVolumeHighOutline,
 } from "react-icons/io5";
 import { WeatherSection } from "./settings/WeatherSection";
 import { CategoriesSection } from "./settings/CategoriesSection";
 import { BlocksCssSection } from "./settings/BlocksCssSection";
 import { ConnectedCalendarsSection } from "./settings/ConnectedCalendarsSection";
 import { ProfileSection } from "./settings/ProfileSection";
+import { AudioSection } from "./settings/AudioSection";
 
 type SettingsSection =
   | "weather"
   | "categories"
   | "blocks-css"
   | "profile"
-  | "connected-calendars";
+  | "connected-calendars"
+  | "audio";
 
 const SECTIONS: {
   id: SettingsSection;
@@ -39,6 +42,7 @@ const SECTIONS: {
     label: "Connected Calendars",
     icon: <IoCalendarOutline />,
   },
+  { id: "audio", label: "Audio", icon: <IoVolumeHighOutline /> },
 ];
 
 export const SettingsScreen = ({ modal = false }: { modal?: boolean }) => {
@@ -51,6 +55,7 @@ export const SettingsScreen = ({ modal = false }: { modal?: boolean }) => {
     "blocks-css": () => <BlocksCssSection />,
     profile: () => <ProfileSection />,
     "connected-calendars": () => <ConnectedCalendarsSection />,
+    audio: () => <AudioSection />,
   };
 
   return (

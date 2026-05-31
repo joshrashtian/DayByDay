@@ -19,7 +19,7 @@ export default function ToolkitScreen() {
         Toolkit
       </h1>
       <p className="mt-3 max-w-2xl text-base text-zinc-600 dark:text-zinc-300">
-        This is the home for dedicated panels we build inside DayByDay. Add the
+        This is the home for dedicated panels we build inside RiseByDay. Add the
         ones you want to your app bar manually.
       </p>
 

@@ -202,9 +202,9 @@ const BlockScreen = () => {
   return (
     <>
       {/* User rules from Settings; textContent assigned in useLayoutEffect */}
-      <style ref={userStyleRef} id="daybyday-blocks-user-css" />
+      <style ref={userStyleRef} id="risebyday-blocks-user-css" />
       {/* Per-block CSS rules generated from block configs */}
-      <style ref={perBlockStyleRef} id="daybyday-blocks-per-block-css" />
+      <style ref={perBlockStyleRef} id="risebyday-blocks-per-block-css" />
       <div id="block-screen" className="block-screen">
         <div className="block-screen__header">
           <div className="block-screen__heading-group">

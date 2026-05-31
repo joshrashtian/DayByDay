@@ -6,10 +6,12 @@ import {
   IoGrid,
   IoHelpCircleOutline,
   IoHomeOutline,
+  IoHourglassOutline,
   IoListOutline,
   IoPersonOutline,
   IoSettingsOutline,
 } from "react-icons/io5";
+import { NavLink } from "react-router-dom";
 import { AnimatePresence, Reorder, motion } from "motion/react";
 import spotifyIcon from "../../assets/spotifysvg.svg";
 import { TOOLKIT_PANELS } from "../../lib/toolkitPanels";
@@ -20,13 +22,14 @@ import {
   type SidebarNavItem,
 } from "./sidebar/SidebarNavItem";
 import { SidebarModeToggle } from "./sidebar/SidebarModeToggle";
-import { SidebarTasksDrawer } from "./sidebar/SidebarTasksDrawer";
+import { SidebarInlineTaskList } from "./sidebar/SidebarInlineTaskList";
 
 const taskDefaultNavItems: SidebarNavItem[] = [
   { label: "Home", icon: <IoHomeOutline />, link: "/" },
   { label: "Tasks", icon: <IoListOutline />, link: "/tasks" },
   { label: "Calendar", icon: <IoCalendarOutline />, link: "/calendar" },
   { label: "Blocks", icon: <IoGrid />, link: "/blocks" },
+  { label: "Pomodoro", icon: <IoHourglassOutline />, link: "/pomodoro" },
 ];
 
 const socialDefaultNavItems: SidebarNavItem[] = [];
@@ -240,7 +243,8 @@ const SideBar = ({
             }}
             onPointerCancel={() => setSwipeStartX(null)}
           >
-            <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain">
+            {/* Nav items — compact, non-scrolling */}
+            <div className="flex shrink-0 flex-col gap-2">
               <SidebarModeToggle
                 showLabel={showLabel}
                 sidebarMode={sidebarMode}
@@ -248,7 +252,7 @@ const SideBar = ({
               />
               <Reorder.Group
                 axis="y"
-                className="flex flex-col gap-1"
+                className="flex flex-col gap-0.5"
                 values={activeItems}
                 onReorder={
                   sidebarMode === "tasks"
@@ -276,26 +280,47 @@ const SideBar = ({
               </Reorder.Group>
             </div>
 
-            <div
-              className={`relative shrink-0 ${sidebarMode === "tasks" ? "pb-[52px]" : ""}`}
-            >
-              <div className="flex flex-col gap-1">
-                {utilityNavItems.map((item) => (
-                  <div key={item.link}>
-                    <SidebarNavItemView
-                      item={item}
-                      showLabel={showLabel}
-                      sidebarOpen={sidebarOpen}
-                      onOpenProfile={onOpenProfile}
-                      onOpenSettings={onOpenSettings}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
+            {/* Divider */}
+            {sidebarMode === "tasks" && (
+              <div className="my-0.5 mx-1 shrink-0 border-t border-zinc-200/70" />
+            )}
+
+            {/* Inline task list — fills remaining space */}
             {sidebarMode === "tasks" ? (
-              <SidebarTasksDrawer showLabel={showLabel} />
-            ) : null}
+              <SidebarInlineTaskList showLabel={showLabel} />
+            ) : (
+              <div className="flex-1" />
+            )}
+
+            {/* Utility icon bar */}
+            <div className="flex shrink-0 items-center justify-around border-t border-zinc-200/70 pt-2">
+              <button
+                type="button"
+                onClick={onOpenProfile}
+                aria-label="Profile"
+                title="Profile"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700"
+              >
+                <IoPersonOutline className="text-base" />
+              </button>
+              <button
+                type="button"
+                onClick={onOpenSettings}
+                aria-label="Settings"
+                title="Settings"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700"
+              >
+                <IoSettingsOutline className="text-base" />
+              </button>
+              <NavLink
+                to="/help"
+                aria-label="Help"
+                title="Help"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700"
+              >
+                <IoHelpCircleOutline className="text-base" />
+              </NavLink>
+            </div>
             <div
               aria-label="Resize sidebar"
               onPointerDown={(event) => {

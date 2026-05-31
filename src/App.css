@@ -11,6 +11,12 @@
     width: 0;
     height: 0;
   }
+
+  .calendar-drop-active {
+    outline: 2px solid rgb(56 189 248 / 0.85);
+    outline-offset: -2px;
+    background-color: rgb(56 189 248 / 0.12);
+  }
 }
 
 @font-face {

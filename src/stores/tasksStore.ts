@@ -9,8 +9,12 @@ import {
 import { normalizeTaskBlock } from "../lib/taskBlocks";
 import { advanceRecurrenceDate } from "../lib/taskDates";
 import { isIcsTask } from "../lib/icsTasks";
+import { playTaskClickSound } from "../lib/taskClickSounds";
 
-const STORAGE_KEY = "daybyday-tasks";
+import { migrateLocalStorageKey } from "@/lib/storageMigration";
+
+const STORAGE_KEY = "risebyday-tasks";
+migrateLocalStorageKey("daybyday-tasks", STORAGE_KEY);
 
 type LegacyCategory = { id: string; name: string };
 
@@ -389,7 +393,11 @@ export const useTasksStore = create<TasksState>()(
         };
         }),
 
-      toggleTask: (id) =>
+      toggleTask: (id) => {
+        const task = get().tasks.find((t) => t.id === id);
+        if (task && !isIcsTask(task) && !task.done) {
+          playTaskClickSound();
+        }
         set((s) => {
           const task = s.tasks.find((t) => t.id === id);
           if (!task) return s;
@@ -454,7 +462,8 @@ export const useTasksStore = create<TasksState>()(
               t.id === id ? { ...t, done: !t.done, updatedAt: now } : t,
             ),
           };
-        }),
+        });
+      },
 
       removeTask: (id) =>
         set((s) => ({

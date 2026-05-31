@@ -13,6 +13,35 @@ const SNAP_MAX_HEIGHT: Record<SnapPoint, string> = {
   full: "min(92dvh, 800px)",
 };
 
+const SNAP_MAX_HEIGHT_FULL_WIDTH: Record<SnapPoint, string> = {
+  peek: "min(62dvh, 520px)",
+  half: "min(78dvh, 680px)",
+  full: "min(96dvh, 920px)",
+};
+
+function getEnabledSnapPoints(snapPoints: readonly SnapPoint[]): SnapPoint[] {
+  const filtered = SNAP_POINT_ORDER.filter((p) => snapPoints.includes(p));
+  return filtered.length > 0 ? filtered : [...SNAP_POINT_ORDER];
+}
+
+export type BottomSheetWidth = "default" | "wide" | "full";
+
+const WIDTH_CLASS: Record<BottomSheetWidth, { wrapper: string; panel: string }> =
+  {
+    default: {
+      wrapper: "px-4",
+      panel: "max-w-2xl rounded-t-2xl",
+    },
+    wide: {
+      wrapper: "px-4 sm:px-6",
+      panel: "max-w-5xl rounded-t-2xl",
+    },
+    full: {
+      wrapper: "px-0",
+      panel: "max-w-none rounded-none border-x-0",
+    },
+  };
+
 function normalizeSnapForEnabled(
   snap: SnapPoint,
   enabled: readonly SnapPoint[],
@@ -21,17 +50,14 @@ function normalizeSnapForEnabled(
   return enabled[0] ?? "peek";
 }
 
-function getEnabledSnapPoints(snapPoints: readonly SnapPoint[]): SnapPoint[] {
-  const filtered = SNAP_POINT_ORDER.filter((p) => snapPoints.includes(p));
-  return filtered.length > 0 ? filtered : [...SNAP_POINT_ORDER];
-}
-
 export type BottomSheetProps = {
   open: boolean;
   onClose: () => void;
   title?: string;
   titleClassName?: string;
   titleIcon?: ReactNode;
+  headerActions?: ReactNode;
+  width?: BottomSheetWidth;
   snapPoints?: readonly SnapPoint[];
   defaultSnap?: SnapPoint;
   onSnapChange?: (snap: SnapPoint) => void;
@@ -49,6 +75,8 @@ export default function BottomSheet({
   title,
   titleClassName,
   titleIcon,
+  headerActions,
+  width = "default",
   snapPoints = SNAP_POINT_ORDER,
   defaultSnap = "peek",
   onSnapChange,
@@ -146,7 +174,9 @@ export default function BottomSheet({
 
   if (typeof document === "undefined") return null;
 
-  const maxHeight = SNAP_MAX_HEIGHT[snap];
+  const maxHeight =
+    width === "full" ? SNAP_MAX_HEIGHT_FULL_WIDTH[snap] : SNAP_MAX_HEIGHT[snap];
+  const widthClasses = WIDTH_CLASS[width];
 
   return createPortal(
     <AnimatePresence>
@@ -173,7 +203,7 @@ export default function BottomSheet({
           {/* Slide wrapper — absolute to bottom, full width, centered.
               Only responsible for the enter/exit slide; no drag here. */}
           <motion.div
-            className="absolute bottom-0 left-0 right-0 z-10 flex justify-center px-4"
+            className={`absolute bottom-0 left-0 right-0 z-10 flex justify-center ${widthClasses.wrapper}`}
             initial={{ y: "110dvh" }}
             animate={{ y: 0 }}
             exit={{ y: "110dvh" }}
@@ -193,7 +223,7 @@ export default function BottomSheet({
               dragMomentum={false}
               onDragEnd={handleDragEnd}
               animate={dragY}
-              className="flex min-h-0 w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border border-zinc-200/80 bg-white shadow-[0_-12px_40px_rgba(0,0,0,0.12)] dark:border-zinc-700/80 dark:bg-zinc-900 dark:shadow-[0_-12px_40px_rgba(0,0,0,0.45)]"
+              className={`flex min-h-0 w-full flex-col overflow-hidden border border-zinc-200/80 bg-white shadow-[0_-12px_40px_rgba(0,0,0,0.12)] dark:border-zinc-700/80 dark:bg-zinc-900 dark:shadow-[0_-12px_40px_rgba(0,0,0,0.45)] ${widthClasses.panel}`}
               style={{ height: maxHeight, maxHeight, transition: HEIGHT_TRANSITION }}
               onClick={(e) => e.stopPropagation()}
             >
@@ -209,7 +239,7 @@ export default function BottomSheet({
               </div>
 
               {/* header */}
-              <div className="flex shrink-0 items-center justify-between gap-3 border-b border-zinc-100 px-4 pb-3 pt-1 dark:border-zinc-800">
+              <div className="flex shrink-0 items-center justify-between gap-3 border-b border-zinc-100 px-4 pb-3 pt-1 dark:border-zinc-800 sm:px-6">
                 {title ? (
                   <h2
                     id="bottom-sheet-title"
@@ -225,6 +255,7 @@ export default function BottomSheet({
                 )}
 
                 <div className="flex items-center gap-1">
+                  {headerActions}
                   {/* snap cycle */}
                   <button
                     type="button"
@@ -273,7 +304,7 @@ export default function BottomSheet({
               </div>
 
               {/* content */}
-              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 text-sm text-zinc-700 dark:text-zinc-300">
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 text-sm text-zinc-700 dark:text-zinc-300 sm:px-6">
                 {children ?? (
                   <p className="leading-relaxed">
                     Pass{" "}

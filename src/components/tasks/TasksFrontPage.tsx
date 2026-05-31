@@ -19,9 +19,21 @@ import { Tooltip, TooltipTrigger } from "../base/tooltip/tooltip";
 
 type Props = {
   activeBlockName?: string;
+  themeInnerClass?: string;
+  themeDropZoneClass?: string;
+  themeDropZoneActiveClass?: string;
+  themeAware?: boolean;
+  themePomodoroToggleClass?: string;
 };
 
-export const TasksFrontPage = ({ activeBlockName }: Props) => {
+export const TasksFrontPage = ({
+  activeBlockName,
+  themeInnerClass = "font-eudoxus",
+  themeDropZoneClass = "rounded-2xl",
+  themeDropZoneActiveClass = "border border-sky-400 bg-sky-50/60 dark:border-sky-400 dark:bg-sky-950/30",
+  themeAware = false,
+  themePomodoroToggleClass,
+}: Props) => {
   const { tasks } = useTasksStore(useShallow((s) => ({ tasks: s.tasks })));
   const { toggleTask, updateTask, removeTask } = useTasksStore(
     useShallow((s) => ({
@@ -45,9 +57,8 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
   const setFocusedTaskId = useHomeFocusStore((s) => s.setFocusedTaskId);
   const draggedTaskId = useHomeFocusStore((s) => s.draggedTaskId);
   const isPointerDragging = useHomeFocusStore((s) => s.isPointerDragging);
-  const dragPointer = useHomeFocusStore((s) => s.dragPointer);
-  const dragGrabOffset = useHomeFocusStore((s) => s.dragGrabOffset);
   const updateDragPointer = useHomeFocusStore((s) => s.updateDragPointer);
+  const taskDragIntent = useHomeFocusStore((s) => s.taskDragIntent);
   const endTaskDrag = useHomeFocusStore((s) => s.endTaskDrag);
   const [isDropActive, setIsDropActive] = useState(false);
   const pomodoroPanelOpen = usePomodoroStore((s) => s.panelOpen);
@@ -84,7 +95,7 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
   }, [sortedTasks, focusedTaskId]);
 
   useEffect(() => {
-    if (!isPointerDragging) return;
+    if (!isPointerDragging || taskDragIntent !== "focus") return;
 
     const isInDropZone = (x: number, y: number) => {
       const rect = dropZoneRef.current?.getBoundingClientRect();
@@ -125,6 +136,7 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
     };
   }, [
     isPointerDragging,
+    taskDragIntent,
     draggedTaskId,
     sortedTasks,
     setFocusedTaskId,
@@ -147,56 +159,27 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
   }, [visibleFocusedTask, setLinkedTaskTitle]);
 
   const activeCount = sortedTasks.filter((task) => !task.done).length;
-  const draggedTask = useMemo(
-    () =>
-      sortedTasks.find((task) => task.id === draggedTaskId) ??
-      tasks.find((task) => task.id === draggedTaskId),
-    [draggedTaskId, sortedTasks, tasks],
-  );
 
   return (
-    <div className="font-eudoxus">
-      {isPointerDragging && draggedTask ? (
-        <motion.div
-          className="pointer-events-none fixed left-0 top-0 z-999 w-56 rounded-xl border border-zinc-300/90 bg-white/95 px-3 py-2 shadow-[0_18px_50px_-20px_rgba(15,23,42,0.55)] sm:w-72 dark:border-zinc-600 dark:bg-zinc-900/90"
-          style={{
-            left: dragPointer.x - dragGrabOffset.x,
-            top: dragPointer.y - dragGrabOffset.y,
-          }}
-          initial={{ opacity: 0.92 }}
-          animate={{ opacity: 1 }}
-          transition={{ opacity: { duration: 0.12 } }}
-        >
-          <div className="mb-1 flex items-center justify-between gap-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-            <span>
-              {draggedTask.critical
-                ? "Critical"
-                : draggedTask.priority
-                  ? `${draggedTask.priority} priority`
-                  : "No priority"}
-            </span>
-            <span>
-              {draggedTask.dueDate
-                ? formatTaskDue(draggedTask.dueDate)
-                : "No time"}
-            </span>
-          </div>
-          <p className="truncate text-sm font-medium text-zinc-800 dark:text-zinc-100">
-            {draggedTask.title}
-          </p>
-        </motion.div>
-      ) : null}
+    <div className={themeInnerClass}>
       <motion.div layout className="flex min-h-100 flex-col gap-4 sm:min-h-112 sm:gap-5">
         <div className="flex w-full items-start justify-between gap-3">
           <div className="min-w-0 flex flex-col items-start gap-1">
-            <p className="font-baron text-lg font-bold uppercase tracking-[0.14em] text-zinc-800 dark:text-zinc-200">
+            <p className="font-baron text-lg font-bold uppercase tracking-[0.14em]">
               {activeBlockName ? `${activeBlockName} Tasks` : "All Tasks"}
             </p>
-            <p className="font-eudoxus text-xs tracking-wide text-zinc-400 dark:text-zinc-500">
+            <p className="font-eudoxus text-xs tracking-wide opacity-70">
               {sortedTasks.length} total &middot; {activeCount} active
             </p>
           </div>
-          <div className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-zinc-200/60 p-0.5 dark:bg-zinc-800/60">
+          <div
+            className={`inline-flex shrink-0 items-center gap-0.5 rounded-full p-0.5 ${
+              themePomodoroToggleClass ??
+              (themeAware
+                ? "bg-black/20 ring-1 ring-white/10"
+                : "bg-zinc-200/60 dark:bg-zinc-800/60")
+            }`}
+          >
             <HomePomodoroToggle />
           </div>
         </div>
@@ -204,11 +187,9 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
         <motion.div
           layout
           ref={dropZoneRef}
-          className={`relative min-h-44 w-full rounded-2xl px-2 py-4 transition-colors sm:min-h-40 sm:px-4 ${
-            isDropActive
-              ? "border border-sky-400 bg-sky-50/60 dark:border-sky-400 dark:bg-sky-950/30"
-              : ""
-          } ${pomodoroPanelOpen ? "bg-zinc-50/50 dark:bg-zinc-900/30" : ""}`}
+          className={`relative min-h-44 w-full px-2 py-4 transition-colors duration-300 sm:min-h-40 sm:px-4 ${themeDropZoneClass} ${
+            isDropActive ? themeDropZoneActiveClass : ""
+          } ${pomodoroPanelOpen && !themeAware ? "bg-zinc-50/50 dark:bg-zinc-900/30" : ""}`}
         >
           <HomePomodoroPanel
             linkedTaskTitle={
@@ -223,14 +204,14 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
               animate={{ opacity: 1, y: 0 }}
               className={`flex min-h-32 flex-col items-center justify-center gap-2 px-4 text-center sm:min-h-28 ${pomodoroPanelOpen ? "pointer-events-none opacity-40" : ""}`}
             >
-              <p className="font-ppneue text-xl font-medium text-zinc-500 dark:text-zinc-400">
+              <p className="font-ppneue text-xl font-medium opacity-75">
                 {sortedTasks.length === 0
                   ? "Nothing here yet"
                   : activeCount === 0
                     ? "All caught up"
                     : "Pick a task to focus"}
               </p>
-              <p className="font-eudoxus text-xs text-zinc-400 dark:text-zinc-500">
+              <p className="font-eudoxus text-xs opacity-60">
                 {sortedTasks.length === 0
                   ? "Add a task from the sidebar or Tasks page."
                   : activeCount === 0
@@ -244,16 +225,22 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
               className={`flex min-h-36 flex-col items-center justify-between gap-4 sm:min-h-32 ${pomodoroPanelOpen ? "pointer-events-none opacity-40" : ""}`}
             >
               <div>
-                <h2 className="wrap-break-word text-center text-3xl font-semibold font-ppneue text-zinc-900 dark:text-zinc-50 sm:text-5xl">
+                <h2 className="wrap-break-word text-center text-3xl font-semibold font-ppneue sm:text-5xl">
                   {visibleFocusedTask.title}
                 </h2>
                 {visibleFocusedTask.description ? (
-                  <p className="mt-1.5 text-center text-sm font-sans text-zinc-600 dark:text-zinc-300">
+                  <p className="mt-1.5 text-center text-sm font-sans opacity-80">
                     {visibleFocusedTask.description}
                   </p>
                 ) : null}
                 <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs font-medium">
-                  <span className="rounded-md border-b border-blue-500 bg-zinc-100 px-2 py-0.5 font-quantify text-zinc-700 dark:border-zinc-600 dark:bg-zinc-700/70 dark:text-zinc-200">
+                  <span
+                    className={`rounded-md px-2 py-0.5 font-quantify ${
+                      themeAware
+                        ? "border border-current/20 bg-black/20"
+                        : "border-b border-blue-500 bg-zinc-100 text-zinc-700 dark:border-zinc-600 dark:bg-zinc-700/70 dark:text-zinc-200"
+                    }`}
+                  >
                     {visibleFocusedTask.critical
                       ? "Critical"
                       : visibleFocusedTask.priority
@@ -261,7 +248,13 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
                           visibleFocusedTask.priority.slice(1)
                         : "No priority"}
                   </span>
-                  <span className="rounded-md border-b font-quantify bg-zinc-100 px-2 py-0.5 text-zinc-700 dark:border-zinc-600 dark:bg-zinc-700/70 dark:text-zinc-200">
+                  <span
+                    className={`rounded-md px-2 py-0.5 font-quantify ${
+                      themeAware
+                        ? "border border-current/20 bg-black/20"
+                        : "border-b bg-zinc-100 text-zinc-700 dark:border-zinc-600 dark:bg-zinc-700/70 dark:text-zinc-200"
+                    }`}
+                  >
                     {visibleFocusedTask.dueDate
                       ? formatTaskDue(visibleFocusedTask.dueDate)
                       : "No Due Date"}

@@ -6,6 +6,7 @@ import {
   getBlockScopedSidebarTasks,
   getTodaySidebarTasks,
 } from "../../lib/sidebarTasks";
+import { isIcsTask } from "../../lib/icsTasks";
 import { useDisplayedBlockName } from "../../hooks/useDisplayedBlockName";
 import { useHomeFocusStore } from "../../stores/homeFocusStore";
 import { useTasksStore } from "../../stores/tasksStore";
@@ -23,12 +24,13 @@ export function useTodayTasksScope() {
   const displayedBlockName = useDisplayedBlockName();
   const { tasks } = useTasksStore(useShallow((s) => ({ tasks: s.tasks })));
 
-  const panelTasks = useMemo(() => {
-    if (onHome) {
-      return getBlockScopedSidebarTasks(tasks, displayedBlockName);
-    }
-    return getTodaySidebarTasks(tasks);
-  }, [tasks, onHome, displayedBlockName]);
+  const panelTasks = useMemo(
+    () =>
+      onHome
+        ? getBlockScopedSidebarTasks(tasks, displayedBlockName)
+        : getTodaySidebarTasks(tasks),
+    [tasks, onHome, displayedBlockName],
+  );
 
   const activeCount = panelTasks.filter((task) => !task.done).length;
   const scopeLabel = onHome
@@ -52,6 +54,8 @@ type TodayTasksPanelProps = {
 export function TodayTasksPanel({ compact = false }: TodayTasksPanelProps) {
   const location = useLocation();
   const onHome = location.pathname === "/";
+  const onCalendar = location.pathname.startsWith("/calendar");
+  const canDragTask = onHome || onCalendar;
   const displayedBlockName = useDisplayedBlockName();
   const { panelTasks } = useTodayTasksScope();
   const { tasks, addTask, updateTask, toggleTask, removeTask } = useTasksStore(
@@ -160,7 +164,7 @@ export function TodayTasksPanel({ compact = false }: TodayTasksPanelProps) {
             ]);
           }}
           onPointerDown={(event) => {
-            if (!onHome) return;
+            if (!canDragTask || isIcsTask(task)) return;
             const rect = event.currentTarget.getBoundingClientRect();
             startTaskDrag(
               task.id,
@@ -168,6 +172,7 @@ export function TodayTasksPanel({ compact = false }: TodayTasksPanelProps) {
               event.clientY,
               event.clientX - rect.left,
               event.clientY - rect.top,
+              onCalendar ? "schedule" : "focus",
             );
           }}
           className={`w-full rounded-xl  text-left transition-colors ${
@@ -176,7 +181,7 @@ export function TodayTasksPanel({ compact = false }: TodayTasksPanelProps) {
             focusedTaskId === task.id
               ? "border-sky-400 bg-sky-50 dark:border-sky-500 dark:bg-sky-950/25"
               : "border-zinc-200/90 bg-white/85 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900/65 dark:hover:bg-zinc-900"
-          } ${task.done ? "opacity-60" : ""} cursor-grab active:cursor-grabbing`}
+          } ${task.done ? "opacity-60" : ""} ${canDragTask && !isIcsTask(task) ? "cursor-grab active:cursor-grabbing" : ""}`}
         >
           {!compact ? (
             <div className="mb-0.5 flex items-center justify-between gap-2 font-eudoxus text-[10px] font-medium uppercase tracking-[0.1em] text-zinc-400 dark:text-zinc-500">

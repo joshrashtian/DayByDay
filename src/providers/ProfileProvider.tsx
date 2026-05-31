@@ -35,7 +35,7 @@ export const ProfileProvider = ({
 }) => {
   const [profile, setProfile] = useState<Profile | null>({
     id: "local-profile",
-    name: "DayByDay User",
+    name: "RiseByDay User",
     email: "you@example.com",
     avatarUrl: null,
   });
@@ -47,8 +47,8 @@ export const ProfileProvider = ({
 
   useEffect(() => {
     const onOpenProfile = () => setIsProfileOpen(true);
-    window.addEventListener("dbd:open-profile", onOpenProfile);
-    return () => window.removeEventListener("dbd:open-profile", onOpenProfile);
+    window.addEventListener("rbd:open-profile", onOpenProfile);
+    return () => window.removeEventListener("rbd:open-profile", onOpenProfile);
   }, []);
 
   useEffect(() => {

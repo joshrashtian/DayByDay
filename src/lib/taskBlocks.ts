@@ -26,9 +26,9 @@ export const DEFAULT_BLOCK_SUGGESTIONS = [
 import { useSettingsStore } from "../stores/settingsStore";
 
 /** @deprecated Use useSettingsStore subscription instead of event listeners */
-export const BLOCK_CONFIG_STORAGE_KEY = "daybyday-block-configs";
+export const BLOCK_CONFIG_STORAGE_KEY = "risebyday-block-configs";
 /** @deprecated Use useSettingsStore subscription instead of event listeners */
-export const BLOCK_CONFIGS_CHANGED = "daybyday:block-configs-changed";
+export const BLOCK_CONFIGS_CHANGED = "risebyday:block-configs-changed";
 
 const MINUTES_IN_DAY = 24 * 60;
 

@@ -1,5 +1,9 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { migrateLocalStorageKey } from "@/lib/storageMigration";
+
+const POMODORO_STORAGE_KEY = "risebyday-pomodoro";
+migrateLocalStorageKey("daybyday-pomodoro", POMODORO_STORAGE_KEY);
 
 export type PomodoroPhase = "focus" | "shortBreak" | "longBreak";
 
@@ -121,7 +125,7 @@ export const usePomodoroStore = create<PomodoroState>()(
         set((s) => ({ dockExpanded: !s.dockExpanded })),
     }),
     {
-      name: "daybyday-pomodoro",
+      name: POMODORO_STORAGE_KEY,
       partialize: (state) => ({
         phase: state.phase,
         secondsLeft: state.secondsLeft,

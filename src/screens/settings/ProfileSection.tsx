@@ -10,7 +10,7 @@ export function ProfileSection() {
           Profile
         </h2>
         <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-          Your local DayByDay profile.
+          Your local RiseByDay profile.
         </p>
       </div>
 
@@ -20,7 +20,7 @@ export function ProfileSection() {
             Name
           </dt>
           <dd className="text-base text-zinc-900 dark:text-zinc-100">
-            {profile?.name ?? "DayByDay User"}
+            {profile?.name ?? "RiseByDay User"}
           </dd>
         </div>
         <div className="mt-4 grid gap-1">

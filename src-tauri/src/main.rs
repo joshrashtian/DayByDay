@@ -55,6 +55,7 @@ fn main() {
                 .text("calendar", "Calendar")
                 .text("tasks", "Tasks")
                 .text("blocks", "Blocks")
+                .text("pomodoro", "Pomodoro")
                 .build()?;
 
             let menu = MenuBuilder::new(app)
@@ -80,6 +81,9 @@ fn main() {
                     }
                     "blocks" => {
                         let _ = app_handle.emit("navigate", "blocks");
+                    }
+                    "pomodoro" => {
+                        let _ = app_handle.emit("navigate", "pomodoro");
                     }
                     "settings" => {
                         let _ = app_handle.emit("navigate", "settings");

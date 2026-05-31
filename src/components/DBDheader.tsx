@@ -1,6 +1,6 @@
 export const Header = () => {
   const items = [
-    { label: "Day By Day", active: true },
+    { label: "Rise By Day", active: true },
     { label: "Today", active: false },
     { label: "Settings", active: false },
   ];

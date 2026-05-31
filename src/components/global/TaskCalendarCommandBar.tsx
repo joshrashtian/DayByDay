@@ -12,6 +12,8 @@ import { IoArrowUp } from "react-icons/io5";
 import { useShallow } from "zustand/react/shallow";
 import { parseTaskChatInput } from "../tasks/functions/parseTokens";
 import { useTasksStore } from "../../stores/tasksStore";
+import { useHomeFocusStore } from "../../stores/homeFocusStore";
+import { usePomodoroStore } from "../../stores/pomodoroStore";
 import { getActiveBlockNameAt } from "../../lib/taskBlocks";
 import {
   parseCalendarDayArg,
@@ -56,6 +58,8 @@ export function TaskCalendarCommandBar() {
       removeTask: s.removeTask,
     })),
   );
+  const setFocusedTaskId = useHomeFocusStore((s) => s.setFocusedTaskId);
+  const setLinkedTaskTitle = usePomodoroStore((s) => s.setLinkedTaskTitle);
 
   const calendarDay = useMemo(() => {
     const params = new URLSearchParams(location.search);
@@ -242,8 +246,51 @@ export function TaskCalendarCommandBar() {
     if (command === "help") {
       setFeedback({
         tone: "neutral",
-        text: "Commands: /done <task>, /undo <task>, /delete <task>, /day <today|tomorrow|YYYY-MM-DD>, /next, /prev. Time: @9am or @9am-11am",
+        text: "Commands: /focus <task>, /focus clear, /done <task>, /undo <task>, /delete <task>, /day <today|tomorrow|YYYY-MM-DD>, /next, /prev. Time: @9am or @9am-11am",
       });
+      return;
+    }
+
+    if (command === "focus") {
+      if (!arg) {
+        setFeedback({
+          tone: "error",
+          text: "Specify a task title fragment, or use /focus clear.",
+        });
+        return;
+      }
+
+      if (arg.toLowerCase() === "clear") {
+        setFocusedTaskId(null);
+        setLinkedTaskTitle(undefined);
+        setFeedback({ tone: "success", text: "Cleared Pomodoro focus." });
+        setRaw("");
+        return;
+      }
+
+      const id = findTaskIdByQuery(arg, false);
+      if (!id) {
+        setFeedback({
+          tone: "error",
+          text: "No unfinished task matched. Try a title fragment.",
+        });
+        return;
+      }
+
+      const task = tasks.find((t) => t.id === id);
+      if (!task) {
+        setFeedback({ tone: "error", text: "Task not found." });
+        return;
+      }
+
+      setFocusedTaskId(id);
+      setLinkedTaskTitle(task.title);
+      setFeedback({
+        tone: "success",
+        text: `Focusing on "${task.title}". Open Pomodoro or Home to see the timer.`,
+      });
+      setRaw("");
+      navigate("/pomodoro");
       return;
     }
 
@@ -444,7 +491,7 @@ export function TaskCalendarCommandBar() {
             value={raw}
             onChange={(e) => setRaw(e.target.value)}
             onKeyDown={onMainInputKeyDown}
-            placeholder="Type task or command... (@9am, @9am-11am, /day today, /done)"
+            placeholder="Type task or command... (@9am, /focus report, /done)"
             className="min-w-0 flex-1 font-eudoxus font-bold bg-transparent px-1.5 py-2 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 dark:text-zinc-100 dark:placeholder:text-zinc-500"
             aria-label="Global command input"
           />

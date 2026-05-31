@@ -53,7 +53,8 @@ export function GlobalPomodoroDock() {
   }, [location.pathname, setPanelOpen]);
 
   const onHome = location.pathname === "/";
-  const hideDock = onHome && panelOpen;
+  const onPomodoroScreen = location.pathname === "/pomodoro";
+  const hideDock = onPomodoroScreen || (onHome && panelOpen);
   const progress =
     1 - secondsLeft / POMODORO_DURATIONS[phase];
   const isActive = isRunning || dockExpanded;

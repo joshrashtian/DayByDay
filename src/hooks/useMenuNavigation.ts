@@ -71,11 +71,14 @@ export function useMenuNavigation() {
         case "blocks":
           navigate("/blocks");
           break;
+        case "pomodoro":
+          navigate("/pomodoro");
+          break;
         case "profile":
-          window.dispatchEvent(new Event("dbd:open-profile"));
+          window.dispatchEvent(new Event("rbd:open-profile"));
           break;
         case "settings":
-          window.dispatchEvent(new Event("dbd:open-settings"));
+          window.dispatchEvent(new Event("rbd:open-settings"));
           break;
         case "help":
           navigate("/help");

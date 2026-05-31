@@ -163,7 +163,7 @@ export function ConnectedCalendarsSection() {
           Connected Calendars
         </h2>
         <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-          Import events from external calendars into DayByDay as read-only ICS
+          Import events from external calendars into RiseByDay as read-only ICS
           items.
         </p>
       </div>
@@ -194,7 +194,7 @@ export function ConnectedCalendarsSection() {
               </h3>
               <p className="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">
                 {icsTaskCount > 0
-                  ? `${icsTaskCount} read-only ICS event${icsTaskCount === 1 ? "" : "s"} in DayByDay`
+                  ? `${icsTaskCount} read-only ICS event${icsTaskCount === 1 ? "" : "s"} in RiseByDay`
                   : "No ICS events imported yet"}
               </p>
               {lastIcsImportLabel ? (

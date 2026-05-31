@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------------
-// DayByDay – shared type definitions
-// Copy this file into any project that needs access to the DayByDay domain
+// RiseByDay – shared type definitions
+// Copy this file into any project that needs access to the RiseByDay domain
 // model. Every declaration is a pure TypeScript type (no runtime, no React).
 // ---------------------------------------------------------------------------
 
@@ -108,7 +108,15 @@ export type BlockConfig = {
   customCss?: string;
 };
 
-export type BlockVisualStyle = "punchy" | "clean" | "outline";
+export type BlockVisualStyle =
+  | "punchy"
+  | "clean"
+  | "outline"
+  | "capsule"
+  | "stacked"
+  | "terminal"
+  | "neon"
+  | "sticker";
 
 export type BlockBannerResolvedClasses = {
   containerClassName: string;
@@ -163,7 +171,8 @@ export type ClockTemplate =
   | "terminal"
   | "orbit"
   | "neon"
-  | "editorial";
+  | "editorial"
+  | "pinkBiology";  
 
 export type ClockStyleSource = "core" | "user" | "marketplace";
 
@@ -171,6 +180,8 @@ export type ClockStylePrototype = {
   id: string;
   template: ClockTemplate;
   source: ClockStyleSource;
+  pageClassName: string;
+  pageContentClassName?: string;
   rootClassName: string;
   wrapperClassName: string;
   wrapperIdleClassName: string;
@@ -213,7 +224,15 @@ export type ConnectedCalendar = {
 
 export type RibbonVisualStyle = "default" | "muted" | "high-contrast";
 
-export type TasksVisualStyle = "default" | "card" | "minimal";
+export type TasksVisualStyle =
+  | "default"
+  | "card"
+  | "minimal"
+  | "terminal"
+  | "neon"
+  | "editorial"
+  | "outline"
+  | "glass";
 
 export type DayFocusMode = "current-block" | "all-day";
 
@@ -224,6 +243,7 @@ export type HomeVisualPrefs = {
   ribbonScale: number;
   tasksStyle: TasksVisualStyle;
   tasksScale: number;
-  clockStyle: ClockTemplate;
+  /** Theme id from the home theme registry (core ids match clock templates). */
+  clockStyle: string;
   clockScale: number;
 };

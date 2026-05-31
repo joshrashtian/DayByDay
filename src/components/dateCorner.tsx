@@ -3,9 +3,15 @@ import { WeatherBadge } from "./WeatherBadge";
 import { useWeather } from "../hooks/useWeather";
 import { useStyle } from "../providers/StyleProvider";
 import { useContextMenu } from "../providers/ContextMenuProvider";
-import type { ClockStylePrototype, ClockTemplate } from "@/types";
+import { useHomeThemeList } from "../themes/ThemeRegistryProvider";
+import type { ClockStylePrototype } from "@/types";
 import { IoSunnyOutline } from "react-icons/io5";
 import { IoMdClock } from "react-icons/io";
+
+const CLOCK_STYLE_ICONS: Partial<Record<string, ReactNode>> = {
+  minimal: <IoMdClock />,
+  basic: <IoSunnyOutline />,
+};
 
 type Props = {
   variant?: string;
@@ -13,18 +19,8 @@ type Props = {
   scale?: number;
   onScaleChange?: (nextScale: number) => void;
   onVariantChange?: (nextVariant: string) => void;
+  onOpenStyleSheet?: () => void;
 };
-
-const CLOCK_STYLE_OPTIONS: { id: ClockTemplate; label: string; icon?: ReactNode }[] =
-  [
-    { id: "minimal", label: "Default", icon: <IoMdClock /> },
-    { id: "p5", label: "Persona 5" },
-    { id: "basic", label: "Basic", icon: <IoSunnyOutline /> },
-    { id: "terminal", label: "Terminal" },
-    { id: "orbit", label: "Orbit" },
-    { id: "neon", label: "Neon" },
-    { id: "editorial", label: "Editorial" },
-  ];
 
 export const DateCorner = ({
   variant: variantOverride,
@@ -32,18 +28,19 @@ export const DateCorner = ({
   scale: scaleOverride,
   onScaleChange,
   onVariantChange,
+  onOpenStyleSheet,
 }: Props) => {
   const today = new Date();
-  const [variant, setVariant] = useState<string | undefined>(undefined);
   const { style, getClockStyle } = useStyle();
-  const resolvedVariant = variantOverride ?? variant ?? style ?? "minimal";
+  const context = useContextMenu();
+  const themeList = useHomeThemeList();
+  const resolvedVariant = variantOverride ?? style ?? "minimal";
   const stylePrototype = getClockStyle(resolvedVariant);
   const weather = useWeather();
   const [scale, setScale] = useState(1);
   const [isDragging, setIsDragging] = useState(false);
   const dragStartY = useRef(0);
   const dragStartScale = useRef(1);
-  const context = useContextMenu();
   const clampScale = (value: number) => Math.min(2, Math.max(0.65, value));
   const resolvedScale = scaleOverride ?? scale;
 
@@ -54,7 +51,6 @@ export const DateCorner = ({
   };
 
   const applyVariant = (nextVariant: string) => {
-    if (variantOverride === undefined) setVariant(nextVariant);
     onVariantChange?.(nextVariant);
   };
 
@@ -115,52 +111,59 @@ export const DateCorner = ({
     />
   );
 
-  const onContextMenu = (e: React.MouseEvent<HTMLDivElement>) =>
-    context.openMenu(e, [
-      {
-        id: "Header1",
-        type: "header",
-        header: "Clock Styles",
-      },
-      ...CLOCK_STYLE_OPTIONS.map((option) => ({
-        id: option.id,
-        label: option.label,
-        onSelect: () => applyVariant(option.id),
-        icon: option.icon,
-        type: "item" as const,
-      })),
-      {
-        id: "Break1",
-        type: "break",
-      },
-      {
-        id: "Header2",
-        type: "header",
-        header: "Clock Size",
-      },
-      {
-        id: "Small",
-        label: "Small",
-        onSelect: () => applyScale(0.65),
-        type: "item",
-      },
-      {
-        id: "Medium",
-        label: "Medium",
-        onSelect: () => applyScale(1),
-        type: "item",
-      },
-      {
-        id: "Large",
-        label: "Large",
-        onSelect: () => applyScale(1.5),
-        type: "item",
-      },
-    ]);
-
   const shell = (content: ReactNode) => (
     <div
-      onContextMenu={onContextMenu}
+      onContextMenu={(event) =>
+        context.openMenu(event, [
+          {
+            id: "clock-header",
+            type: "header",
+            header: "Clock Styles",
+          },
+          ...themeList.map((option) => ({
+            id: option.id,
+            label: option.label,
+            onSelect: () => applyVariant(option.id),
+            icon: CLOCK_STYLE_ICONS[option.id],
+            type: "item" as const,
+          })),
+          { id: "clock-break", type: "break" },
+          {
+            id: "clock-size-header",
+            type: "header",
+            header: "Clock Size",
+          },
+          {
+            id: "clock-small",
+            label: "Small",
+            onSelect: () => applyScale(0.65),
+            type: "item" as const,
+          },
+          {
+            id: "clock-medium",
+            label: "Medium",
+            onSelect: () => applyScale(1),
+            type: "item" as const,
+          },
+          {
+            id: "clock-large",
+            label: "Large",
+            onSelect: () => applyScale(1.5),
+            type: "item" as const,
+          },
+          ...(onOpenStyleSheet
+            ? [
+                { id: "clock-sheet-break", type: "break" as const },
+                {
+                  id: "clock-open-sheet",
+                  label: "Open style sheet…",
+                  onSelect: onOpenStyleSheet,
+                  type: "item" as const,
+                },
+              ]
+            : []),
+        ])
+      }
       className={wrapperClassName}
       style={{
         transform: `scale(${resolvedScale})`,

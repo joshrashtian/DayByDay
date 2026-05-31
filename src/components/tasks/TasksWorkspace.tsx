@@ -5,6 +5,7 @@ import {
   isCompletedTaskFromPreviousDay,
   isTaskDueToday,
 } from "../../lib/taskDates";
+import { isIcsTask } from "../../lib/icsTasks";
 import { collectTaskBlocks } from "../../lib/taskBlocks";
 import { collectAvailableCategories } from "../../lib/taskCategories";
 import { TaskCreator } from "./TaskCreator";
@@ -139,10 +140,15 @@ export function TasksWorkspace({
   const [groupSort, setGroupSort] =
     useState<GroupSortConfig>(DEFAULT_GROUP_SORT);
 
-  const blocks = useMemo(() => collectTaskBlocks(tasks), [tasks]);
-  const categories = useMemo(
-    () => collectAvailableCategories(tasks),
+  const userTasks = useMemo(
+    () => tasks.filter((task) => !isIcsTask(task)),
     [tasks],
+  );
+
+  const blocks = useMemo(() => collectTaskBlocks(userTasks), [userTasks]);
+  const categories = useMemo(
+    () => collectAvailableCategories(userTasks),
+    [userTasks],
   );
 
   useEffect(() => {
@@ -176,7 +182,7 @@ export function TasksWorkspace({
 
   const visibleTasks = useMemo(
     () =>
-      tasks.filter((t) => {
+      userTasks.filter((t) => {
         if (statusFilter !== "history" && isCompletedTaskFromPreviousDay(t)) {
           return false;
         }
@@ -196,7 +202,7 @@ export function TasksWorkspace({
         return true;
       }),
     [
-      tasks,
+      userTasks,
       taskSearch,
       blockFilters,
       categoryFilters,

@@ -60,7 +60,7 @@ export function TasksCategoryDetailPage() {
           <button
             type="button"
             onClick={() =>
-              window.dispatchEvent(new Event("dbd:open-settings"))
+              window.dispatchEvent(new Event("rbd:open-settings"))
             }
             className="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/50 px-3 py-1.5 text-xs font-semibold text-zinc-700 ring-1 ring-white/30 backdrop-blur-xl transition-colors hover:bg-white/80 dark:border-white/15 dark:bg-zinc-900/45 dark:text-zinc-200 dark:hover:bg-zinc-800/80"
           >

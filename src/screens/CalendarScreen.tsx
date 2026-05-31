@@ -21,6 +21,7 @@ import {
   localInputForDateTime,
 } from "../lib/taskDates";
 import { usePopup } from "../providers/PopupProvider";
+import { useCalendarTaskDrop } from "../hooks/useCalendarTaskDrop";
 import { useTasksStore } from "../stores/tasksStore";
 import { DatePicker } from "../components/application/date-picker/date-picker";
 
@@ -37,6 +38,7 @@ const modes: { id: CalendarMode; label: string }[] = [
 
 export default function CalendarScreen() {
   const [searchParams, setSearchParams] = useSearchParams();
+  useCalendarTaskDrop();
   const controlsDrag = useDragControls();
   const { open: openPopup, close: closePopup } = usePopup();
   const {

@@ -12,6 +12,7 @@ export const CLOCK_TEMPLATE_IDS: ClockTemplate[] = [
   "orbit",
   "neon",
   "editorial",
+  "pinkBiology",
 ];
 
 export const isClockTemplate = (value: string): value is ClockTemplate =>
@@ -30,6 +31,8 @@ export const defaultClockStyles: Record<string, ClockStylePrototype> = {
     id: "minimal",
     template: "minimal",
     source: "core",
+    pageClassName:
+      "bg-zinc-100/50 dark:bg-zinc-950 [--home-muted:theme(colors.zinc.500)]",
     rootClassName: "fixed right-4 top-4 z-10 select-none",
     wrapperClassName: "group relative inline-flex flex-col items-end gap-0.5",
     wrapperIdleClassName: "transition-transform duration-150",
@@ -56,6 +59,9 @@ export const defaultClockStyles: Record<string, ClockStylePrototype> = {
     id: "p5",
     template: "p5",
     source: "core",
+    pageClassName:
+      "bg-gradient-to-br from-zinc-900 via-zinc-950 to-blue-950/50 dark:from-black dark:via-zinc-950 dark:to-blue-950/70 [--home-muted:theme(colors.zinc.400)]",
+    pageContentClassName: "text-zinc-100",
     rootClassName: "fixed right-4 top-4 z-10 select-none",
     wrapperClassName: "group relative inline-flex flex-col items-end",
     wrapperIdleClassName: "transition-transform duration-150",
@@ -81,6 +87,8 @@ export const defaultClockStyles: Record<string, ClockStylePrototype> = {
     id: "basic",
     template: "basic",
     source: "core",
+    pageClassName:
+      "bg-gradient-to-b from-sky-50/90 via-zinc-50/60 to-zinc-100/50 dark:from-sky-950/25 dark:via-zinc-950 dark:to-zinc-950 [--home-muted:theme(colors.sky.600)]",
     rootClassName: "fixed right-4 top-4 z-10 select-none",
     wrapperClassName: "group relative inline-flex flex-col items-end",
     wrapperIdleClassName: "transition-transform duration-150",
@@ -105,6 +113,9 @@ export const defaultClockStyles: Record<string, ClockStylePrototype> = {
     id: "terminal",
     template: "terminal",
     source: "core",
+    pageClassName:
+      "bg-zinc-950 bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.06),transparent_70%)] [--home-muted:theme(colors.emerald.500/70)]",
+    pageContentClassName: "text-emerald-50/95",
     rootClassName: "fixed right-4 top-4 z-10 select-none",
     wrapperClassName: "group relative inline-flex flex-col items-end gap-1",
     wrapperIdleClassName: "transition-transform duration-150",
@@ -130,6 +141,8 @@ export const defaultClockStyles: Record<string, ClockStylePrototype> = {
     id: "orbit",
     template: "orbit",
     source: "core",
+    pageClassName:
+      "bg-gradient-to-br from-amber-50 via-orange-50/40 to-zinc-100 dark:from-amber-950/20 dark:via-zinc-950 dark:to-zinc-950 [--home-muted:theme(colors.amber.700/80)]",
     rootClassName: "fixed right-4 top-4 z-10 select-none",
     wrapperClassName: "group relative inline-flex flex-col items-center gap-2",
     wrapperIdleClassName: "transition-transform duration-150",
@@ -156,6 +169,9 @@ export const defaultClockStyles: Record<string, ClockStylePrototype> = {
     id: "neon",
     template: "neon",
     source: "core",
+    pageClassName:
+      "bg-zinc-950 bg-[radial-gradient(ellipse_at_top_right,rgba(236,72,153,0.14),transparent_55%),radial-gradient(ellipse_at_bottom_left,rgba(34,211,238,0.1),transparent_55%)] [--home-muted:theme(colors.fuchsia.400/80)]",
+    pageContentClassName: "text-zinc-100",
     rootClassName: "fixed right-4 top-4 z-10 select-none",
     wrapperClassName: "group relative inline-flex flex-col items-end gap-1.5",
     wrapperIdleClassName: "transition-transform duration-150",
@@ -182,6 +198,8 @@ export const defaultClockStyles: Record<string, ClockStylePrototype> = {
     id: "editorial",
     template: "editorial",
     source: "core",
+    pageClassName:
+      "bg-[#faf9f7] dark:bg-zinc-950 [--home-muted:theme(colors.zinc.500)]",
     rootClassName: "fixed right-4 top-4 z-10 select-none",
     wrapperClassName: "group relative inline-flex flex-col items-end gap-3",
     wrapperIdleClassName: "transition-transform duration-150",
@@ -203,6 +221,28 @@ export const defaultClockStyles: Record<string, ClockStylePrototype> = {
       "font-sans text-xs font-medium tabular-nums tracking-wide text-zinc-600 dark:text-zinc-300",
     resizeHandleClassName:
       "absolute -bottom-1 -left-1 h-2.5 w-2.5 cursor-nesw-resize rounded-none border border-zinc-400 bg-zinc-300 opacity-40 transition-all duration-150 hover:opacity-100 group-hover:opacity-70 dark:border-zinc-600 dark:bg-zinc-700",
+  },
+  pinkBiology: {
+    id: "pinkBiology",
+    template: "pinkBiology",
+    source: "core",
+    rootClassName: "fixed right-4 top-4 z-10 select-none",
+    wrapperClassName: "group relative inline-flex flex-col items-end gap-2",
+    wrapperIdleClassName: "transition-transform duration-150",
+    transformOrigin: "top right",
+    dateRowClassName: "relative inline-flex items-center",
+    dateRowCardClassName: "relative px-5 py-3 shadow-[0_16px_30px_rgba(37,99,235,0.55)]",
+    dateTextClassName: "flex items-baseline font-quantify gap-1 text-blue-800",
+    monthClassName: "text-7xl leading-none",
+    dayClassName: "text-7xl leading-none",
+
+    pageClassName: "bg-pink-50/50 dark:bg-pink-950/50 [--home-muted:theme(colors.pink.700/80)]",
+    weekdayRowClassName: "flex max-w-full flex-nowrap items-center justify-end gap-3",
+    weekdayClassName: "shrink-0 font-quantify text-[11px] font-bold uppercase tracking-[0.35em] text-emerald-500/80",
+    weatherClassName: "shrink-0 items-center text-emerald-400",
+    weatherIconClassName: "text-emerald-400",
+    weatherTemperatureClassName: "font-quantify text-sm font-bold tabular-nums text-emerald-300",
+    resizeHandleClassName: "absolute -bottom-1 -left-1 h-3 w-3 cursor-nesw-resize rounded-full border border-emerald-500/60 bg-emerald-600/80 opacity-40 shadow-sm transition-all duration-150 hover:scale-125 hover:opacity-100 group-hover:opacity-70",
   },
 };
 

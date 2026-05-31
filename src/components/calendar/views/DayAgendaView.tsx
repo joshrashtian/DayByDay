@@ -82,7 +82,11 @@ export function DayAgendaView({
           </motion.button>
         ) : null}
       </div>
-      <div className="mt-6 max-w-md">
+      <div
+        className="mt-6 max-w-md"
+        data-calendar-drop="all-day"
+        data-calendar-day={key}
+      >
         <TaskDueList
           items={dayTasks}
           onToggle={onToggleTask}

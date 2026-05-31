@@ -70,12 +70,12 @@ const RECURRENCE_OPTIONS: { value: RecurrenceChoice; label: string }[] = [
 ];
 
 const TASK_KIND_COPY: Record<TaskKind, string> = {
-  task: "General to-do item",
-  event: "Time-based event",
-  class: "Weekly class schedule",
-  reminder: "One-time reminder",
-  habit: "Routine or recurring practice",
-  ics: "Imported calendar event (read-only)",
+  task: "Something To Do",
+  event: "Time-Based Event",
+  class: "Classes of the Week",
+  reminder: "One-Time Reminder",
+  habit: "Routine or Recurring Practice",
+  ics: "Imported Calendar Event (Read-Only)",
 };
 
 const WEEKDAY_OPTIONS: Array<{
@@ -104,7 +104,7 @@ function WeekdayPicker({
   onChange: (next: RecurrenceWeekday[]) => void;
 }) {
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <div className="grid grid-cols-7 gap-1.5">
       {WEEKDAY_OPTIONS.map((day) => {
         const active = value.includes(day.value);
         return (
@@ -122,7 +122,7 @@ function WeekdayPicker({
                 ) ?? [],
               )
             }
-            className={`h-9 min-w-9 rounded-lg px-2 text-xs font-semibold transition-colors ${
+            className={`h-9 min-w-9 -skew-x-6 rounded-lg px-2 text-xs font-semibold font-display transition-colors ${
               active ? taskPopupField.weekdayActive : taskPopupField.weekdayIdle
             }`}
           >

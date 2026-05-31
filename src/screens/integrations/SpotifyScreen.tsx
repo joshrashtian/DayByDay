@@ -6,7 +6,7 @@ export default function SpotifyScreen() {
       </h1>
       <p className="mt-3 max-w-2xl text-base text-zinc-600 dark:text-zinc-300">
         Connect Spotify to surface listening context, focus sessions, and music
-        shortcuts inside DayByDay.
+        shortcuts inside RiseByDay.
       </p>
     </main>
   );

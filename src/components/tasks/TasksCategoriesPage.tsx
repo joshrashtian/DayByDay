@@ -12,19 +12,24 @@ import {
   setOrUpdateCategoryConfig,
   suggestCategoryColor,
 } from "../../lib/taskCategories";
+import { isIcsTask } from "../../lib/icsTasks";
 import { useTasksStore } from "../../stores/tasksStore";
 import { TasksBreadcrumb } from "./TasksBreadcrumb";
 
 export function TasksCategoriesPage() {
   const navigate = useNavigate();
   const tasks = useTasksStore((s) => s.tasks);
+  const userTasks = useMemo(
+    () => tasks.filter((task) => !isIcsTask(task)),
+    [tasks],
+  );
   const removeCategoryFromAllTasks = useTasksStore(
     (s) => s.removeCategoryFromAllTasks,
   );
 
   const categories = useMemo(
-    () => collectAvailableCategories(tasks),
-    [tasks],
+    () => collectAvailableCategories(userTasks),
+    [userTasks],
   );
 
   const [newCategoryName, setNewCategoryName] = useState("");
@@ -51,7 +56,7 @@ export function TasksCategoriesPage() {
   };
 
   const onDeleteCategory = (name: string) => {
-    const count = countTasksInCategory(tasks, name);
+    const count = countTasksInCategory(userTasks, name);
     if (pendingDelete !== name) {
       setPendingDelete(name);
       setMessage(
@@ -146,7 +151,7 @@ export function TasksCategoriesPage() {
             <ul className="flex flex-col gap-2">
               {categories.map((name) => {
                 const visual = resolveCategoryVisual(name);
-                const count = countTasksInCategory(tasks, name);
+                const count = countTasksInCategory(userTasks, name);
                 const hasStyle = Boolean(getCategoryConfigByName(name));
                 const isPending = pendingDelete === name;
 

@@ -1,0 +1,13 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "home-style",
+  "description": "Capability for the home style editor window",
+  "windows": ["home-style"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-close",
+    "core:window:allow-set-focus",
+    "core:window:allow-show",
+    "core:webview:default"
+  ]
+}

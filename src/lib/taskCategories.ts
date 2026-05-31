@@ -4,9 +4,9 @@ import { useSettingsStore } from "../stores/settingsStore";
 export type { CategoryConfig, CategoryTone } from "@/types";
 
 /** @deprecated Use useSettingsStore subscription instead of event listeners */
-export const CATEGORY_CONFIG_STORAGE_KEY = "daybyday-category-configs";
+export const CATEGORY_CONFIG_STORAGE_KEY = "risebyday-category-configs";
 /** @deprecated Use useSettingsStore subscription instead of event listeners */
-export const CATEGORY_CONFIGS_CHANGED = "daybyday:category-configs-changed";
+export const CATEGORY_CONFIGS_CHANGED = "risebyday:category-configs-changed";
 
 type CategoryVisual = {
   bg: string;

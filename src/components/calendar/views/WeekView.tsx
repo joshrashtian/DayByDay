@@ -715,6 +715,9 @@ function WeekDayTimeColumn({
           <div
             key={`${key}-slot-${minuteOfDay}`}
             className="min-h-0"
+            data-calendar-drop="timed"
+            data-calendar-day={key}
+            data-calendar-minute={minuteOfDay}
             onMouseDown={(e) => {
               if (e.button !== 0) return;
               onSlotMouseDown(minuteOfDay);
@@ -1047,6 +1050,8 @@ export function WeekView({
               <button
                 key={key}
                 type="button"
+                data-calendar-drop="all-day"
+                data-calendar-day={key}
                 onClick={() => onPickDay(day)}
                 onContextMenu={(e) =>
                   openMenu(e, [
@@ -1100,6 +1105,8 @@ export function WeekView({
             return (
               <div
                 key={`${key}-all-day`}
+                data-calendar-drop="all-day"
+                data-calendar-day={key}
                 className={`border-r border-zinc-200/80 p-1.5 dark:border-white/10 ${
                   dayIndex % 2 === 0
                     ? "bg-zinc-50/45 dark:bg-zinc-900/30"

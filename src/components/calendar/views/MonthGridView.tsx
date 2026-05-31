@@ -75,6 +75,8 @@ export function MonthGridView({
                 variants={cellVariants}
                 initial="hidden"
                 animate="show"
+                data-calendar-drop="all-day"
+                data-calendar-day={key}
                 onClick={() => onPickDay(day.startOf("day"))}
                 className={`flex min-h-[92px] flex-col gap-1 rounded-xl border p-2 text-left ring-1 transition-colors hover:bg-white/50 dark:hover:bg-white/5 ${
                   inMonth
