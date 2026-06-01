@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { AnimatePresence, motion, useDragControls } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import {
   getLocalTimeZone,
   parseDate,
@@ -26,7 +26,6 @@ import { useTasksStore } from "../stores/tasksStore";
 import { DatePicker } from "../components/application/date-picker/date-picker";
 
 type CalendarMode = "month" | "week" | "day" | "three" | "custom";
-type ControlsDock = "top" | "bottom" | "right";
 
 const modes: { id: CalendarMode; label: string }[] = [
   { id: "month", label: "Grid" },
@@ -39,7 +38,6 @@ const modes: { id: CalendarMode; label: string }[] = [
 export default function CalendarScreen() {
   const [searchParams, setSearchParams] = useSearchParams();
   useCalendarTaskDrop();
-  const controlsDrag = useDragControls();
   const { open: openPopup, close: closePopup } = usePopup();
   const {
     tasks,
@@ -60,8 +58,6 @@ export default function CalendarScreen() {
   );
 
   const [mode, setMode] = useState<CalendarMode>("week");
-  const [controlsDock, setControlsDock] = useState<ControlsDock>("bottom");
-  const [isDraggingControls, setIsDraggingControls] = useState(false);
   const focus = useMemo(() => {
     const day = searchParams.get("day");
     const parsed = day
@@ -70,14 +66,6 @@ export default function CalendarScreen() {
     return parsed.isValid ? parsed : DateTime.local().startOf("day");
   }, [searchParams]);
   const [customDayCount, setCustomDayCount] = useState(7);
-  const isSideDock = controlsDock === "right";
-
-  const controlsDockClass =
-    controlsDock === "top"
-      ? "top-3 left-1/2 -translate-x-1/2 w-[min(92vw,980px)]"
-      : controlsDock === "right"
-        ? "right-6 top-1/2 -translate-y-1/2 w-80"
-        : "bottom-24 left-1/2 -translate-x-1/2 w-[min(92vw,980px)]";
 
   const setFocus = useCallback(
     (next: DateTime | ((current: DateTime) => DateTime)) => {
@@ -209,18 +197,6 @@ export default function CalendarScreen() {
 
   const viewKey = `${mode}-${focus.toISODate()}-${monthRef.toISODate()}-${customDayCount}`;
 
-  const snapControlsDock = (x: number, y: number) => {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    const distances: Array<{ dock: ControlsDock; d: number }> = [
-      { dock: "right", d: Math.max(0, w - x) },
-      { dock: "top", d: y },
-      { dock: "bottom", d: Math.max(0, h - y) },
-    ];
-    distances.sort((a, b) => a.d - b.d);
-    setControlsDock(distances[0]?.dock ?? "bottom");
-  };
-
   return (
     <main className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-zinc-50 dark:bg-zinc-950">
       <div
@@ -233,149 +209,116 @@ export default function CalendarScreen() {
       />
 
       <div className="relative z-10 flex h-full w-full min-h-0 flex-col">
-        <motion.div
-          layout
-          drag
-          dragListener={false}
-          dragControls={controlsDrag}
-          dragMomentum={false}
-          dragElastic={0.15}
-          dragSnapToOrigin
-          whileDrag={{ scale: 1.015 }}
-          transition={{
-            type: "spring",
-            stiffness: 300,
-            damping: 32,
-            mass: 0.7,
-          }}
-          onDragStart={() => {
-            setIsDraggingControls(true);
-            document.body.style.userSelect = "none";
-          }}
-          onDragEnd={(_, info) => {
-            snapControlsDock(info.point.x, info.point.y);
-            setIsDraggingControls(false);
-            document.body.style.userSelect = "";
-          }}
-          className={`fixed z-40 flex flex-col gap-2 transition-all duration-300 ease-out ${controlsDockClass}`}
-        >
-          <div
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              controlsDrag.start(e);
-            }}
-            className={`mx-auto flex w-full select-none justify-center ${
-              isDraggingControls ? "cursor-grabbing" : "cursor-grab"
-            }`}
-            style={{ touchAction: "none" }}
-            title="Drag to dock top, right, or bottom"
-          >
-            <span className="h-1.5 w-16 rounded-full bg-zinc-300/90 shadow-sm dark:bg-zinc-600/90" />
-          </div>
-          <div
-            className={`flex w-full gap-2 rounded-2xl border border-white/60 bg-white/70 p-1.5 shadow-[0_8px_24px_rgba(15,23,42,0.06)] ring-1 ring-white/40 backdrop-blur-xl dark:border-white/15 dark:bg-zinc-900/70 dark:ring-white/10 ${
-              isSideDock
-                ? "flex-col items-stretch"
-                : "flex-wrap items-center justify-between"
-            }`}
-          >
-            <div
-              className={`flex rounded-2xl border border-white/70 bg-white/35 px-4 py-3 ring-1 ring-white/30 backdrop-blur-xl dark:border-white/15 dark:bg-zinc-900/35 dark:ring-white/10 ${
-                isSideDock
-                  ? "flex-col items-stretch gap-2"
-                  : "flex-wrap items-center justify-between gap-3"
-              }`}
+        {/* Calendar header */}
+        <motion.div className="flex shrink-0 items-center justify-between gap-3 border-b border-zinc-200/60 px-4 py-2.5 dark:border-zinc-800/60">
+          {/* Left: title */}
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={title}
+              className="min-w-0 flex flex-row truncate z-50 font-display text-2xl font-semibold text-zinc-800 dark:text-zinc-100"
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
             >
-              {modes.map(({ id, label }) => (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => setMode(id)}
-                  className={` px-4 py-2 text-sm font-semibold skew-x-6 transition-colors ${
-                    mode === id
-                      ? "bg-zinc-900 text-white shadow-sm dark:bg-white dark:text-zinc-900"
-                      : "text-zinc-600 hover:bg-white/50 dark:text-zinc-400 dark:hover:bg-white/10"
-                  }`}
+              {title.split("").map((char, i) => (
+                <motion.span
+                  key={i}
+                  variants={{
+                    hidden: { opacity: 0, y: 10 },
+                    visible: {
+                      opacity: 1,
+                      y: 0,
+                      transition: {
+                        type: "spring",
+                        stiffness: 100,
+                        damping: 10,
+                        delay: i * 0.02,
+                      },
+                    },
+                  }}
                 >
-                  {label}
-                </button>
+                  {char === " " ? "\u00A0" : char}
+                </motion.span>
               ))}
-              {mode === "custom" ? (
-                <label className="ml-1 flex items-center gap-2 rounded-xl border border-white/70 bg-white/60 px-2 py-1 text-xs font-semibold text-zinc-700 dark:border-white/15 dark:bg-zinc-900/50 dark:text-zinc-200">
-                  Days
-                  <input
-                    type="number"
-                    min={1}
-                    max={14}
-                    step={1}
-                    value={customDayCount}
-                    onChange={(e) => {
-                      const parsed = Number.parseInt(e.target.value, 10);
-                      if (Number.isNaN(parsed)) return;
-                      setCustomDayCount(Math.max(1, Math.min(14, parsed)));
-                    }}
-                    className="w-14 rounded-md border border-zinc-300/80 bg-white/90 px-2 py-1 text-xs font-bold text-zinc-900 outline-none ring-sky-400/40 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100"
-                    aria-label="Custom day count"
-                  />
-                </label>
-              ) : null}
-            </div>
-            <div
-              className={`flex rounded-2xl border border-white/70 bg-white/35 px-4 py-3 ring-1 ring-white/30 backdrop-blur-xl dark:border-white/15 dark:bg-zinc-900/35 dark:ring-white/10 ${
-                isSideDock
-                  ? "flex-col items-stretch gap-3"
-                  : "flex-wrap items-center justify-between gap-3"
-              }`}
-            >
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-quantify text-lg font-semibold text-zinc-800 dark:text-zinc-100">
-                  {title}
-                </p>
-              </div>
-              <DatePicker
-                value={pickerValue}
-                onChange={(value: DateValue | null) => {
-                  if (!value) return;
-                  const next = DateTime.fromJSDate(
-                    value.toDate(getLocalTimeZone()),
-                  ).startOf("day");
-                  setFocus(next);
-                }}
-                size="sm"
-              />
-              <div
-                className={`flex ${
-                  isSideDock ? "justify-center gap-2" : "items-center gap-1"
+            </motion.p>
+          </AnimatePresence>
+          {/* Center: mode switcher */}
+          <div className="flex absolute left-1/2 -translate-x-1/2 items-center gap-0.5 rounded-xl border border-zinc-200/80 bg-white/60 p-1 backdrop-blur-sm dark:border-zinc-700/60 dark:bg-zinc-900/60">
+            {modes.map(({ id, label }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setMode(id)}
+                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  mode === id
+                    ? "bg-zinc-900 text-white shadow-sm dark:bg-white dark:text-zinc-900"
+                    : "text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-100"
                 }`}
               >
-                <motion.button
-                  type="button"
-                  whileTap={{ scale: 0.94 }}
-                  onClick={goPrev}
-                  className="rounded-full bg-blue-300/40 px-3 py-2 text-sm font-semibold text-zinc-800 hover:bg-white dark:border-zinc-600 dark:bg-zinc-800/60 dark:text-zinc-100 dark:hover:bg-zinc-800"
-                  aria-label="Previous"
-                >
-                  ←
-                </motion.button>
-                <motion.button
-                  type="button"
-                  whileTap={{ scale: 0.94 }}
-                  onClick={() => setFocus(DateTime.local().startOf("day"))}
-                  className=" bg-blue-500 transition-colors px-6 rounded-full py-2 text-sm font-semibold text-white hover:bg-zinc-800 dark:bg-zinc-800/60 dark:text-zinc-100 dark:hover:bg-zinc-800"
-                >
-                  Today
-                </motion.button>
-                <motion.button
-                  type="button"
-                  whileTap={{ scale: 0.94 }}
-                  onClick={goNext}
-                  className="rounded-full bg-blue-300/40 px-3 py-2 text-sm font-semibold text-zinc-800 hover:bg-white dark:border-zinc-600 dark:bg-zinc-800/60 dark:text-zinc-100 dark:hover:bg-zinc-800"
-                  aria-label="Next"
-                >
-                  →
-                </motion.button>
-              </div>
+                {label}
+              </button>
+            ))}
+            {mode === "custom" && (
+              <label className="ml-1 flex items-center gap-1.5 rounded-lg border border-zinc-200/80 bg-white/60 px-2 py-1 text-xs font-semibold text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900/50 dark:text-zinc-300">
+                Days
+                <input
+                  type="number"
+                  min={1}
+                  max={14}
+                  step={1}
+                  value={customDayCount}
+                  onChange={(e) => {
+                    const parsed = Number.parseInt(e.target.value, 10);
+                    if (Number.isNaN(parsed)) return;
+                    setCustomDayCount(Math.max(1, Math.min(14, parsed)));
+                  }}
+                  className="w-12 rounded-md border border-zinc-300/80 bg-white/90 px-1.5 py-0.5 text-xs font-bold text-zinc-900 outline-none ring-sky-400/40 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100"
+                  aria-label="Custom day count"
+                />
+              </label>
+            )}
+          </div>
+
+          {/* Right: date picker + nav */}
+          <div className="flex items-center gap-2">
+            <DatePicker
+              value={pickerValue}
+              onChange={(value: DateValue | null) => {
+                if (!value) return;
+                const next = DateTime.fromJSDate(
+                  value.toDate(getLocalTimeZone()),
+                ).startOf("day");
+                setFocus(next);
+              }}
+              size="sm"
+            />
+            <div className="flex items-center gap-1">
+              <motion.button
+                type="button"
+                whileTap={{ scale: 0.94 }}
+                onClick={goPrev}
+                className="rounded-full bg-zinc-100 px-3 py-1.5 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+                aria-label="Previous"
+              >
+                ←
+              </motion.button>
+              <motion.button
+                type="button"
+                whileTap={{ scale: 0.94 }}
+                onClick={() => setFocus(DateTime.local().startOf("day"))}
+                className="rounded-full bg-blue-500 px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-blue-600"
+              >
+                Today
+              </motion.button>
+              <motion.button
+                type="button"
+                whileTap={{ scale: 0.94 }}
+                onClick={goNext}
+                className="rounded-full bg-zinc-100 px-3 py-1.5 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+                aria-label="Next"
+              >
+                →
+              </motion.button>
             </div>
           </div>
         </motion.div>

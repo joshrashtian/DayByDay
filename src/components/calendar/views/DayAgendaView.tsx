@@ -37,28 +37,7 @@ export function DayAgendaView({
       exit={{ opacity: 0, x: -16 }}
       transition={{ duration: 0.28, ease: [0.25, 0.1, 0.25, 1] }}
     >
-      <div className="flex flex-row ">
-        {day
-          .toLocaleString(DateTime.DATE_FULL)
-          .split("")
-          .map((part, index) => (
-            <motion.p
-              key={`${part}-${index}`}
-              initial={{ opacity: 0, x: 16 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -16 }}
-              transition={{
-                duration: 0.28,
-                delay: index * 0.06,
-                ease: [0.25, 0.1, 0.25, 1],
-              }}
-              className="font-quantify text-6xl font-black tracking-wide text-zinc-900 dark:text-zinc-50"
-            >
-              {part === " " ? " " : part}
-            </motion.p>
-          ))}
-      </div>
-      <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
           {dayTasks.length} due {dayTasks.length === 1 ? "item" : "items"}
         </p>

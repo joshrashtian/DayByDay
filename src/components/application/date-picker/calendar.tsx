@@ -1,6 +1,6 @@
 import type { PropsWithChildren, ReactNode } from "react";
 import { Fragment, useState } from "react";
-import { getLocalTimeZone, today } from "@internationalized/date";
+import { getLocalTimeZone } from "@internationalized/date";
 import { ChevronLeft, ChevronRight } from "@untitledui/icons";
 import type { CalendarProps as AriaCalendarProps, DateValue } from "react-aria-components";
 import {
@@ -45,55 +45,42 @@ export const Calendar = ({ highlightedDates, className, children, ...props }: Ca
                 {...props}
                 className={(state) =>
                     cx(
-                        "flex flex-col gap-3 rounded-xl border border-zinc-200/70 bg-white/70 p-3 dark:border-zinc-700/70 dark:bg-zinc-900/60",
+                        "flex flex-col gap-2",
                         typeof className === "function" ? className(state) : className,
                     )
                 }
             >
                 {({ state }) => (
                     <>
-                        <header className="flex items-center justify-between">
+                        <header className="flex items-center justify-between px-1 pb-1">
                             <AriaButton
                                 slot="previous"
-                                className="inline-flex size-8 items-center justify-center rounded-full border border-zinc-300/80 bg-white/80 text-zinc-700 transition-colors hover:bg-white dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-200 dark:hover:bg-zinc-900"
+                                className="inline-flex size-7 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
                             >
-                                <ChevronLeft className="size-4" />
+                                <ChevronLeft className="size-3.5" />
                             </AriaButton>
-                            <AriaHeading className="text-sm font-semibold text-zinc-800 dark:text-zinc-100" />
+                            <AriaHeading className="text-xs font-semibold tracking-wide text-zinc-700 dark:text-zinc-200" />
                             <AriaButton
                                 slot="next"
-                                className="inline-flex size-8 items-center justify-center rounded-full border border-zinc-300/80 bg-white/80 text-zinc-700 transition-colors hover:bg-white dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-200 dark:hover:bg-zinc-900"
+                                className="inline-flex size-7 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
                             >
-                                <ChevronRight className="size-4" />
+                                <ChevronRight className="size-3.5" />
                             </AriaButton>
                         </header>
 
-                        {children || (
-                            <div className="flex justify-end">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        state.setValue(today(getLocalTimeZone()));
-                                        state.setFocusedDate(today(getLocalTimeZone()));
-                                    }}
-                                    className="rounded-lg border border-zinc-300/80 bg-white/80 px-3 py-1.5 text-sm font-semibold text-zinc-700 transition-colors hover:bg-white dark:border-zinc-700 dark:bg-zinc-900/60 dark:text-zinc-200 dark:hover:bg-zinc-900"
-                                >
-                                    Today
-                                </button>
-                            </div>
-                        )}
+                        {children || null}
 
                         <AriaCalendarGrid weekdayStyle="short" className="w-max">
-                            <AriaCalendarGridHeader className="border-b border-zinc-200/70 dark:border-zinc-700/70">
+                            <AriaCalendarGridHeader>
                                 {(day) => (
                                     <AriaCalendarHeaderCell className="p-0">
-                                        <div className="flex size-10 items-center justify-center text-sm font-semibold text-zinc-500 dark:text-zinc-400">
+                                        <div className="flex size-8 items-center justify-center text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
                                             {day.slice(0, 2)}
                                         </div>
                                     </AriaCalendarHeaderCell>
                                 )}
                             </AriaCalendarGridHeader>
-                            <AriaCalendarGridBody className="[&_td]:p-0 [&_tr]:border-b border-zinc-100/80 [&_tr:last-of-type]:border-none dark:[&_tr]:border-zinc-800/70">
+                            <AriaCalendarGridBody className="[&_td]:p-0">
                                 {(date) => (
                                     <CalendarCell
                                         date={date}

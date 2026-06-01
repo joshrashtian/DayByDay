@@ -42,9 +42,7 @@ export function SidebarNavItemView({
         </span>
         <span
           className={`overflow-hidden whitespace-nowrap text-sm font-semibold transition-all duration-150 ${
-            showLabel
-              ? "ml-2 max-w-[160px] opacity-100"
-              : "ml-0 max-w-0 opacity-0"
+            showLabel ? "ml-2 max-w-40 opacity-100" : "ml-0 max-w-0 opacity-0"
           }`}
         >
           {item.label}
@@ -72,9 +70,7 @@ export function SidebarNavItemView({
         </span>
         <span
           className={`overflow-hidden whitespace-nowrap text-sm font-semibold transition-all duration-150 ${
-            showLabel
-              ? "ml-2 max-w-[160px] opacity-100"
-              : "ml-0 max-w-0 opacity-0"
+            showLabel ? "ml-2 max-w-40 opacity-100" : "ml-0 max-w-0 opacity-0"
           }`}
         >
           {item.label}
@@ -111,9 +107,7 @@ export function SidebarNavItemView({
       </span>
       <span
         className={`overflow-hidden whitespace-nowrap text-sm font-semibold transition-all duration-150 ${
-          showLabel
-            ? "ml-2 max-w-[160px] opacity-100"
-            : "ml-0 max-w-0 opacity-0"
+          showLabel ? "ml-2 max-w-40 opacity-100" : "ml-0 max-w-0 opacity-0"
         }`}
       >
         {item.label}

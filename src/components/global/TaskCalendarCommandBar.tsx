@@ -7,12 +7,14 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import { DateTime } from "luxon";
+import { motion } from "motion/react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   IoArrowUp,
   IoCalendarOutline,
   IoDocumentTextOutline,
   IoPricetagsOutline,
+  IoSparkles,
   IoSparklesOutline,
   IoTerminalOutline,
   IoTimeOutline,
@@ -425,7 +427,7 @@ export function TaskCalendarCommandBar() {
   ) : mode === "calendar" ? (
     <IoCalendarOutline className="h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500" />
   ) : (
-    <IoSparklesOutline className="h-3.5 w-3.5 text-blue-700 dark:text-blue-300" />
+    <IoSparkles className="h-3.5 w-3.5 text-zinc-400 dark:text-blue-300" />
   );
 
   return (
@@ -442,7 +444,7 @@ export function TaskCalendarCommandBar() {
           />
         ) : null}
 
-        <div className="overflow-hidden rounded-2xl bg-white shadow-[0_8px_36px_rgba(15,15,15,0.18)] dark:bg-zinc-900">
+        <div className=" rounded-2xl bg-white/10 backdrop-blur-2xl shadow-[0_8px_36px_rgba(15,15,15,0.18)] dark:bg-zinc-900">
           {(isTaskInput || isCommandInput) && (
             <div className="px-5 pt-4 pb-3">
               {isTaskInput && (
@@ -458,7 +460,7 @@ export function TaskCalendarCommandBar() {
                 </div>
               )}
 
-              <p
+              <motion.p
                 className={`font-display text-sm font-bold italic leading-snug ${
                   isCommandInput
                     ? feedback?.tone === "error"
@@ -470,9 +472,27 @@ export function TaskCalendarCommandBar() {
                 }`}
               >
                 {isCommandInput
-                  ? (feedback?.text ?? "Type a command…")
-                  : summary}
-              </p>
+                  ? (feedback?.text.split("").map((c, i) => (
+                      <motion.span
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        key={i}
+                      >
+                        {c}
+                      </motion.span>
+                    )) ?? "Type a command…")
+                  : summary.split("").map((c, i) => (
+                      <motion.span
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.01 }}
+                        key={i}
+                        className="z-50"
+                      >
+                        {c}
+                      </motion.span>
+                    ))}
+              </motion.p>
 
               {isTaskInput && tokenHints.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-1.5">

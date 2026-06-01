@@ -480,6 +480,8 @@ type WeekDayTimeColumnProps = {
   previewRange: WeekPreviewRange | null;
   disableTooltips: boolean;
   editingTaskId: string | null;
+  isToday: boolean;
+  nowMinuteOfDay: number | null;
   onSlotContextMenu: (
     e: ReactMouseEvent<HTMLDivElement>,
     minuteOfDay: number,
@@ -678,6 +680,8 @@ function WeekDayTimeColumn({
   previewRange,
   disableTooltips,
   editingTaskId,
+  isToday,
+  nowMinuteOfDay,
   onSlotContextMenu,
   onEventContextMenu,
   onSlotMouseDown,
@@ -708,7 +712,7 @@ function WeekDayTimeColumn({
         gridColumn: dayIndex + 2,
       }}
     >
-      <div className="absolute inset-0 grid grid-rows-[repeat(96,minmax(0,1fr))]">
+      <div className="absolute inset-0 grid grid-rows-96">
         {quarterSlots.map((minuteOfDay) => (
           <div
             key={`${key}-slot-${minuteOfDay}`}
@@ -726,6 +730,16 @@ function WeekDayTimeColumn({
           />
         ))}
       </div>
+
+      {isToday && nowMinuteOfDay !== null ? (
+        <div
+          className="pointer-events-none absolute inset-x-0 z-20 flex items-center"
+          style={{ top: `${(nowMinuteOfDay / MINUTES_PER_DAY) * 100}%` }}
+        >
+          <span className="ml-0.5 h-2 w-2 shrink-0 rounded-full bg-blue-500" />
+          <span className="h-px flex-1 bg-blue-500/70" />
+        </div>
+      ) : null}
 
       <LayoutGroup id={`week-events-${key}`}>
         <div className="pointer-events-none absolute inset-0 z-10">
@@ -788,7 +802,7 @@ function WeekDayTimeColumn({
 function WeekTimeLabelsColumn({ quarterSlots }: { quarterSlots: number[] }) {
   return (
     <div
-      className="grid grid-rows-[repeat(96,minmax(0,1fr))] border-r border-zinc-200/80 bg-zinc-50/55 dark:border-white/10 dark:bg-zinc-900/35"
+      className="grid grid-rows-96 border-r border-zinc-200/80 bg-zinc-50/55 dark:border-white/10 dark:bg-zinc-900/35"
       style={{ gridRow: `3 / span ${SLOTS_PER_DAY}`, gridColumn: 1 }}
     >
       {quarterSlots.map((minuteOfDay) => (
@@ -833,6 +847,17 @@ export function WeekView({
   );
   const today = DateTime.local().startOf("day");
   const quarterSlots = Array.from({ length: 96 }, (_, i) => i * 15);
+
+  const getNowMinute = () => {
+    const now = DateTime.local();
+    return now.hour * 60 + now.minute;
+  };
+  const [nowMinuteOfDay, setNowMinuteOfDay] = useState<number>(getNowMinute);
+  useEffect(() => {
+    const tick = () => setNowMinuteOfDay(getNowMinute());
+    const id = window.setInterval(tick, 60_000);
+    return () => window.clearInterval(id);
+  }, []);
   const showWeekMeta = anchorToWeekStart && safeDayCount === 7;
   const [dragSelection, setDragSelection] = useState<WeekDragSelection | null>(
     null,
@@ -1016,19 +1041,8 @@ export function WeekView({
   }, [dragSelection, editInteraction, editTarget, onUpdateTaskSchedule]);
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-4">
-      <div className="flex items-end justify-between gap-3">
-        <p className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-          {showWeekMeta
-            ? `W${rangeStart.weekNumber}`
-            : `${safeDayCount} Day View`}
-        </p>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          {rangeStart.toFormat("d MMM")} - {rangeEnd.toFormat("d MMM yyyy")}
-        </p>
-      </div>
-
-      <div className="min-h-0 flex-1 overflow-auto rounded-2xl border border-zinc-200/70 bg-white/75 shadow-[0_8px_30px_rgba(15,23,42,0.06)] ring-1 ring-white/60 dark:border-white/15 dark:bg-zinc-900/45 dark:ring-white/10 [&>div]:min-h-full">
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="min-h-0 flex-1 overflow-auto rounded-none border-0 bg-white/75 dark:bg-zinc-900/45 [&>div]:min-h-full">
         <div
           className="grid min-h-full"
           style={{
@@ -1042,7 +1056,6 @@ export function WeekView({
           </div>
           {days.map((day, dayIndex) => {
             const key = day.toISODate() ?? "";
-            const count = (byDay.get(key) ?? []).length;
             const isToday = day.hasSame(today, "day");
             return (
               <button
@@ -1114,7 +1127,7 @@ export function WeekView({
                     : "bg-white/65 dark:bg-zinc-900/20"
                 }`}
               >
-                <div className="flex min-h-[44px] flex-col gap-1">
+                <div className="flex min-h-11 flex-col gap-1">
                   {allDayItems.slice(0, 2).map((row) => {
                     const tooltipContent = weekAllDayEventTooltipContent(
                       row.task,
@@ -1185,6 +1198,8 @@ export function WeekView({
                 previewRange={previewRange}
                 disableTooltips={disableTooltips}
                 editingTaskId={editingTaskId}
+                isToday={day.hasSame(today, "day")}
+                nowMinuteOfDay={nowMinuteOfDay}
                 onSlotContextMenu={(e, slotMinuteOfDay) => {
                   const start = day
                     .startOf("day")

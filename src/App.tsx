@@ -1,7 +1,7 @@
 import "./App.css";
 import { useEffect, useState } from "react";
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
-import { AnimatePresence, motion } from "motion/react";
+import { motion } from "motion/react";
 import { IoClose } from "react-icons/io5";
 import { AnimatedPage } from "./components/layout/AnimatedPage";
 import SideBar from "./components/global/sidebar";
@@ -173,7 +173,7 @@ export default function App() {
                 role="dialog"
                 aria-modal="true"
                 aria-label="Settings"
-                className="relative flex h-[min(90vh,920px)] w-full max-w-[1180px] overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-950"
+                className="relative flex h-[min(90vh,920px)] w-full max-w-295 overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-950"
                 onClick={(event) => event.stopPropagation()}
               >
                 <button
