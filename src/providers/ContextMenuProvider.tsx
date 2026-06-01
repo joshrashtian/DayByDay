@@ -10,6 +10,11 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
+import {
+  clientRectToFixedPosition,
+  getAppZoomLevel,
+  isCssHtmlZoomActive,
+} from "@/lib/appZoom";
 
 export type ContextMenuItem =
   | {
@@ -75,12 +80,13 @@ export default function ContextMenuProvider({
       event.preventDefault();
       event.stopPropagation();
       if (items.length === 0) return;
-      setMenu({
-        x: event.clientX,
-        y: event.clientY,
-        items,
-      });
-      setPlaced({ x: event.clientX, y: event.clientY });
+      // When CSS zoom is on <html>, clientX/Y are in scaled coords but
+      // position:fixed uses unscaled CSS pixels — divide to match.
+      const z = isCssHtmlZoomActive() ? getAppZoomLevel() : 1;
+      const x = event.clientX / z;
+      const y = event.clientY / z;
+      setMenu({ x, y, items });
+      setPlaced({ x, y });
     },
     [],
   );
@@ -97,7 +103,8 @@ export default function ContextMenuProvider({
     if (!menu) return;
     const el = menuPanelRef.current;
     if (!el) return;
-    const rect = el.getBoundingClientRect();
+    // Convert rect to fixed-position coordinate space (handles CSS html zoom).
+    const rect = clientRectToFixedPosition(el.getBoundingClientRect());
     const pad = 8;
     let x = menu.x;
     let y = menu.y;

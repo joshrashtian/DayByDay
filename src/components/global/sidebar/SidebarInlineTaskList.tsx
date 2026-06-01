@@ -73,20 +73,20 @@ export function SidebarInlineTaskList({ showLabel }: Props) {
   }, [openPopup, addTask, closePopup, onHome, displayedBlockName]);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-1.5">
+    <div className="flex min-h-0 flex-1 max-h-1/2 flex-col gap-1.5">
       {/* Section header */}
       <div className="flex items-center justify-between px-1 pt-1">
         {showLabel ? (
           <>
-            <span className="font-eudoxus text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-400">
+            <span className="font-eudoxus text-[10px] font-semibold uppercase tracking-[0.12em] text-white/60">
               {scopeLabel}
             </span>
-            <span className="rounded-full bg-zinc-100 px-1.5 py-0.5 font-eudoxus text-[10px] font-medium text-zinc-500">
+            <span className="rounded-full bg-white/20 px-1.5 py-0.5 font-eudoxus text-[10px] font-medium text-white/70">
               {activeCount} active
             </span>
           </>
         ) : (
-          <span className="mx-auto font-eudoxus text-[10px] font-semibold text-zinc-400">
+          <span className="mx-auto font-eudoxus text-[10px] font-semibold text-white/60">
             {activeCount}
           </span>
         )}
@@ -96,7 +96,7 @@ export function SidebarInlineTaskList({ showLabel }: Props) {
       <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto">
         {panelTasks.length === 0 ? (
           showLabel ? (
-            <p className="px-2 py-2 font-eudoxus text-xs text-zinc-400">
+            <p className="px-2 py-2 font-eudoxus text-xs text-white/60">
               Nothing scheduled.
             </p>
           ) : null
@@ -149,8 +149,8 @@ export function SidebarInlineTaskList({ showLabel }: Props) {
                 }}
                 className={`w-full rounded-xl px-2.5 py-2 text-left transition-colors ${
                   isFocused
-                    ? "bg-violet-50 ring-1 ring-inset ring-violet-200/80"
-                    : "hover:bg-zinc-50"
+                    ? "bg-white/25 ring-1 ring-inset ring-white/30"
+                    : "hover:bg-white/10"
                 } ${task.done ? "opacity-50" : ""} ${
                   canDragTask && !isIcsTask(task)
                     ? "cursor-grab active:cursor-grabbing"
@@ -159,20 +159,20 @@ export function SidebarInlineTaskList({ showLabel }: Props) {
               >
                 <div className="flex items-start justify-between gap-1.5">
                   <span
-                    className={`flex-1 truncate font-ppneue text-[12.5px] font-medium leading-snug text-zinc-800 ${
+                    className={`flex-1 truncate font-ppneue text-[12.5px] font-medium leading-snug text-white ${
                       task.done ? "line-through" : ""
                     }`}
                   >
                     {task.title}
                   </span>
                   {isFocused && showLabel && (
-                    <span className="shrink-0 rounded-full bg-violet-100 px-1.5 py-px font-eudoxus text-[9px] font-bold uppercase tracking-wide text-violet-600">
+                    <span className="shrink-0 rounded-full bg-white/25 px-1.5 py-px font-eudoxus text-[9px] font-bold uppercase tracking-wide text-white">
                       Focus
                     </span>
                   )}
                 </div>
                 {showLabel && (category || duration) && (
-                  <div className="mt-0.5 flex items-center gap-1 font-eudoxus text-[10px] text-zinc-400">
+                  <div className="mt-0.5 flex items-center gap-1 font-eudoxus text-[10px] text-white/60">
                     {category && (
                       <>
                         <span
@@ -196,7 +196,7 @@ export function SidebarInlineTaskList({ showLabel }: Props) {
       <button
         type="button"
         onClick={openTaskFormPopup}
-        className="flex shrink-0 w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-zinc-300/90 bg-white/50 px-3 py-2 font-eudoxus text-[11px] font-medium text-violet-600 transition-colors hover:border-violet-300 hover:bg-violet-50"
+        className="flex shrink-0 w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-white/30 bg-white/10 px-3 py-2 font-eudoxus text-[11px] font-medium text-white/80 transition-colors hover:border-white/50 hover:bg-white/20"
       >
         <IoAdd className="text-sm" aria-hidden />
         {showLabel ? "Add a task" : ""}

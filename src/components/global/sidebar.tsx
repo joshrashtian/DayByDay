@@ -51,11 +51,11 @@ const buildPinnedPanelNavItems = (panelIds: string[]): SidebarNavItem[] => {
     }));
 };
 
-const SNAP_WIDTHS = [220, 260] as const;
+const SNAP_WIDTHS = [220, 240, 320, 520] as const;
 const DEFAULT_SIDEBAR_WIDTH = SNAP_WIDTHS[0];
 const LABEL_REVEAL_WIDTH = 180;
 const MIN_EXPANDED_WIDTH = SNAP_WIDTHS[0] - 16;
-const MAX_EXPANDED_WIDTH = SNAP_WIDTHS[1] + 16;
+const MAX_EXPANDED_WIDTH = SNAP_WIDTHS[3] + 16;
 const SWIPE_CLOSE_THRESHOLD = 56;
 const EDGE_SWIPE_OPEN_THRESHOLD = 48;
 const EDGE_SWIPE_ZONE_WIDTH = 28;
@@ -209,7 +209,7 @@ const SideBar = ({
           <motion.nav
             key="sidebar-nav"
             aria-label="Primary navigation"
-            className="relative flex h-full flex-col overflow-hidden border-r border-zinc-200/70 bg-white/85 px-3 py-3 shadow-lg backdrop-blur-sm"
+            className="relative flex h-full justify-between flex-col overflow-hidden  bg-linear-to-tr from-blue-700 to-purple-500 rounded-r-3xl px-3 py-3 shadow-lg backdrop-blur-sm"
             style={{ width: resolvedWidth }}
             initial={{ x: -24 }}
             animate={{ x: 0 }}
@@ -276,7 +276,7 @@ const SideBar = ({
 
             {/* Divider */}
             {sidebarMode === "tasks" && (
-              <div className="my-0.5 mx-1 shrink-0 border-t border-zinc-200/70" />
+              <div className="my-0.5 mx-1 shrink-0 border-t border-white/20" />
             )}
 
             {/* Inline task list — fills remaining space */}
@@ -287,13 +287,13 @@ const SideBar = ({
             )}
 
             {/* Utility icon bar */}
-            <div className="flex shrink-0 items-center justify-around border-t border-zinc-200/70 pt-2">
+            <div className="flex shrink-0 items-center justify-around border-t border-white/20 pt-2">
               <button
                 type="button"
                 onClick={onOpenProfile}
                 aria-label="Profile"
                 title="Profile"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-white/60 transition-colors hover:bg-white/20 hover:text-white"
               >
                 <IoPersonOutline className="text-base" />
               </button>
@@ -302,7 +302,7 @@ const SideBar = ({
                 onClick={onOpenSettings}
                 aria-label="Settings"
                 title="Settings"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-white/60 transition-colors hover:bg-white/20 hover:text-white"
               >
                 <IoSettingsOutline className="text-base" />
               </button>
@@ -310,7 +310,7 @@ const SideBar = ({
                 to="/help"
                 aria-label="Help"
                 title="Help"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-white/60 transition-colors hover:bg-white/20 hover:text-white"
               >
                 <IoHelpCircleOutline className="text-base" />
               </NavLink>

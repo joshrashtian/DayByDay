@@ -126,13 +126,9 @@ export type BlockBannerResolvedClasses = {
 
 // ── Categories ────────────────────────────────────────────────────────────
 
-export type CategoryTone = "soft" | "solid";
-
 export type CategoryConfig = {
   name: string;
   color: string;
-  textColor?: string;
-  tone?: CategoryTone;
   icon?: string;
 };
 

@@ -43,6 +43,7 @@ export default function CalendarScreen() {
     tasks,
     toggleTask,
     removeTask,
+    duplicateTask,
     addTask,
     setTaskSchedule,
     updateTask,
@@ -51,6 +52,7 @@ export default function CalendarScreen() {
       tasks: s.tasks,
       toggleTask: s.toggleTask,
       removeTask: s.removeTask,
+      duplicateTask: s.duplicateTask,
       addTask: s.addTask,
       setTaskSchedule: s.setTaskSchedule,
       updateTask: s.updateTask,
@@ -340,6 +342,7 @@ export default function CalendarScreen() {
                   onToggleTask={toggleTask}
                   onEditTask={openTaskEditor}
                   onDeleteTask={removeTask}
+                  onDuplicateTask={duplicateTask}
                   onPickDay={handlePickDay}
                 />
               </div>
@@ -351,6 +354,7 @@ export default function CalendarScreen() {
                 onToggleTask={toggleTask}
                 onEditTask={openTaskEditor}
                 onDeleteTask={removeTask}
+                onDuplicateTask={duplicateTask}
                 onAddTaskForDay={openAddTaskForDay}
               />
             ) : null}
@@ -361,6 +365,7 @@ export default function CalendarScreen() {
                   tasks={tasks}
                   onToggleTask={toggleTask}
                   onDeleteTask={removeTask}
+                  onDuplicateTask={duplicateTask}
                   onPickDay={handlePickDay}
                   onAddTaskForDay={openAddTaskForDay}
                   onCreateTimedTask={openAddTaskForRange}
@@ -379,6 +384,7 @@ export default function CalendarScreen() {
                 onToggleTask={toggleTask}
                 onEditTask={openTaskEditor}
                 onDeleteTask={removeTask}
+                onDuplicateTask={duplicateTask}
                 onPickDay={handlePickDay}
                 onAddTaskForDay={openAddTaskForDay}
                 onCreateTimedTask={openAddTaskForRange}
@@ -395,6 +401,7 @@ export default function CalendarScreen() {
                   tasks={tasks}
                   onToggleTask={toggleTask}
                   onDeleteTask={removeTask}
+                  onDuplicateTask={duplicateTask}
                   onPickDay={handlePickDay}
                   onAddTaskForDay={openAddTaskForDay}
                   onCreateTimedTask={openAddTaskForRange}

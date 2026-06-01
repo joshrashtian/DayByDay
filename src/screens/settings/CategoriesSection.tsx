@@ -1,10 +1,7 @@
 import { useEffect, useId, useState } from "react";
 import { ColorPicker } from "../../components/base/input/color-picker";
 import { IconPicker } from "../../components/base/input/icon-picker";
-import {
-  getCategoryIconOption,
-  renderCategoryIcon,
-} from "../../lib/categoryIcons";
+import { renderCategoryIcon } from "../../lib/categoryIcons";
 import { useTasksStore } from "../../stores/tasksStore";
 import { useSettingsStore } from "../../stores/settingsStore";
 import {
@@ -13,10 +10,9 @@ import {
   deleteCategoryEntirely,
   getCategoryConfigByName,
   getCategoryConfigs,
-  removeCategoryConfigByName,
+  resolveCategoryVisual,
   setOrUpdateCategoryConfig,
   suggestCategoryColor,
-  type CategoryTone,
 } from "../../lib/taskCategories";
 
 export function CategoriesSection() {
@@ -30,15 +26,11 @@ export function CategoriesSection() {
     getCategoryConfigs(),
   );
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [categoryNameInput, setCategoryNameInput] = useState("");
-  const [categoryColorInput, setCategoryColorInput] = useState("#6366f1");
-  const [categoryTextColorInput, setCategoryTextColorInput] =
-    useState("#ffffff");
-  const [categoryTone, setCategoryTone] = useState<CategoryTone>("soft");
-  const [categoryIconInput, setCategoryIconInput] = useState("");
-  const [categoryMessage, setCategoryMessage] = useState<string | null>(null);
-  const [pendingStyleDelete, setPendingStyleDelete] = useState(false);
-  const [pendingFullDelete, setPendingFullDelete] = useState(false);
+  const [nameInput, setNameInput] = useState("");
+  const [colorInput, setColorInput] = useState("#6366f1");
+  const [iconInput, setIconInput] = useState("");
+  const [message, setMessage] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState(false);
 
   useEffect(() => {
     setCategoryConfigs(getCategoryConfigs());
@@ -56,127 +48,90 @@ export function CategoriesSection() {
   useEffect(() => {
     if (!selectedCategory) return;
     const cfg = getCategoryConfigByName(selectedCategory);
-    setCategoryNameInput(selectedCategory);
-    setCategoryColorInput(cfg?.color ?? suggestCategoryColor(selectedCategory));
-    setCategoryTextColorInput(cfg?.textColor ?? "#ffffff");
-    setCategoryTone(cfg?.tone ?? "soft");
-    setCategoryIconInput(cfg?.icon ?? "");
-    setCategoryMessage(null);
+    setNameInput(selectedCategory);
+    setColorInput(cfg?.color ?? suggestCategoryColor(selectedCategory));
+    setIconInput(cfg?.icon ?? "");
+    setMessage(null);
   }, [selectedCategory, categoryConfigs]);
 
   const onSelectCategory = (name: string) => {
     setSelectedCategory(name);
-    setCategoryMessage(null);
-    setPendingStyleDelete(false);
-    setPendingFullDelete(false);
+    setMessage(null);
+    setPendingDelete(false);
   };
 
-  const onStartNewCategory = () => {
+  const onStartNew = () => {
     setSelectedCategory("");
-    setCategoryNameInput("");
-    setCategoryColorInput("#6366f1");
-    setCategoryTextColorInput("#ffffff");
-    setCategoryTone("soft");
-    setCategoryIconInput("");
-    setCategoryMessage(null);
-    setPendingStyleDelete(false);
-    setPendingFullDelete(false);
+    setNameInput("");
+    setColorInput("#6366f1");
+    setIconInput("");
+    setMessage(null);
+    setPendingDelete(false);
   };
 
-  const onSaveCategoryStyle = () => {
-    const trimmed = categoryNameInput.trim();
+  const onSave = () => {
+    const trimmed = nameInput.trim();
     if (!trimmed) {
-      setCategoryMessage("Enter a category name.");
+      setMessage("Enter a category name.");
       return;
     }
-    if (!/^#([0-9a-fA-F]{6})$/.test(categoryColorInput.trim())) {
-      setCategoryMessage("Primary color must be a 6-digit hex value.");
-      return;
-    }
-    if (
-      categoryTextColorInput.trim() &&
-      !/^#([0-9a-fA-F]{6})$/.test(categoryTextColorInput.trim())
-    ) {
-      setCategoryMessage("Text color must be a 6-digit hex value.");
+    if (!/^#([0-9a-fA-F]{6})$/.test(colorInput.trim())) {
+      setMessage("Color must be a 6-digit hex value.");
       return;
     }
     setOrUpdateCategoryConfig({
       name: trimmed,
-      color: categoryColorInput.trim(),
-      textColor: categoryTextColorInput.trim() || undefined,
-      tone: categoryTone,
-      icon: categoryIconInput.trim() || undefined,
+      color: colorInput.trim(),
+      icon: iconInput.trim() || undefined,
     });
     setSelectedCategory(trimmed);
-    setCategoryMessage("Category style saved.");
+    setMessage("Category saved.");
   };
 
-  const onDeleteCategoryStyle = () => {
-    const trimmed = (selectedCategory || categoryNameInput).trim();
+  const onDelete = () => {
+    const trimmed = (selectedCategory || nameInput).trim();
     if (!trimmed) {
-      setCategoryMessage("Select a category to delete.");
-      return;
-    }
-    if (!pendingStyleDelete) {
-      setPendingStyleDelete(true);
-      setPendingFullDelete(false);
-      setCategoryMessage(
-        `Remove saved style for “${trimmed}”? Tasks keep the category label.`,
-      );
-      return;
-    }
-    removeCategoryConfigByName(trimmed);
-    onStartNewCategory();
-    setPendingStyleDelete(false);
-    setCategoryMessage("Category style removed.");
-  };
-
-  const onDeleteCategoryFully = () => {
-    const trimmed = (selectedCategory || categoryNameInput).trim();
-    if (!trimmed) {
-      setCategoryMessage("Select a category to delete.");
+      setMessage("Select a category to delete.");
       return;
     }
     const count = countTasksInCategory(tasks, trimmed);
-    if (!pendingFullDelete) {
-      setPendingFullDelete(true);
-      setPendingStyleDelete(false);
-      setCategoryMessage(
+    if (!pendingDelete) {
+      setPendingDelete(true);
+      setMessage(
         count > 0
-          ? `Delete “${trimmed}” from all ${count} task${count === 1 ? "" : "s"} and remove its style?`
-          : `Delete “${trimmed}” and remove its style?`,
+          ? `Delete “${trimmed}” from all ${count} task${count === 1 ? "" : "s"}?`
+          : `Delete “${trimmed}”?`,
       );
       return;
     }
     deleteCategoryEntirely(trimmed, removeCategoryFromAllTasks);
-    onStartNewCategory();
-    setPendingFullDelete(false);
-    setCategoryMessage(`Deleted “${trimmed}”.`);
+    onStartNew();
+    setMessage(`Deleted “${trimmed}”.`);
   };
+
+  const previewName = nameInput.trim() || "Category";
+  const previewColor = /^#([0-9a-fA-F]{6})$/.test(colorInput.trim())
+    ? colorInput.trim()
+    : "#6366f1";
+  const visual = resolveCategoryVisual(previewName);
+  // Live-preview the in-progress color/icon rather than the saved config.
+  const cardColor = previewColor;
+  const onColor = visual.onColor;
+  const iconBg = visual.iconBg;
 
   const catSelectId = `${uid}-cat-select`;
   const catNameId = `${uid}-cat-name`;
-  const catToneId = `${uid}-cat-tone`;
-  const catColorId = `${uid}-cat-color`;
-  const catTextColorId = `${uid}-cat-text-color`;
 
   return (
     <div className="space-y-5">
       <div>
         <h2 className="font-display text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
-          Category Styles
+          Categories
         </h2>
         <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-          Customize how task categories appear across calendar and task views.
+          Give each category a color and an icon. Tasks in that category show as
+          a full-color card.
         </p>
-      </div>
-
-      <div
-        className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
-        role="note"
-      >
-        Workflow tip: pick a consistent color language (for example work = cool
-        tones, personal = warm tones) to make scanning your day faster.
       </div>
 
       <div className="flex flex-wrap items-end gap-3">
@@ -185,7 +140,7 @@ export function CategoriesSection() {
             htmlFor={catSelectId}
             className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
           >
-            Category
+            Edit category
           </label>
           <select
             id={catSelectId}
@@ -203,168 +158,114 @@ export function CategoriesSection() {
         </div>
         <button
           type="button"
-          onClick={onStartNewCategory}
+          onClick={onStartNew}
           className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
         >
-          New style
+          New category
         </button>
       </div>
 
-      <fieldset className="border-none p-0">
-        <legend className="sr-only">Category appearance</legend>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="flex flex-col gap-1">
-            <label
-              htmlFor={catNameId}
-              className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
-            >
-              Category name
-            </label>
-            <input
-              id={catNameId}
-              type="text"
-              value={categoryNameInput}
-              onChange={(e) => {
-                setCategoryNameInput(e.target.value);
-                setCategoryMessage(null);
-              }}
-              placeholder="Work, School, Fitness…"
-              className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition-shadow focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label
-              htmlFor={catToneId}
-              className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
-            >
-              Tone
-            </label>
-            <select
-              id={catToneId}
-              value={categoryTone}
-              onChange={(e) =>
-                setCategoryTone(e.target.value as CategoryTone)
-              }
-              className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition-shadow focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-            >
-              <option value="soft">Soft</option>
-              <option value="solid">Solid</option>
-            </select>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span
-              id={catColorId}
-              className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
-            >
-              Color
-            </span>
-            <ColorPicker
-              value={categoryColorInput}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-1">
+          <label
+            htmlFor={catNameId}
+            className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+          >
+            Name
+          </label>
+          <input
+            id={catNameId}
+            type="text"
+            value={nameInput}
+            onChange={(e) => {
+              setNameInput(e.target.value);
+              setMessage(null);
+            }}
+            placeholder="Work, School, Fitness…"
+            className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition-shadow focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <span className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            Color
+          </span>
+          <ColorPicker
+            value={colorInput}
+            onChange={(next) => {
+              setColorInput(next);
+              setMessage(null);
+            }}
+            aria-label="Category color"
+          />
+        </div>
+        <div className="sm:col-span-2">
+          <span
+            className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+            id={`${uid}-icon-label`}
+          >
+            Icon
+          </span>
+          <div className="mt-1" role="group" aria-labelledby={`${uid}-icon-label`}>
+            <IconPicker
+              value={iconInput}
               onChange={(next) => {
-                setCategoryColorInput(next);
-                setCategoryMessage(null);
+                setIconInput(next);
+                setMessage(null);
               }}
-              aria-label="Category color"
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <span
-              id={catTextColorId}
-              className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
-            >
-              Text color
-            </span>
-            <ColorPicker
-              value={categoryTextColorInput}
-              onChange={(next) => {
-                setCategoryTextColorInput(next);
-                setCategoryMessage(null);
+              onClear={() => {
+                setIconInput("");
+                setMessage(null);
               }}
-              presets={["#ffffff", "#f4f4f5", "#18181b", "#000000"]}
-              aria-label="Category text color"
             />
-          </div>
-          <div className="sm:col-span-2">
-            <span
-              className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
-              id={`${uid}-icon-label`}
-            >
-              Icon (optional)
-            </span>
-            <div
-              className="mt-1"
-              role="group"
-              aria-labelledby={`${uid}-icon-label`}
-            >
-              <IconPicker
-                value={categoryIconInput}
-                onChange={(next) => {
-                  setCategoryIconInput(next);
-                  setCategoryMessage(null);
-                }}
-                onClear={() => {
-                  setCategoryIconInput("");
-                  setCategoryMessage(null);
-                }}
-              />
-            </div>
           </div>
         </div>
-      </fieldset>
+      </div>
 
-      <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-900">
-        <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+      <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-900">
+        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
           Preview
         </p>
-        <span
-          className="mt-2 inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-wide"
+        <div
+          className="flex items-center gap-4 rounded-[26px] px-5 py-5 shadow-[0_10px_30px_rgba(15,15,15,0.12)]"
+          style={{ backgroundColor: cardColor, color: onColor }}
           role="img"
-          aria-label={`Preview of ${categoryNameInput.trim() || "Category"} badge`}
-          style={{
-            backgroundColor:
-              categoryTone === "solid"
-                ? categoryColorInput
-                : `${categoryColorInput}2e`,
-            color:
-              categoryTone === "solid"
-                ? categoryTextColorInput || "#ffffff"
-                : categoryTextColorInput || categoryColorInput,
-            borderColor:
-              categoryTone === "solid"
-                ? `${categoryColorInput}aa`
-                : `${categoryColorInput}6f`,
-          }}
+          aria-label={`Preview of ${previewName} card`}
         >
-          {categoryIconInput.trim() ? (
-            <span className="inline-flex items-center" aria-hidden="true">
-              {renderCategoryIcon(categoryIconInput.trim(), "h-3.5 w-3.5")}
-            </span>
-          ) : null}
-          <span>{categoryNameInput.trim() || "Category"}</span>
-        </span>
-        {categoryIconInput.trim() ? (
-          <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
-            Icon key:{" "}
-            <span className="font-semibold text-zinc-700 dark:text-zinc-200">
-              {getCategoryIconOption(categoryIconInput.trim())?.label ??
-                categoryIconInput.trim()}
-            </span>
-          </p>
-        ) : null}
+          <span
+            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full"
+            style={{ backgroundColor: iconBg }}
+            aria-hidden
+          >
+            {iconInput.trim() ? (
+              renderCategoryIcon(iconInput.trim(), "h-7 w-7")
+            ) : (
+              <span className="text-xl font-bold">
+                {previewName.charAt(0).toUpperCase()}
+              </span>
+            )}
+          </span>
+          <div className="min-w-0">
+            <p className="text-xl font-bold leading-tight tracking-tight">
+              Example task
+            </p>
+            <p className="mt-0.5 text-sm font-semibold opacity-80">
+              {previewName}
+            </p>
+          </div>
+        </div>
       </div>
 
       <div aria-live="polite">
-        {categoryMessage ? (
+        {message ? (
           <p
             className="text-sm text-zinc-700 dark:text-zinc-300"
             role={
-              categoryMessage.includes("removed") ||
-              categoryMessage.includes("saved")
+              message.includes("Deleted") || message.includes("saved")
                 ? "status"
                 : "alert"
             }
           >
-            {categoryMessage}
+            {message}
           </p>
         ) : null}
       </div>
@@ -372,24 +273,17 @@ export function CategoriesSection() {
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
-          onClick={onSaveCategoryStyle}
+          onClick={onSave}
           className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
         >
-          Save Category Styles
+          Save category
         </button>
         <button
           type="button"
-          onClick={onDeleteCategoryStyle}
-          className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
-        >
-          {pendingStyleDelete ? "Confirm remove style" : "Remove style only"}
-        </button>
-        <button
-          type="button"
-          onClick={onDeleteCategoryFully}
+          onClick={onDelete}
           className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-700 transition-colors hover:bg-rose-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-500 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950/60"
         >
-          {pendingFullDelete ? "Confirm delete category" : "Delete category"}
+          {pendingDelete ? "Confirm delete" : "Delete category"}
         </button>
       </div>
     </div>

@@ -444,7 +444,7 @@ export function TaskCalendarCommandBar() {
           />
         ) : null}
 
-        <div className=" rounded-2xl bg-white/10 backdrop-blur-2xl shadow-[0_8px_36px_rgba(15,15,15,0.18)] dark:bg-zinc-900">
+        <div className=" rounded-2xl bg-white/60 backdrop-blur-2xl shadow-[0_8px_36px_rgba(15,15,15,0.18)] dark:bg-zinc-900">
           {(isTaskInput || isCommandInput) && (
             <div className="px-5 pt-4 pb-3">
               {isTaskInput && (

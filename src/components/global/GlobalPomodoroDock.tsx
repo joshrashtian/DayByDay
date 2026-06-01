@@ -55,8 +55,7 @@ export function GlobalPomodoroDock() {
   const onHome = location.pathname === "/";
   const onPomodoroScreen = location.pathname === "/pomodoro";
   const hideDock = onPomodoroScreen || (onHome && panelOpen);
-  const progress =
-    1 - secondsLeft / POMODORO_DURATIONS[phase];
+  const progress = 1 - secondsLeft / POMODORO_DURATIONS[phase];
   const isActive = isRunning || dockExpanded;
 
   if (hideDock) return null;
@@ -64,7 +63,7 @@ export function GlobalPomodoroDock() {
   return (
     <motion.div
       layout
-      className="fixed bottom-20 right-4 z-60 font-eudoxus sm:right-6"
+      className="fixed bottom-4 right-4 z-60 font-eudoxus sm:right-6"
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
     >
@@ -83,7 +82,7 @@ export function GlobalPomodoroDock() {
                   className={`h-2 w-2 rounded-full ${PHASE_DOT[phase]}`}
                   aria-hidden
                 />
-                <span className="font-baron text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+                <span className="font-display text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
                   {PHASE_LABELS[phase]}
                 </span>
               </motion.div>
@@ -97,7 +96,7 @@ export function GlobalPomodoroDock() {
               </button>
             </div>
             <div className="space-y-2 px-3 py-3">
-              <p className="font-quantify text-3xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
+              <p className="font-display text-3xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
                 {formatPomodoroTime(secondsLeft)}
               </p>
               {linkedTaskTitle ? (
@@ -127,11 +126,7 @@ export function GlobalPomodoroDock() {
                   onClick={isRunning ? pause : start}
                   className="inline-flex flex-1 items-center justify-center gap-1 rounded-full bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
                 >
-                  {isRunning ? (
-                    <IoPause aria-hidden />
-                  ) : (
-                    <IoPlay aria-hidden />
-                  )}
+                  {isRunning ? <IoPause aria-hidden /> : <IoPlay aria-hidden />}
                   {isRunning ? "Pause" : "Start"}
                 </button>
                 <button

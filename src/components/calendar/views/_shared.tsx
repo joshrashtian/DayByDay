@@ -1,8 +1,8 @@
 import { useState, type MouseEvent as ReactMouseEvent } from "react";
-import { IoCheckmarkDone } from "react-icons/io5";
+import { IoCheckmarkDone, IoEllipseOutline } from "react-icons/io5";
 import { renderCategoryIcon } from "../../../lib/categoryIcons";
 import { getTaskKindVisual } from "../../../lib/taskKinds";
-import { resolveCategoryVisual } from "../../../lib/taskCategories";
+import { resolveTaskCardVisual } from "../../../lib/taskCategories";
 import { formatTaskDue } from "../../../lib/taskDates";
 import { useContextMenu } from "../../../providers/ContextMenuProvider";
 import type { CalendarTaskRow, Task } from "@/types";
@@ -18,6 +18,7 @@ export type TaskListProps = {
   onToggle: (id: string) => void;
   onEditTask?: (task: Task) => void;
   onDeleteTask?: (taskId: string) => void;
+  onDuplicateTask?: (taskId: string) => void;
   compact?: boolean;
 };
 
@@ -26,6 +27,7 @@ export function TaskDueList({
   onToggle,
   onEditTask,
   onDeleteTask,
+  onDuplicateTask,
   compact,
 }: TaskListProps) {
   const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
@@ -56,8 +58,7 @@ export function TaskDueList({
       {compact ? (
         <ul className="flex min-h-0 flex-col gap-1">
           {items.map(({ task, displayDueDate, rowKey }) => {
-            const categoryVisual = resolveCategoryVisual(task.category);
-            const kindVisual = getTaskKindVisual(task.kind);
+            const visual = resolveTaskCardVisual(task);
             return (
               <li key={rowKey}>
                 <button
@@ -79,6 +80,15 @@ export function TaskDueList({
                         label: task.done ? "Mark not done" : "Mark done",
                         onSelect: () => onToggle(task.id),
                       },
+                      ...(onDuplicateTask
+                        ? [
+                            {
+                              id: `duplicate-${task.id}`,
+                              label: "Duplicate task",
+                              onSelect: () => onDuplicateTask(task.id),
+                            } as const,
+                          ]
+                        : []),
                       ...(onDeleteTask
                         ? [
                             {
@@ -91,60 +101,38 @@ export function TaskDueList({
                         : []),
                     ])
                   }
-                  className={`w-full rounded-lg border px-2 py-1.5 text-left text-xs font-medium transition-colors hover:bg-white/60 dark:hover:bg-white/10 ${
-                    task.done
-                      ? "border-emerald-500/60 bg-emerald-500/15 text-emerald-900 shadow-[0_0_0_1px_rgba(16,185,129,0.15)] dark:bg-emerald-500/20 dark:text-emerald-100"
-                      : task.critical
-                      ? "border-red-500/80 bg-red-500/5"
-                      : "border-white/30 bg-white/30 dark:border-white/15 dark:bg-white/5"
+                  className={`w-full rounded-xl px-2 py-1.5 text-left text-xs font-medium transition-[transform,filter,opacity] hover:brightness-105 active:scale-[0.99] ${
+                    task.done ? "opacity-55 saturate-[0.7]" : ""
                   }`}
-                  style={task.done ? completedCheckeredStyle : undefined}
+                  style={{
+                    backgroundColor: visual.color,
+                    color: visual.onColor,
+                  }}
                 >
-                  <div className="mb-1 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5">
                     <span
-                      className={`inline-flex max-w-full items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${kindVisual.subtleBadgeClass}`}
+                      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
+                      style={{ backgroundColor: visual.iconBg }}
+                      aria-hidden
                     >
-                      {kindVisual.label}
+                      {visual.icon ? (
+                        renderCategoryIcon(visual.icon, "h-3 w-3")
+                      ) : (
+                        <IoEllipseOutline className="h-3 w-3" />
+                      )}
                     </span>
-                    {task.critical ? (
-                      <span className="text-[10px] font-display italic text-red-500">
-                        CRITICAL
-                      </span>
-                    ) : task.category && categoryVisual ? (
-                      <span
-                        className="inline-flex max-w-full items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide"
-                        style={{
-                          backgroundColor: categoryVisual.bg,
-                          color: categoryVisual.text,
-                          borderColor: categoryVisual.border,
-                        }}
-                      >
-                        {categoryVisual.icon ? (
-                          <span className="inline-flex items-center">
-                            {renderCategoryIcon(categoryVisual.icon)}
-                          </span>
-                        ) : null}
-                        <span className="truncate">{task.category}</span>
-                      </span>
-                    ) : null}
+                    <span
+                      className={`line-clamp-2 min-w-0 flex-1 font-black leading-snug ${task.done ? "line-through opacity-80" : ""}`}
+                    >
+                      {task.title}
+                    </span>
                     {task.done ? (
-                      <span className="inline-flex items-center justify-center rounded-full bg-emerald-500/20 p-0.5 text-emerald-700 dark:bg-emerald-400/25 dark:text-emerald-100">
-                        <IoCheckmarkDone />
-                      </span>
+                      <IoCheckmarkDone className="shrink-0" />
                     ) : null}
                   </div>
-                  <span
-                    className={`line-clamp-2 font-black leading-snug ${task.done ? "line-through opacity-80" : ""}`}
-                  >
-                    {task.title}
-                  </span>
                   <time
                     dateTime={displayDueDate.toISOString()}
-                    className={`mt-1 block truncate text-[10px] ${
-                      task.done
-                        ? "text-emerald-700/80 dark:text-emerald-200/90"
-                        : "text-zinc-500 dark:text-zinc-400"
-                    }`}
+                    className="mt-1 block truncate pl-6.5 text-[10px] opacity-75"
                   >
                     {formatTaskDue(displayDueDate)}
                   </time>
@@ -154,20 +142,19 @@ export function TaskDueList({
           })}
         </ul>
       ) : (
-        <ul className="flex flex-col gap-1">
+        <ul className="flex flex-col gap-2.5">
           {items.map(({ task, displayDueDate, rowKey }) => {
-            const categoryVisual = resolveCategoryVisual(task.category);
-            const kindVisual = getTaskKindVisual(task.kind);
+            const visual = resolveTaskCardVisual(task);
+            const lightText = visual.onColor === "#ffffff";
+            const chipBg = lightText
+              ? "rgba(255,255,255,0.18)"
+              : "rgba(0,0,0,0.10)";
+            const descLines = (task.description ?? "")
+              .split("\n")
+              .map((line) => line.trim())
+              .filter(Boolean);
             return (
-              <li key={rowKey} className="flex flex-row items-center gap-2">
-                {task.done ? (
-                  <span
-                    className="relative inline-grid h-14 w-14 shrink-0 place-items-center before:absolute before:z-0 before:h-10 before:w-10 before:rotate-45 before:rounded-sm before:bg-red-500 before:content-['']"
-                    aria-hidden
-                  >
-                    <IoCheckmarkDone className="relative z-10 text-3xl text-white" />
-                  </span>
-                ) : null}
+              <li key={rowKey}>
                 <button
                   type="button"
                   onClick={(e) => openTask(task, e)}
@@ -187,6 +174,15 @@ export function TaskDueList({
                         label: task.done ? "Mark not done" : "Mark done",
                         onSelect: () => onToggle(task.id),
                       },
+                      ...(onDuplicateTask
+                        ? [
+                            {
+                              id: `duplicate-${task.id}`,
+                              label: "Duplicate task",
+                              onSelect: () => onDuplicateTask(task.id),
+                            } as const,
+                          ]
+                        : []),
                       ...(onDeleteTask
                         ? [
                             {
@@ -199,74 +195,85 @@ export function TaskDueList({
                         : []),
                     ])
                   }
-                  className={`w-full rounded-xl px-3 py-2 text-left font-medium transition-colors hover:bg-white/60 dark:border-white/10 dark:hover:bg-white/10 ${
-                    task.done
-                      ? "border border-emerald-500/40 bg-emerald-500/10 dark:bg-emerald-500/15"
-                      : "dark:bg-white/5"
+                  className={`flex w-full items-start gap-4 overflow-hidden rounded-[26px] px-5 py-5 text-left shadow-[0_10px_30px_rgba(15,15,15,0.12)] transition-[transform,box-shadow,opacity] hover:shadow-[0_18px_44px_rgba(15,15,15,0.18)] active:scale-[0.99] ${
+                    task.done ? "opacity-55 saturate-[0.7]" : ""
                   }`}
-                  style={task.done ? completedCheckeredStyle : undefined}
+                  style={{
+                    backgroundColor: visual.color,
+                    color: visual.onColor,
+                  }}
                 >
-                  {task.priority && !task.critical ? (
-                    <span className="block text-lg font-display italic text-zinc-500">
-                      {task.priority.toUpperCase()} PRIORITY
-                    </span>
-                  ) : null}
-                  {task.critical ? (
-                    <span className="block text-lg font-display italic text-red-500">
-                      CRITICAL — {formatTaskDue(displayDueDate)}
-                    </span>
-                  ) : (
-                    <time
-                      dateTime={displayDueDate.toISOString()}
-                      className="mb-1 block text-base text-zinc-500 dark:text-zinc-400"
-                    >
-                      {formatTaskDue(displayDueDate)}
-                    </time>
-                  )}
-                  <div className="mb-1 flex flex-wrap items-center gap-2">
-                    <span
-                      className={`rounded-full border px-2 py-0.5 text-xs font-semibold uppercase tracking-wide ${kindVisual.badgeClass}`}
-                    >
-                      {kindVisual.label}
-                    </span>
-                    {task.block ? (
-                      <span className="rounded-full bg-indigo-500/15 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-indigo-700 dark:text-indigo-300">
-                        {task.block}
-                      </span>
-                    ) : null}
-                    {task.category && categoryVisual ? (
-                      <span
-                        className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-semibold uppercase tracking-wide"
-                        style={{
-                          backgroundColor: categoryVisual.bg,
-                          color: categoryVisual.text,
-                          borderColor: categoryVisual.border,
-                        }}
-                      >
-                        {categoryVisual.icon ? (
-                          <span className="inline-flex items-center">
-                            {renderCategoryIcon(categoryVisual.icon)}
-                          </span>
-                        ) : null}
-                        {task.category}
-                      </span>
-                    ) : null}
-                  </div>
                   <span
-                    className={`line-clamp-2 text-3xl font-black leading-tight ${
-                      task.done
-                        ? "line-through text-zinc-500 dark:text-zinc-400"
-                        : ""
-                    }`}
+                    className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full"
+                    style={{ backgroundColor: visual.iconBg }}
+                    aria-hidden
                   >
-                    {task.title}
+                    {visual.icon ? (
+                      renderCategoryIcon(visual.icon, "h-7 w-7")
+                    ) : (
+                      <IoEllipseOutline className="h-7 w-7" />
+                    )}
+                    {task.done ? (
+                      <span className="absolute inset-0 grid place-items-center rounded-full bg-black/30">
+                        <IoCheckmarkDone className="h-7 w-7 text-white" />
+                      </span>
+                    ) : null}
                   </span>
-                  {task.done ? (
-                    <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-800 dark:bg-emerald-400/25 dark:text-emerald-100">
-                      <IoCheckmarkDone className="text-sm" />
-                      Completed
-                    </span>
-                  ) : null}
+
+                  <div className="min-w-0 flex-1">
+                    <h3
+                      className={`wrap-break-word text-2xl font-black leading-tight tracking-tight ${
+                        task.done ? "line-through" : ""
+                      }`}
+                    >
+                      {task.title}
+                    </h3>
+                    {task.critical ? (
+                      <p className="mt-0.5 font-display text-sm font-extrabold uppercase italic tracking-wide">
+                        Critical
+                      </p>
+                    ) : task.priority ? (
+                      <p className="mt-0.5 font-display text-sm font-extrabold uppercase italic tracking-wide">
+                        {task.priority} priority
+                      </p>
+                    ) : null}
+
+                    {descLines.length ? (
+                      <ul className="mt-2 space-y-0.5 text-base font-medium">
+                        {descLines.map((line, i) => (
+                          <li key={i} className="flex gap-2">
+                            <span aria-hidden>•</span>
+                            <span className="min-w-0 wrap-break-word">
+                              {line}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-semibold">
+                      <time
+                        dateTime={displayDueDate.toISOString()}
+                        className="rounded-full px-2.5 py-0.5"
+                        style={{ backgroundColor: chipBg }}
+                      >
+                        {formatTaskDue(displayDueDate)}
+                      </time>
+                      {task.block ? (
+                        <span
+                          className="rounded-full px-2.5 py-0.5"
+                          style={{ backgroundColor: chipBg }}
+                        >
+                          {task.block}
+                        </span>
+                      ) : null}
+                      {task.tags?.map((tag) => (
+                        <span key={tag} className="opacity-80">
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 </button>
               </li>
             );

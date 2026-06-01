@@ -11,6 +11,7 @@ type DayViewProps = {
   onToggleTask: (id: string) => void;
   onEditTask?: (task: Task) => void;
   onDeleteTask?: (taskId: string) => void;
+  onDuplicateTask?: (taskId: string) => void;
   onAddTaskForDay?: (day: DateTime) => void;
 };
 
@@ -20,6 +21,7 @@ export function DayAgendaView({
   onToggleTask,
   onEditTask,
   onDeleteTask,
+  onDuplicateTask,
   onAddTaskForDay,
 }: DayViewProps) {
   const byDay = tasksByDueDateKeyInRange(
@@ -71,6 +73,7 @@ export function DayAgendaView({
           onToggle={onToggleTask}
           onEditTask={onEditTask}
           onDeleteTask={onDeleteTask}
+          onDuplicateTask={onDuplicateTask}
         />
       </div>
     </motion.div>

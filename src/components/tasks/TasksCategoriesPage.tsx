@@ -47,7 +47,6 @@ export function TasksCategoriesPage() {
       setOrUpdateCategoryConfig({
         name: trimmed,
         color: suggestCategoryColor(trimmed),
-        tone: "soft",
       });
     }
     setNewCategoryName("");

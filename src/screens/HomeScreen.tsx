@@ -51,9 +51,9 @@ export const HomeScreen = () => {
   const pomodoroDockExpanded = usePomodoroStore((s) => s.dockExpanded);
 
   const styleButtonBottomClass = useMemo(() => {
-    if (pomodoroPanelOpen) return "bottom-6";
-    if (pomodoroDockExpanded) return "bottom-[18.5rem]";
-    return "bottom-[8.75rem]";
+    if (pomodoroPanelOpen) return "bottom-32";
+    if (pomodoroDockExpanded) return "bottom-54";
+    return "bottom-16";
   }, [pomodoroPanelOpen, pomodoroDockExpanded]);
 
   const themeId = normalizeHomeThemeId(visualPrefs.clockStyle);
@@ -80,10 +80,7 @@ export const HomeScreen = () => {
   const isAllDayMode = focusMode === "all-day";
   const displayedBlockName = isAllDayMode ? undefined : activeBlockName;
 
-  const blockAccentClass = getThemeBlockAccent(
-    homeTheme,
-    displayedBlockName,
-  );
+  const blockAccentClass = getThemeBlockAccent(homeTheme, displayedBlockName);
 
   const blockClasses = getBlockBannerClasses(
     visualPrefs.blockStyle,
@@ -401,11 +398,10 @@ export const HomeScreen = () => {
       <button
         type="button"
         onClick={openStyleSheet}
-        className={`fixed ${styleButtonBottomClass} right-4 z-20 inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold shadow-lg backdrop-blur-sm transition-all duration-500 hover:scale-[1.02] sm:right-6 ${homeTheme.styleButton}`}
+        className={`fixed ${styleButtonBottomClass} right-4 z-20 inline-flex items-center gap-2 rounded-full border p-4 text-sm font-semibold shadow-lg backdrop-blur-sm transition-all duration-500 hover:scale-[1.02] sm:right-6 ${homeTheme.styleButton}`}
         aria-label="Customize home style"
       >
         <IoColorPaletteOutline className="text-base" />
-        Style
       </button>
 
       <HomeStyleBottomSheet

@@ -7,7 +7,7 @@ import {
   type CSSProperties,
   type MouseEvent as ReactMouseEvent,
 } from "react";
-import { IoAdd, IoClose, IoDocument } from "react-icons/io5";
+import { IoAdd, IoClose, IoDocument, IoEllipseOutline } from "react-icons/io5";
 import type { CalendarTaskRow, Task } from "@/types";
 import { tasksByDueDateKeyInRange } from "../../../lib/calendarUtils";
 import {
@@ -15,7 +15,10 @@ import {
   renderCategoryIcon,
 } from "../../../lib/categoryIcons";
 import { getTaskKindVisual } from "../../../lib/taskKinds";
-import { resolveCategoryVisual } from "../../../lib/taskCategories";
+import {
+  resolveTaskCardVisual,
+  type TaskCardVisual,
+} from "../../../lib/taskCategories";
 import { isIcsTask } from "../../../lib/icsTasks";
 import { formatTaskDue } from "../../../lib/taskDates";
 import { useContextMenu } from "../../../providers/ContextMenuProvider";
@@ -97,6 +100,7 @@ type WeekViewProps = {
   tasks: Task[];
   onToggleTask: (id: string) => void;
   onDeleteTask?: (taskId: string) => void;
+  onDuplicateTask?: (taskId: string) => void;
   onPickDay: (day: DateTime) => void;
   onAddTaskForDay?: (day: DateTime) => void;
   onCreateTimedTask?: (start: DateTime, end: DateTime) => void;
@@ -117,6 +121,7 @@ type ThreeDayProps = {
   onToggleTask: (id: string) => void;
   onEditTask?: (task: Task) => void;
   onDeleteTask?: (taskId: string) => void;
+  onDuplicateTask?: (taskId: string) => void;
   onPickDay: (day: DateTime) => void;
   onAddTaskForDay?: (day: DateTime) => void;
   onCreateTimedTask?: (start: DateTime, end: DateTime) => void;
@@ -293,48 +298,14 @@ function layoutDayTimedEvents(rows: CalendarTaskRow[]): {
 
 function resolveEventBlockStyle(
   task: Task,
-  categoryVisual: ReturnType<typeof resolveCategoryVisual>,
+  visual: TaskCardVisual,
 ): CSSProperties | undefined {
   if (task.done) return completedCheckeredStyle;
-  if (task.critical) return undefined;
-  if (categoryVisual) {
-    return {
-      backgroundColor: categoryVisual.bg,
-      color: categoryVisual.text,
-      borderLeftColor: categoryVisual.accent,
-    };
-  }
-  if (task.kind === "event") {
-    return {
-      backgroundColor: "rgba(14, 165, 233, 0.18)",
-      borderLeftColor: "rgba(14, 165, 233, 0.65)",
-    };
-  }
-  if (task.kind === "reminder") {
-    return {
-      backgroundColor: "rgba(245, 158, 11, 0.18)",
-      borderLeftColor: "rgba(245, 158, 11, 0.65)",
-    };
-  }
-  if (task.kind === "habit") {
-    return {
-      backgroundColor: "rgba(139, 92, 246, 0.18)",
-      borderLeftColor: "rgba(139, 92, 246, 0.65)",
-    };
-  }
-  if (task.kind === "class") {
-    return {
-      backgroundColor: "rgba(99, 102, 241, 0.2)",
-      borderLeftColor: "rgba(99, 102, 241, 0.65)",
-    };
-  }
-  if (task.kind === "ics") {
-    return {
-      backgroundColor: "rgba(20, 184, 166, 0.16)",
-      borderLeftColor: "rgba(20, 184, 166, 0.7)",
-    };
-  }
-  return undefined;
+  return {
+    backgroundColor: visual.color,
+    color: visual.onColor,
+    borderLeftColor: visual.iconBg,
+  };
 }
 
 function eventContentDensity(durationMinutes: number): {
@@ -546,7 +517,7 @@ function WeekEventBlock({
   const widthPct = 100 / columnCount;
   const leftPct = column * widthPct;
   const durationMinutes = range.endMinuteExclusive - range.startMinute;
-  const categoryVisual = resolveCategoryVisual(row.task.category);
+  const categoryVisual = resolveTaskCardVisual(row.task);
   const kindVisual = getTaskKindVisual(row.task.kind);
   const tooltipContent = weekEventTooltipContent(row.task, row.displayDueDate);
   const density = eventContentDensity(durationMinutes);
@@ -624,11 +595,13 @@ function WeekEventBlock({
         />
         <div className="flex h-full min-h-0 flex-col gap-0.5 overflow-hidden">
           <div className="flex shrink-0 items-center gap-1">
-            {categoryVisual?.icon ? (
-              <span className="inline-flex shrink-0 items-center">
-                {renderCategoryIcon(categoryVisual.icon, "h-3 w-3")}
-              </span>
-            ) : null}
+            <span className="inline-flex shrink-0 items-center">
+              {categoryVisual.icon ? (
+                renderCategoryIcon(categoryVisual.icon, "h-3 w-3")
+              ) : (
+                <IoEllipseOutline className="h-3 w-3" aria-hidden />
+              )}
+            </span>
             {row.task.kind !== "task" ? (
               <span
                 className="inline-flex shrink-0 items-center opacity-80"
@@ -822,6 +795,7 @@ export function WeekView({
   tasks,
   onToggleTask,
   onDeleteTask,
+  onDuplicateTask,
   onPickDay,
   onAddTaskForDay,
   onCreateTimedTask,
@@ -935,6 +909,15 @@ export function WeekView({
         label: task.done ? "Mark not done" : "Mark done",
         onSelect: () => onToggleTask(task.id),
       },
+      ...(onDuplicateTask
+        ? [
+            {
+              id: `duplicate-${task.id}`,
+              label: "Duplicate task",
+              onSelect: () => onDuplicateTask(task.id),
+            } as const,
+          ]
+        : []),
       ...(onDeleteTask
         ? [
             {
@@ -1451,6 +1434,7 @@ export function ThreeDayView({
   onToggleTask,
   onEditTask,
   onDeleteTask,
+  onDuplicateTask,
   onPickDay,
   onAddTaskForDay,
   onCreateTimedTask,
@@ -1463,6 +1447,7 @@ export function ThreeDayView({
       tasks={tasks}
       onToggleTask={onToggleTask}
       onDeleteTask={onDeleteTask}
+      onDuplicateTask={onDuplicateTask}
       onPickDay={onPickDay}
       onAddTaskForDay={onAddTaskForDay}
       onCreateTimedTask={onCreateTimedTask}

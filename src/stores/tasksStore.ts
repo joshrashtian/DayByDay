@@ -25,6 +25,7 @@ type TasksState = {
   setTaskSchedule: (taskId: string, dueDate: Date, endDate?: Date) => void;
   toggleTask: (id: string) => void;
   removeTask: (id: string) => void;
+  duplicateTask: (id: string) => void;
   setTaskCategory: (taskId: string, category: string | undefined) => void;
   removeCategoryFromAllTasks: (categoryName: string) => void;
   setTaskBlock: (taskId: string, block: string | undefined) => void;
@@ -469,6 +470,28 @@ export const useTasksStore = create<TasksState>()(
         set((s) => ({
           tasks: s.tasks.filter((t) => t.id !== id),
         })),
+
+      duplicateTask: (id) =>
+        set((s) => {
+          const index = s.tasks.findIndex((t) => t.id === id);
+          if (index === -1) return s;
+          const original = s.tasks[index];
+          if (isIcsTask(original)) return s;
+          const now = new Date();
+          const { icsUid: _icsUid, recurringSourceId: _recurringSourceId, ...rest } =
+            original;
+          const clone: Task = {
+            ...rest,
+            id: crypto.randomUUID(),
+            done: false,
+            createdAt: now,
+            updatedAt: now,
+            lastCompletedAt: undefined,
+          };
+          const tasks = [...s.tasks];
+          tasks.splice(index + 1, 0, clone);
+          return { tasks };
+        }),
 
       importIcsTasks: (payloads) => {
         const s = get();

@@ -1,7 +1,7 @@
-import type { CategoryConfig, CategoryTone, Task } from "@/types";
+import type { CategoryConfig, Task, TaskPriority } from "@/types";
 import { useSettingsStore } from "../stores/settingsStore";
 
-export type { CategoryConfig, CategoryTone } from "@/types";
+export type { CategoryConfig } from "@/types";
 
 /** @deprecated Use useSettingsStore subscription instead of event listeners */
 export const CATEGORY_CONFIG_STORAGE_KEY = "risebyday-category-configs";
@@ -9,9 +9,19 @@ export const CATEGORY_CONFIG_STORAGE_KEY = "risebyday-category-configs";
 export const CATEGORY_CONFIGS_CHANGED = "risebyday:category-configs-changed";
 
 type CategoryVisual = {
+  /** Full saturated category color — fills the whole task card. */
+  color: string;
+  /** Readable text/icon color on top of `color` (white or near-black). */
+  onColor: string;
+  /** Deeper shade of `color` for the circular icon badge. */
+  iconBg: string;
+  /** Translucent fill for compact badges (calendar, chips). */
   bg: string;
+  /** Text color for compact badges. */
   text: string;
+  /** Border color for compact badges. */
   border: string;
+  /** Raw accent color (same as `color`). */
   accent: string;
   icon?: string;
 };
@@ -22,10 +32,6 @@ function normalizeCategoryName(raw: unknown): string | undefined {
   if (typeof raw !== "string") return undefined;
   const trimmed = raw.trim().replace(/\s+/g, " ");
   return trimmed.length > 0 ? trimmed : undefined;
-}
-
-function normalizeTone(raw: unknown): CategoryTone | undefined {
-  return raw === "solid" || raw === "soft" ? raw : undefined;
 }
 
 function normalizeHex(raw: unknown): string | undefined {
@@ -48,14 +54,10 @@ function normalizeCategoryConfig(raw: unknown): CategoryConfig | undefined {
   const name = normalizeCategoryName(item.name);
   const color = normalizeHex(item.color);
   if (!name || !color) return undefined;
-  const textColor = normalizeHex(item.textColor);
-  const tone = normalizeTone(item.tone);
   const icon = normalizeIcon(item.icon);
   return {
     name,
     color,
-    ...(textColor ? { textColor } : {}),
-    ...(tone ? { tone } : {}),
     ...(icon ? { icon } : {}),
   };
 }
@@ -81,6 +83,24 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
 function rgba(hex: string, alpha: number): string {
   const { r, g, b } = hexToRgb(hex);
   return `rgba(${r}, ${g}, ${b}, ${Math.max(0, Math.min(1, alpha))})`;
+}
+
+/** Mix a hex color toward black by `amount` (0–1) and return a hex string. */
+function shade(hex: string, amount: number): string {
+  const { r, g, b } = hexToRgb(hex);
+  const k = 1 - Math.max(0, Math.min(1, amount));
+  const toHex = (n: number) =>
+    Math.round(n * k)
+      .toString(16)
+      .padStart(2, "0");
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+/** Pick white or near-black for legible text on top of `hex`. */
+function readableTextColor(hex: string): string {
+  const { r, g, b } = hexToRgb(hex);
+  const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  return luminance > 0.6 ? "#1c1917" : "#ffffff";
 }
 
 function hashToHue(input: string): number {
@@ -221,22 +241,63 @@ export function collectAvailableCategories(tasks: Task[]): string[] {
 export function resolveCategoryVisual(name: string | undefined): CategoryVisual {
   const normalized = normalizeCategoryName(name);
   const cfg = normalized ? getCategoryConfigByName(normalized) : undefined;
-  const color = cfg?.color ?? (normalized ? suggestCategoryColor(normalized) : DEFAULT_CATEGORY_COLOR);
-  const tone = cfg?.tone ?? "soft";
-  if (tone === "solid") {
-    return {
-      bg: color,
-      text: cfg?.textColor ?? "#ffffff",
-      border: rgba(color, 0.66),
-      accent: color,
-      ...(cfg?.icon ? { icon: cfg.icon } : {}),
-    };
-  }
+  const color =
+    cfg?.color ??
+    (normalized ? suggestCategoryColor(normalized) : DEFAULT_CATEGORY_COLOR);
   return {
+    color,
+    onColor: readableTextColor(color),
+    iconBg: shade(color, 0.22),
     bg: rgba(color, 0.18),
-    text: cfg?.textColor ?? color,
+    text: color,
     border: rgba(color, 0.44),
     accent: color,
     ...(cfg?.icon ? { icon: cfg.icon } : {}),
+  };
+}
+
+const CRITICAL_COLOR = "#dc2626";
+const PRIORITY_COLORS: Record<TaskPriority, string> = {
+  high: "#ef4444",
+  medium: "#f59e0b",
+  low: "#64748b",
+};
+const NO_PRIORITY_COLOR = "#64748b";
+
+export type TaskCardVisual = {
+  /** Solid fill for the whole card — always present. */
+  color: string;
+  /** Readable text/icon color on top of `color`. */
+  onColor: string;
+  /** Deeper shade of `color` for the circular icon badge. */
+  iconBg: string;
+  /** Category icon id, if the task has a category with an icon. */
+  icon?: string;
+  /** True when the fill comes from a category (vs. critical/priority). */
+  hasCategory: boolean;
+};
+
+/**
+ * Resolves the solid card color for calendar surfaces.
+ * Precedence: critical → category → priority → neutral slate.
+ */
+export function resolveTaskCardVisual(task: Task): TaskCardVisual {
+  const hasCategory = Boolean(normalizeCategoryName(task.category));
+  const categoryVisual = resolveCategoryVisual(task.category);
+  const color = task.critical
+    ? CRITICAL_COLOR
+    : hasCategory
+      ? categoryVisual.color
+      : task.priority
+        ? PRIORITY_COLORS[task.priority]
+        : NO_PRIORITY_COLOR;
+  return {
+    color,
+    onColor: readableTextColor(color),
+    iconBg: shade(color, 0.22),
+    hasCategory,
+    ...(hasCategory && categoryVisual.icon
+      ? { icon: categoryVisual.icon }
+      : {}),
   };
 }

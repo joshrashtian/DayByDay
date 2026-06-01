@@ -25,6 +25,7 @@ type MonthGridProps = {
   onToggleTask: (id: string) => void;
   onEditTask?: (task: Task) => void;
   onDeleteTask?: (taskId: string) => void;
+  onDuplicateTask?: (taskId: string) => void;
   onPickDay: (day: DateTime) => void;
 };
 
@@ -34,6 +35,7 @@ export function MonthGridView({
   onToggleTask,
   onEditTask,
   onDeleteTask,
+  onDuplicateTask,
   onPickDay,
 }: MonthGridProps) {
   const gridStart = month.startOf("month").startOf("week");
@@ -103,6 +105,7 @@ export function MonthGridView({
                     onToggle={onToggleTask}
                     onEditTask={onEditTask}
                     onDeleteTask={onDeleteTask}
+                    onDuplicateTask={onDuplicateTask}
                     compact
                   />
                   {dayTasks.length > 3 ? (
