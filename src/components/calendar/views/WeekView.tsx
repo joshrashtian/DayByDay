@@ -571,7 +571,9 @@ function WeekEventBlock({
           consumedByDragRef.current = false;
           clearDragHoldTimeout();
           const releasePendingDrag = () => clearDragHoldTimeout();
-          window.addEventListener("mouseup", releasePendingDrag, { once: true });
+          window.addEventListener("mouseup", releasePendingDrag, {
+            once: true,
+          });
           dragHoldTimeoutRef.current = window.setTimeout(() => {
             consumedByDragRef.current = true;
             onEventMoveStart(row, range.startMinute);
@@ -660,11 +662,7 @@ function WeekEventBlock({
             if (e.button !== 0) return;
             e.stopPropagation();
             e.preventDefault();
-            onEventResizeStart(
-              row,
-              range.endMinuteExclusive - 15,
-              "end",
-            );
+            onEventResizeStart(row, range.endMinuteExclusive - 15, "end");
           }}
         />
       </motion.button>
@@ -1071,23 +1069,26 @@ export function WeekView({
                     },
                   ])
                 }
-                className={`sticky top-0 z-30 border-b border-r border-zinc-200/80 px-2 py-2 text-left backdrop-blur transition-colors hover:bg-white/80 dark:border-white/10 dark:hover:bg-white/5 ${
-                  isToday
-                    ? "bg-sky-100/90 dark:bg-sky-900/60"
-                    : dayIndex % 2 === 0
-                      ? "bg-zinc-50/95 dark:bg-zinc-900/95"
-                      : "bg-white/95 dark:bg-zinc-900/90"
+                className={`sticky top-0 z-30 border-b border-r border-zinc-200/80 px-2 py-2 text-center flex flex-col items-center backdrop-blur transition-colors hover:bg-white/80 dark:border-white/10 dark:hover:bg-white/5 ${
+                  dayIndex % 2 === 0
+                    ? "bg-zinc-50/95 dark:bg-zinc-900/95"
+                    : "bg-white/95 dark:bg-zinc-900/90"
                 }`}
               >
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                <p
+                  className={`text-[11px] font-display font-semibold uppercase tracking-wide  ${isToday ? "text-blue-600" : "text-zinc-500 dark:text-zinc-400"}`}
+                >
                   {day.toFormat("ccc")}
                 </p>
-                <p className="text-sm font-black text-zinc-800 dark:text-zinc-100">
-                  {day.toFormat("d")}
-                </p>
-                <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
-                  {count} {count === 1 ? "item" : "items"}
-                </p>
+                <div
+                  className={` w-8 h-8 rounded-full flex justify-center items-center ${isToday ? "bg-blue-600 text-white font-display" : "text-zinc-800 dark:text-zinc-100"}`}
+                >
+                  <p
+                    className={`text-sm font-black flex items-center justify-center `}
+                  >
+                    {day.toFormat("d")}
+                  </p>
+                </div>
               </button>
             );
           })}

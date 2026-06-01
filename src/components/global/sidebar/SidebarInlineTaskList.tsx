@@ -31,6 +31,8 @@ type Props = {
 export function SidebarInlineTaskList({ showLabel }: Props) {
   const location = useLocation();
   const onHome = location.pathname === "/";
+  const onCalendar = location.pathname.startsWith("/calendar");
+  const canDragTask = onHome || onCalendar;
   const displayedBlockName = useDisplayedBlockName();
   const { panelTasks, activeCount, scopeLabel } = useTodayTasksScope();
   const categoryConfigs = useSettingsStore((s) => s.categoryConfigs);
@@ -134,7 +136,7 @@ export function SidebarInlineTaskList({ showLabel }: Props) {
                   ]);
                 }}
                 onPointerDown={(e) => {
-                  if (!onHome || isIcsTask(task)) return;
+                  if (!canDragTask || isIcsTask(task)) return;
                   const rect = e.currentTarget.getBoundingClientRect();
                   startTaskDrag(
                     task.id,
@@ -142,7 +144,7 @@ export function SidebarInlineTaskList({ showLabel }: Props) {
                     e.clientY,
                     e.clientX - rect.left,
                     e.clientY - rect.top,
-                    "focus",
+                    onCalendar ? "schedule" : "focus",
                   );
                 }}
                 className={`w-full rounded-xl px-2.5 py-2 text-left transition-colors ${
@@ -150,7 +152,7 @@ export function SidebarInlineTaskList({ showLabel }: Props) {
                     ? "bg-violet-50 ring-1 ring-inset ring-violet-200/80"
                     : "hover:bg-zinc-50"
                 } ${task.done ? "opacity-50" : ""} ${
-                  onHome && !isIcsTask(task)
+                  canDragTask && !isIcsTask(task)
                     ? "cursor-grab active:cursor-grabbing"
                     : ""
                 }`}

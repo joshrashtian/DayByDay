@@ -8,17 +8,27 @@ import {
 } from "react";
 import { DateTime } from "luxon";
 import { useLocation, useNavigate } from "react-router-dom";
-import { IoArrowUp } from "react-icons/io5";
+import {
+  IoArrowUp,
+  IoCalendarOutline,
+  IoDocumentTextOutline,
+  IoPricetagsOutline,
+  IoSparklesOutline,
+  IoTerminalOutline,
+  IoTimeOutline,
+  IoWarning,
+} from "react-icons/io5";
 import { useShallow } from "zustand/react/shallow";
-import { parseTaskChatInput } from "../tasks/functions/parseTokens";
+import {
+  parseTaskChatInput,
+  type TaskChatHint,
+  type TaskChatParse,
+} from "../tasks/functions/parseTokens";
 import { useTasksStore } from "../../stores/tasksStore";
 import { useHomeFocusStore } from "../../stores/homeFocusStore";
 import { usePomodoroStore } from "../../stores/pomodoroStore";
 import { getActiveBlockNameAt } from "../../lib/taskBlocks";
-import {
-  parseCalendarDayArg,
-  includesNormalized,
-} from "./commandbar/calendarCommands";
+import { runCommand, type Feedback } from "./commandbar/commands";
 import {
   CATEGORY_TOKEN_TAIL_RE,
   extractInlineCategoryQuery,
@@ -28,8 +38,123 @@ import {
 } from "./commandbar/categoryHelpers";
 import { CategoryPicker } from "./commandbar/CategoryPicker";
 
+const TOKEN_HINT_KEYS = new Set([
+  "due",
+  "tag",
+  "category",
+  "block",
+  "priority",
+  "critical",
+]);
+
+function buildSummary(parsed: TaskChatParse): string {
+  const parts: string[] = [];
+
+  if (parsed.title) parts.push(`Add "${parsed.title}"`);
+
+  if (parsed.dueDate) {
+    const dt = DateTime.fromJSDate(parsed.dueDate);
+    const today = DateTime.local().startOf("day");
+    const tomorrow = today.plus({ days: 1 });
+    let dateStr: string;
+    if (dt.startOf("day").valueOf() === today.valueOf()) {
+      dateStr = "Today";
+    } else if (dt.startOf("day").valueOf() === tomorrow.valueOf()) {
+      dateStr = "Tomorrow";
+    } else {
+      dateStr = dt.toFormat("ccc, d MMM");
+    }
+    parts.push(`due ${dateStr}`);
+  }
+
+  if (parsed.block) parts.push(`in "${parsed.block}"`);
+  if (parsed.category) parts.push(`filed under "${parsed.category}"`);
+
+  if (parsed.tags?.length) {
+    parts.push(`tagged ${parsed.tags.map((t) => `#${t}`).join(", ")}`);
+  }
+
+  if (parsed.critical) parts.push("marked critical");
+  else if (parsed.priority) parts.push(`marked ${parsed.priority} priority`);
+
+  if (!parts.length) return "";
+  return parts.join(", ") + ".";
+}
+
+type PillConfig = {
+  className: string;
+  icon: React.ReactNode;
+  label: string;
+};
+
+function getPillConfig(hint: TaskChatHint): PillConfig {
+  const stripPrefix = (prefix: string) =>
+    hint.label.startsWith(prefix)
+      ? hint.label.slice(prefix.length)
+      : hint.label;
+
+  if (hint.partial) {
+    return {
+      className:
+        "border border-amber-400/80 bg-amber-100/70 text-amber-900 dark:border-amber-500/60 dark:bg-amber-500/10 dark:text-amber-200",
+      icon: null,
+      label: hint.label,
+    };
+  }
+
+  switch (hint.key) {
+    case "due": {
+      const cleaned = hint.label.replace(
+        /^(?:Date|Time|At|End(?:\s+Date)?|End(?:\s+Time)?): /,
+        "",
+      );
+      return {
+        className: "bg-blue-500 text-white",
+        icon: <IoCalendarOutline className="h-3 w-3" />,
+        label: cleaned,
+      };
+    }
+    case "tag":
+      return {
+        className: "bg-emerald-500 text-white",
+        icon: <IoPricetagsOutline className="h-3 w-3" />,
+        label: `# ${stripPrefix("Tag: ")}`,
+      };
+    case "category":
+      return {
+        className: "bg-teal-600 text-white",
+        icon: <IoDocumentTextOutline className="h-3 w-3" />,
+        label: `"${stripPrefix("Category: ")}"`,
+      };
+    case "block":
+      return {
+        className: "bg-violet-500 text-white",
+        icon: <IoTimeOutline className="h-3 w-3" />,
+        label: stripPrefix("Block: "),
+      };
+    case "priority":
+      return {
+        className: "bg-amber-500 text-white",
+        icon: null,
+        label: hint.label,
+      };
+    case "critical":
+      return {
+        className: "bg-rose-600 text-white",
+        icon: <IoWarning className="h-3 w-3" />,
+        label: "Critical",
+      };
+    default:
+      return {
+        className:
+          "border border-zinc-300/80 bg-zinc-100/70 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800/70 dark:text-zinc-200",
+        icon: null,
+        label: hint.label,
+      };
+  }
+}
+
 type Mode = "task" | "calendar";
-type Feedback = { tone: "neutral" | "success" | "error"; text: string };
 
 export function TaskCalendarCommandBar() {
   const location = useLocation();
@@ -39,10 +164,7 @@ export function TaskCalendarCommandBar() {
   const [manualMode, setManualMode] = useState<Mode | null>(null);
   const [categoryDraft, setCategoryDraft] = useState("");
   const [highlightedCategoryIndex, setHighlightedCategoryIndex] = useState(0);
-  const [feedback, setFeedback] = useState<Feedback>({
-    tone: "neutral",
-    text: "Type a task or command. Use /help.",
-  });
+  const [feedback, setFeedback] = useState<Feedback | null>(null);
 
   const routeMode: Mode = useMemo(() => {
     if (location.pathname.startsWith("/calendar")) return "calendar";
@@ -219,177 +341,26 @@ export function TaskCalendarCommandBar() {
     setRaw("");
   };
 
-  const findTaskIdByQuery = (
-    query: string,
-    onlyDone: boolean | null,
-  ): string | undefined => {
-    const q = query.trim().toLowerCase();
-    if (!q) return undefined;
-    return tasks.find((task) => {
-      if (onlyDone === true && !task.done) return false;
-      if (onlyDone === false && task.done) return false;
-      return includesNormalized(task.title, q);
-    })?.id;
-  };
-
-  const runCommand = (input: string) => {
-    const body = input.slice(1).trim();
-    if (!body) {
-      setFeedback({ tone: "error", text: "Command is empty. Try /help." });
-      return;
-    }
-
-    const [head] = body.split(/\s+/, 1);
-    const command = head.toLowerCase();
-    const arg = body.slice(head.length).trim();
-
-    if (command === "help") {
-      setFeedback({
-        tone: "neutral",
-        text: "Commands: /focus <task>, /focus clear, /done <task>, /undo <task>, /delete <task>, /day <today|tomorrow|YYYY-MM-DD>, /next, /prev. Time: @9am or @9am-11am",
-      });
-      return;
-    }
-
-    if (command === "focus") {
-      if (!arg) {
-        setFeedback({
-          tone: "error",
-          text: "Specify a task title fragment, or use /focus clear.",
-        });
-        return;
-      }
-
-      if (arg.toLowerCase() === "clear") {
-        setFocusedTaskId(null);
-        setLinkedTaskTitle(undefined);
-        setFeedback({ tone: "success", text: "Cleared Pomodoro focus." });
-        setRaw("");
-        return;
-      }
-
-      const id = findTaskIdByQuery(arg, false);
-      if (!id) {
-        setFeedback({
-          tone: "error",
-          text: "No unfinished task matched. Try a title fragment.",
-        });
-        return;
-      }
-
-      const task = tasks.find((t) => t.id === id);
-      if (!task) {
-        setFeedback({ tone: "error", text: "Task not found." });
-        return;
-      }
-
-      setFocusedTaskId(id);
-      setLinkedTaskTitle(task.title);
-      setFeedback({
-        tone: "success",
-        text: `Focusing on "${task.title}". Open Pomodoro or Home to see the timer.`,
-      });
-      setRaw("");
-      navigate("/pomodoro");
-      return;
-    }
-
-    if (command === "done") {
-      const id = findTaskIdByQuery(arg, false);
-      if (!id) {
-        setFeedback({ tone: "error", text: "No unfinished task matched." });
-        return;
-      }
-      toggleTask(id);
-      setFeedback({ tone: "success", text: "Marked task done." });
-      setRaw("");
-      return;
-    }
-
-    if (command === "undo") {
-      const id = findTaskIdByQuery(arg, true);
-      if (!id) {
-        setFeedback({ tone: "error", text: "No completed task matched." });
-        return;
-      }
-      toggleTask(id);
-      setFeedback({ tone: "success", text: "Marked task as not done." });
-      setRaw("");
-      return;
-    }
-
-    if (command === "delete" || command === "remove") {
-      const id = findTaskIdByQuery(arg, null);
-      if (!id) {
-        setFeedback({ tone: "error", text: "No task matched for deletion." });
-        return;
-      }
-      removeTask(id);
-      setFeedback({ tone: "success", text: "Task deleted." });
-      setRaw("");
-      return;
-    }
-
-    if (
-      command === "day" ||
-      command === "today" ||
-      command === "next" ||
-      command === "prev"
-    ) {
-      if (command === "today") {
-        setCalendarDay(DateTime.local().startOf("day"));
-        setFeedback({ tone: "success", text: "Moved to today." });
-        setRaw("");
-        return;
-      }
-      if (command === "next") {
-        setCalendarDay(calendarDay.plus({ days: 1 }).startOf("day"));
-        setFeedback({ tone: "success", text: "Moved to next day." });
-        setRaw("");
-        return;
-      }
-      if (command === "prev") {
-        setCalendarDay(calendarDay.minus({ days: 1 }).startOf("day"));
-        setFeedback({ tone: "success", text: "Moved to previous day." });
-        setRaw("");
-        return;
-      }
-
-      const nextDay = parseCalendarDayArg(arg, calendarDay);
-      if (!nextDay) {
-        setFeedback({
-          tone: "error",
-          text: "Could not parse day. Use today, tomorrow, or YYYY-MM-DD.",
-        });
-        return;
-      }
-      setCalendarDay(nextDay);
-      setFeedback({
-        tone: "success",
-        text: `Moved to ${nextDay.toFormat("cccc, d MMM yyyy")}.`,
-      });
-      setRaw("");
-      return;
-    }
-
-    setFeedback({ tone: "error", text: `Unknown command: /${command}` });
-  };
-
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
     const input = raw.trim();
     if (!input) return;
-    if (input.startsWith("/")) runCommand(input);
-    else submitTask(input);
-  };
-
-  const modes: { id: Mode; label: string }[] = [
-    { id: "task", label: "Task" },
-    { id: "calendar", label: "Calendar" },
-  ];
-
-  const selectMode = (nextMode: Mode) => {
-    setManualMode(nextMode);
+    if (input.startsWith("/")) {
+      runCommand(input, {
+        tasks,
+        toggleTask,
+        removeTask,
+        setFocusedTaskId,
+        setLinkedTaskTitle,
+        calendarDay,
+        setCalendarDay,
+        setFeedback,
+        setRaw,
+        navigate,
+      });
+    } else {
+      submitTask(input);
+    }
   };
 
   const applyCategoryToken = (value: string) => {
@@ -440,12 +411,26 @@ export function TaskCalendarCommandBar() {
     }
   };
 
+  const trimmed = raw.trim();
+  const isCommandInput = trimmed.startsWith("/");
+  const isTaskInput = trimmed.length > 0 && !isCommandInput;
+  const isUnderstood =
+    isTaskInput && !taskParsePreview?.hints.some((h) => h.partial);
+  const summary = taskParsePreview ? buildSummary(taskParsePreview) : "";
+  const tokenHints =
+    taskParsePreview?.hints.filter((h) => TOKEN_HINT_KEYS.has(h.key)) ?? [];
+
+  const inputIcon = isCommandInput ? (
+    <IoTerminalOutline className="h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500" />
+  ) : mode === "calendar" ? (
+    <IoCalendarOutline className="h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500" />
+  ) : (
+    <IoSparklesOutline className="h-3.5 w-3.5 text-blue-700 dark:text-blue-300" />
+  );
+
   return (
     <div className="pointer-events-none fixed bottom-3 left-1/2 z-50 w-[min(92vw,760px)] -translate-x-1/2">
-      <form
-        onSubmit={onSubmit}
-        className="pointer-events-auto relative rounded-3xl bg-white/90 p-2 px-6 shadow-[0_8px_36px_rgba(15,15,15,0.14)]  backdrop-blur-xl  dark:bg-zinc-900/90 "
-      >
+      <form onSubmit={onSubmit} className="pointer-events-auto relative">
         {activeCategoryQuery !== null ? (
           <CategoryPicker
             categoryDraft={categoryDraft}
@@ -456,83 +441,95 @@ export function TaskCalendarCommandBar() {
             applyCategoryToken={applyCategoryToken}
           />
         ) : null}
-        <div className="flex items-center gap-2">
-          <div className="group/mode relative">
-            <button
-              type="button"
-              className="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"
-              aria-haspopup="menu"
-              aria-label="Select command mode"
-            >
-              {mode}
-            </button>
-            <div className="pointer-events-none absolute bottom-full left-1/2 mb-2 flex min-w-max -translate-x-1/2 translate-y-0 flex-col gap-1 opacity-0 transition-all duration-200 group-hover/mode:pointer-events-auto group-hover/mode:translate-y-0 group-hover/mode:opacity-100 group-focus-within/mode:pointer-events-auto group-focus-within/mode:translate-y-0 group-focus-within/mode:opacity-100">
-              {modes.map((m) => (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => selectMode(m.id)}
-                  className={`rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-wide shadow-sm transition-colors ${
-                    mode === m.id
-                      ? "border-zinc-900 bg-zinc-900 text-white dark:border-white dark:bg-white dark:text-zinc-900"
-                      : "border-zinc-200 bg-white/95 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800/95 dark:text-zinc-200 dark:hover:bg-zinc-700"
-                  }`}
-                  aria-current={mode === m.id ? "true" : undefined}
-                >
-                  {m.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <input
-            ref={inputRef}
-            value={raw}
-            onChange={(e) => setRaw(e.target.value)}
-            onKeyDown={onMainInputKeyDown}
-            placeholder="Type task or command... (@9am, /focus report, /done)"
-            className="min-w-0 flex-1 font-eudoxus font-bold bg-transparent px-1.5 py-2 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 dark:text-zinc-100 dark:placeholder:text-zinc-500"
-            aria-label="Global command input"
-          />
-          <button
-            type="submit"
-            disabled={
-              !raw.trim() ||
-              (!raw.trim().startsWith("/") &&
-                Boolean(taskParsePreview?.hints.some((h) => h.partial)))
-            }
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-zinc-900 text-white transition-colors hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
-            aria-label="Submit command"
-          >
-            <IoArrowUp className="h-4 w-4" />
-          </button>
-        </div>
-        {taskParsePreview?.hints.length ? (
-          <div className="flex flex-wrap gap-1.5 px-2 pb-1 pt-1">
-            {taskParsePreview.hints.map((hint, i) => (
-              <span
-                key={`${hint.key}-${i}-${hint.label}`}
-                className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                  hint.partial
-                    ? "border border-amber-400/80 bg-amber-100/70 text-amber-900 dark:border-amber-500/60 dark:bg-amber-500/10 dark:text-amber-200"
-                    : "border border-zinc-300/80 bg-zinc-100/70 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800/70 dark:text-zinc-200"
+
+        <div className="overflow-hidden rounded-2xl bg-white shadow-[0_8px_36px_rgba(15,15,15,0.18)] dark:bg-zinc-900">
+          {(isTaskInput || isCommandInput) && (
+            <div className="px-5 pt-4 pb-3">
+              {isTaskInput && (
+                <div className="mb-2.5 flex items-center gap-1.5">
+                  <span
+                    className={`h-2 w-2 rounded-full ${isUnderstood ? "bg-emerald-500" : "bg-amber-400"}`}
+                  />
+                  <span
+                    className={`text-[10px] font-bold uppercase tracking-[0.12em] ${isUnderstood ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}
+                  >
+                    Cognition · {isUnderstood ? "Understood" : "Parsing…"}
+                  </span>
+                </div>
+              )}
+
+              <p
+                className={`font-display text-sm font-bold italic leading-snug ${
+                  isCommandInput
+                    ? feedback?.tone === "error"
+                      ? "text-rose-600 dark:text-rose-400"
+                      : feedback?.tone === "success"
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-zinc-500 dark:text-zinc-400"
+                    : "text-zinc-900 dark:text-zinc-100"
                 }`}
               >
-                {hint.label}
-              </span>
-            ))}
+                {isCommandInput
+                  ? (feedback?.text ?? "Type a command…")
+                  : summary}
+              </p>
+
+              {isTaskInput && tokenHints.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {tokenHints.map((hint, i) => {
+                    const config = getPillConfig(hint);
+                    return (
+                      <span
+                        key={`${hint.key}-${i}`}
+                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${config.className}`}
+                      >
+                        {config.icon}
+                        {config.label}
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div
+            className={`flex items-center gap-2 px-5 ${isTaskInput ? "border-t border-zinc-100 py-3 dark:border-zinc-800" : "py-3"}`}
+          >
+            {inputIcon}
+            <input
+              ref={inputRef}
+              value={raw}
+              onChange={(e) => setRaw(e.target.value)}
+              onKeyDown={onMainInputKeyDown}
+              placeholder="Type a task or command. Use /help."
+              className="min-w-0 flex-1 bg-transparent text-sm text-zinc-700 outline-none placeholder:text-zinc-400 dark:text-zinc-300 dark:placeholder:text-zinc-600"
+              aria-label="Global command input"
+            />
+            <button
+              type="submit"
+              disabled={!raw.trim() || (isTaskInput && !isUnderstood)}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-zinc-900 text-white transition-colors hover:bg-zinc-700 disabled:opacity-40 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+              aria-label="Submit"
+            >
+              <IoArrowUp className="h-4 w-4" />
+            </button>
           </div>
-        ) : null}
-        <p
-          className={`px-2 pb-0.5 pt-1 font-display text-xs ${
-            feedback.tone === "error"
-              ? "text-rose-600 dark:text-rose-300"
-              : feedback.tone === "success"
-                ? "text-emerald-600 dark:text-emerald-300"
-                : "text-zinc-500 dark:text-zinc-400"
-          }`}
-        >
-          {feedback.text}
-        </p>
+
+          {!isTaskInput && !isCommandInput && feedback && (
+            <p
+              className={`px-5 pb-3 font-eudoxus text-xs font-semibold italic ${
+                feedback.tone === "error"
+                  ? "text-rose-600 dark:text-rose-400"
+                  : feedback.tone === "success"
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : "text-zinc-500 dark:text-zinc-400"
+              }`}
+            >
+              {feedback.text}
+            </p>
+          )}
+        </div>
       </form>
     </div>
   );

@@ -64,17 +64,21 @@ export function parseTaskChatInput(raw: string): TaskChatParse {
   const trimmed = raw.replace(/^\s+/, "");
   const [line1, restMultiline] = splitFirstLine(trimmed);
   let work = line1;
+  const titleParts: string[] = [];
 
   const consumeLeading = (): boolean => {
     work = work.replace(/^\s+/, "");
     if (!work) return false;
 
-    const rangeJoin = work.match(/^(?:till|until|to|->)(\s|$)/i);
-    if (rangeJoin) {
-      parsingRangeEnd = true;
-      work = work.slice(rangeJoin[0].length);
-      hints.push({ key: "range", label: "Range end…" });
-      return true;
+    // Range joins only make sense before any title text (e.g. @9am to 11pm)
+    if (titleParts.length === 0) {
+      const rangeJoin = work.match(/^(?:till|until|to|->)(\s|$)/i);
+      if (rangeJoin) {
+        parsingRangeEnd = true;
+        work = work.slice(rangeJoin[0].length);
+        hints.push({ key: "range", label: "Range end…" });
+        return true;
+      }
     }
 
     if (work.startsWith("!!")) {
@@ -216,13 +220,34 @@ export function parseTaskChatInput(raw: string): TaskChatParse {
     return false;
   };
 
+  const TOKEN_START_RE = /^(?:!!|!|@@|@|#|%)/;
+
   let guard = 0;
-  while (guard++ < 24 && consumeLeading()) {
-    /* consume */
+  while (guard++ < 200) {
+    work = work.replace(/^\s+/, "");
+    if (!work) break;
+
+    if (consumeLeading()) continue;
+
+    // Stop if the remainder looks like a token prefix (partial token detection below)
+    if (TOKEN_START_RE.test(work)) break;
+
+    // Consume the next whitespace-delimited word as title text
+    const wordMatch = work.match(/^(\S+)/);
+    if (!wordMatch) break;
+    titleParts.push(wordMatch[1]);
+    work = work.slice(wordMatch[0].length);
   }
 
   work = work.replace(/^\s+/, "");
-  const titleCore = (work + restMultiline).trim();
+
+  // Build title from collected words; exclude remaining partial-token prefix
+  const isRemainingToken = TOKEN_START_RE.test(work);
+  const titleCore = (
+    [...titleParts, isRemainingToken ? "" : work]
+      .filter(Boolean)
+      .join(" ") + restMultiline
+  ).trim();
 
   if (work) {
     if (work.startsWith("!!") && work.length > 2 && work[2] !== " ") {
