@@ -1,6 +1,5 @@
 import type { PropsWithChildren, ReactNode } from "react";
 import { Fragment, useState } from "react";
-import { getLocalTimeZone } from "@internationalized/date";
 import { ChevronLeft, ChevronRight } from "@untitledui/icons";
 import type { CalendarProps as AriaCalendarProps, DateValue } from "react-aria-components";
 import {
@@ -50,7 +49,7 @@ export const Calendar = ({ highlightedDates, className, children, ...props }: Ca
                     )
                 }
             >
-                {({ state }) => (
+                {() => (
                     <>
                         <header className="flex items-center justify-between px-1 pb-1">
                             <AriaButton

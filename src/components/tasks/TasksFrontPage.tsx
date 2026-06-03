@@ -62,7 +62,6 @@ export const TasksFrontPage = ({
   const endTaskDrag = useHomeFocusStore((s) => s.endTaskDrag);
   const [isDropActive, setIsDropActive] = useState(false);
   const pomodoroPanelOpen = usePomodoroStore((s) => s.panelOpen);
-  const setLinkedTaskTitle = usePomodoroStore((s) => s.setLinkedTaskTitle);
   const dropZoneRef = useRef<HTMLDivElement | null>(null);
 
   const sortedTasks = useMemo(
@@ -149,14 +148,6 @@ export const TasksFrontPage = ({
     [sortedTasks, focusedTaskId],
   );
   const visibleFocusedTask = focusedTask ?? null;
-
-  useEffect(() => {
-    if (visibleFocusedTask && !visibleFocusedTask.done) {
-      setLinkedTaskTitle(visibleFocusedTask.title);
-    } else {
-      setLinkedTaskTitle(undefined);
-    }
-  }, [visibleFocusedTask, setLinkedTaskTitle]);
 
   const activeCount = sortedTasks.filter((task) => !task.done).length;
 

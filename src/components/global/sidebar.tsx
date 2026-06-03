@@ -23,6 +23,7 @@ import {
 } from "./sidebar/SidebarNavItem";
 import { SidebarModeToggle } from "./sidebar/SidebarModeToggle";
 import { SidebarInlineTaskList } from "./sidebar/SidebarInlineTaskList";
+import { listen } from "@tauri-apps/api/event";
 
 const taskDefaultNavItems: SidebarNavItem[] = [
   { label: "Home", icon: <IoHomeOutline />, link: "/" },
@@ -134,6 +135,15 @@ const SideBar = ({
       ),
     );
   }, [appDefaultNavItems]);
+
+  useEffect(() => {
+    const unlisten = listen("toggle-left-panel", () => {
+      setSidebarOpen((prev) => !prev);
+    });
+    return () => {
+      unlisten.then((off) => off());
+    };
+  }, []);
 
   useEffect(() => {
     onWidthChange?.(sidebarOpen ? sidebarWidth : 0);

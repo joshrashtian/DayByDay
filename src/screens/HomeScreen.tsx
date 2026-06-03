@@ -6,7 +6,10 @@ import { TasksFrontPage } from "../components/tasks/TasksFrontPage";
 import { useContextMenu } from "../providers/ContextMenuProvider";
 import { useDayTransition } from "../providers/DayTransitionProvider";
 import { getBlockBannerClasses } from "../providers/homeBlockBannerStyles";
-import { getCriticalRibbonClass } from "../providers/homeCriticalRibbonStyles";
+import {
+  getCriticalRibbonClass,
+  ribbonStyleIsThemeable,
+} from "../providers/homeCriticalRibbonStyles";
 import {
   getThemeBlockAccent,
   mergeRibbonClass,
@@ -88,7 +91,9 @@ export const HomeScreen = () => {
   );
   const ribbonStyleClass = mergeRibbonClass(
     getCriticalRibbonClass(visualPrefs.ribbonStyle),
-    homeTheme.ribbonOverlay,
+    ribbonStyleIsThemeable(visualPrefs.ribbonStyle)
+      ? homeTheme.ribbonOverlay
+      : "",
   );
   const tasksThemeActive = shouldApplyThemeTasksOverlay(visualPrefs.tasksStyle);
   const tasksStyleClass = [
@@ -340,6 +345,7 @@ export const HomeScreen = () => {
               }}
             >
               <CriticalHeaderRibbon
+                style={visualPrefs.ribbonStyle}
                 ribbonContainerClassName={ribbonStyleClass}
               />
             </div>

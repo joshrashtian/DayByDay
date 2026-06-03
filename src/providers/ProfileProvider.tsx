@@ -85,7 +85,6 @@ export const ProfileProvider = ({
 
   const {
     totalTasks,
-    completedTasks,
     openTasks,
     completionRateLabel,
     categoriesCount,

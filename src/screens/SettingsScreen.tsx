@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "motion/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getVersion } from "@tauri-apps/api/app";
 import {
   IoCloudOutline,
   IoColorPaletteOutline,
@@ -15,8 +16,11 @@ import { BlocksCssSection } from "./settings/BlocksCssSection";
 import { ConnectedCalendarsSection } from "./settings/ConnectedCalendarsSection";
 import { ProfileSection } from "./settings/ProfileSection";
 import { AudioSection } from "./settings/AudioSection";
+import HomeSection from "./settings/HomeSection";
+import { SettingsProvider, useSettings } from "@/providers/SettingsProvider";
 
 type SettingsSection =
+  | "home"
   | "weather"
   | "categories"
   | "blocks-css"
@@ -24,11 +28,14 @@ type SettingsSection =
   | "connected-calendars"
   | "audio";
 
+const DEFAULT_SECTION: SettingsSection = "weather";
+
 const SECTIONS: {
   id: SettingsSection;
   label: string;
   icon: React.ReactNode;
 }[] = [
+  { id: "home", label: "Home", icon: <IoSettings /> },
   { id: "weather", label: "Weather", icon: <IoCloudOutline /> },
   {
     id: "categories",
@@ -46,10 +53,26 @@ const SECTIONS: {
 ];
 
 export const SettingsScreen = ({ modal = false }: { modal?: boolean }) => {
-  const [activeSection, setActiveSection] =
-    useState<SettingsSection>("weather");
+  return (
+    <SettingsProvider initialPage={DEFAULT_SECTION}>
+      <SettingsScreenContent modal={modal} />
+    </SettingsProvider>
+  );
+};
+
+const SettingsScreenContent = ({ modal = false }: { modal?: boolean }) => {
+  const { currentPage, navigate } = useSettings();
+  const activeSection = (currentPage || DEFAULT_SECTION) as SettingsSection;
+  const [appVersion, setAppVersion] = useState<string | null>(null);
+
+  useEffect(() => {
+    getVersion()
+      .then(setAppVersion)
+      .catch(() => setAppVersion(null));
+  }, []);
 
   const sectionContent: Record<SettingsSection, () => React.ReactNode> = {
+    home: () => <HomeSection />,
     weather: () => <WeatherSection />,
     categories: () => <CategoriesSection />,
     "blocks-css": () => <BlocksCssSection />,
@@ -103,6 +126,11 @@ export const SettingsScreen = ({ modal = false }: { modal?: boolean }) => {
               </motion.span>
             ))}
           </h1>
+          {appVersion && (
+            <p className="mt-1 text-xs font-medium text-zinc-400 dark:text-zinc-500">
+              {`v${appVersion}`}
+            </p>
+          )}
         </div>
       </div>
 
@@ -117,7 +145,7 @@ export const SettingsScreen = ({ modal = false }: { modal?: boolean }) => {
               <button
                 key={section.id}
                 type="button"
-                onClick={() => setActiveSection(section.id)}
+                onClick={() => navigate(section.id)}
                 aria-current={isActive ? "true" : undefined}
                 className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 ${
                   isActive
@@ -134,7 +162,7 @@ export const SettingsScreen = ({ modal = false }: { modal?: boolean }) => {
       </nav>
 
       <div className="flex min-h-0 flex-1">
-        <nav
+        {/*  <nav
           aria-label="Settings sections"
           className="hidden w-52 shrink-0 flex-col border-r border-zinc-100 bg-zinc-50/50 p-3 md:flex dark:border-zinc-800/60 dark:bg-zinc-900/30"
         >
@@ -145,7 +173,7 @@ export const SettingsScreen = ({ modal = false }: { modal?: boolean }) => {
                 <button
                   key={section.id}
                   type="button"
-                  onClick={() => setActiveSection(section.id)}
+                  onClick={() => navigate(section.id)}
                   aria-current={isActive ? "true" : undefined}
                   className={`group relative flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 ${
                     isActive
@@ -174,7 +202,7 @@ export const SettingsScreen = ({ modal = false }: { modal?: boolean }) => {
             })}
           </div>
         </nav>
-
+*/}
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-2xl px-6 py-6">
             <AnimatePresence mode="wait">

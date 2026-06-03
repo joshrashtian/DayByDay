@@ -19,6 +19,10 @@ const CORE_RIBBON_STYLE_OPTIONS: SectionStyleOption<RibbonVisualStyle>[] = [
   { id: "default", label: "Default" },
   { id: "muted", label: "Muted" },
   { id: "high-contrast", label: "High Contrast" },
+  { id: "solid", label: "Solid" },
+  { id: "glass", label: "Glass" },
+  { id: "outline", label: "Outline" },
+  { id: "classic", label: "Classic Ribbon" },
 ];
 
 const CORE_TASKS_STYLE_OPTIONS: SectionStyleOption<TasksVisualStyle>[] = [

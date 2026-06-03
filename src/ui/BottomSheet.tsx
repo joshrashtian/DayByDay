@@ -1,7 +1,22 @@
-import { useAnimation } from "motion/react";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useAnimation, useReducedMotion } from "motion/react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useDragControls } from "motion/react";
+
+const FOCUSABLE_SELECTOR = [
+  "a[href]",
+  "button:not([disabled])",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  '[tabindex]:not([tabindex="-1"])',
+].join(",");
 
 export type SnapPoint = "peek" | "half" | "full";
 
@@ -95,6 +110,11 @@ export default function BottomSheet({
   const dragControls = useDragControls();
   // Controls only the drag-layer's y — lets us reset to 0 after every release.
   const dragY = useAnimation();
+  const reduceMotion = useReducedMotion();
+
+  const panelRef = useRef<HTMLDivElement>(null);
+  // The element that had focus before the sheet opened, to restore on close.
+  const restoreFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -102,10 +122,57 @@ export default function BottomSheet({
     }
   }, [open, defaultSnap, stableEnabled]);
 
+  // Focus management: move focus into the dialog on open, restore it on close.
+  useEffect(() => {
+    if (!open) return;
+    restoreFocusRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    // Defer until the panel is mounted/animated in.
+    const raf = requestAnimationFrame(() => {
+      const panel = panelRef.current;
+      if (!panel) return;
+      const first = panel.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+      (first ?? panel).focus();
+    });
+    return () => {
+      cancelAnimationFrame(raf);
+      restoreFocusRef.current?.focus?.();
+      restoreFocusRef.current = null;
+    };
+  }, [open]);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      // Trap Tab focus within the panel.
+      if (e.key === "Tab") {
+        const panel = panelRef.current;
+        if (!panel) return;
+        const focusable = Array.from(
+          panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+        ).filter((el) => el.offsetParent !== null || el === document.activeElement);
+        if (focusable.length === 0) {
+          e.preventDefault();
+          panel.focus();
+          return;
+        }
+        const first = focusable[0]!;
+        const last = focusable[focusable.length - 1]!;
+        const active = document.activeElement;
+        if (e.shiftKey && (active === first || active === panel)) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && active === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -128,8 +195,12 @@ export default function BottomSheet({
     onSnapChange?.(next);
   }
 
+  // Spring for gestures, near-instant when the user prefers reduced motion.
+  const motionTransition = reduceMotion ? { duration: 0 } : SPRING;
+  const heightTransition = reduceMotion ? "none" : HEIGHT_TRANSITION;
+
   function resetDragY() {
-    dragY.start({ y: 0, transition: SPRING });
+    dragY.start({ y: 0, transition: motionTransition });
   }
 
   function handleDragEnd(
@@ -189,10 +260,9 @@ export default function BottomSheet({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
         >
-          {/* backdrop */}
-          <motion.button
-            type="button"
-            aria-label="Close sheet"
+          {/* backdrop — decorative; the "Done" button is the labelled close affordance */}
+          <motion.div
+            aria-hidden
             className="absolute inset-0 bg-zinc-950/45 backdrop-blur-[2px]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -204,17 +274,19 @@ export default function BottomSheet({
               Only responsible for the enter/exit slide; no drag here. */}
           <motion.div
             className={`absolute bottom-0 left-0 right-0 z-10 flex justify-center ${widthClasses.wrapper}`}
-            initial={{ y: "110dvh" }}
-            animate={{ y: 0 }}
-            exit={{ y: "110dvh" }}
-            transition={SPRING}
+            initial={reduceMotion ? { opacity: 0 } : { y: "110dvh" }}
+            animate={reduceMotion ? { opacity: 1 } : { y: 0 }}
+            exit={reduceMotion ? { opacity: 0 } : { y: "110dvh" }}
+            transition={motionTransition}
           >
             {/* Drag layer — resets to y:0 after every gesture via dragY controls.
                 Height changes via CSS transition so Motion y is never entangled. */}
             <motion.div
+              ref={panelRef}
               role="dialog"
               aria-modal="true"
               aria-labelledby={title ? "bottom-sheet-title" : undefined}
+              tabIndex={-1}
               drag="y"
               dragControls={dragControls}
               dragListener={false}
@@ -223,8 +295,8 @@ export default function BottomSheet({
               dragMomentum={false}
               onDragEnd={handleDragEnd}
               animate={dragY}
-              className={`flex min-h-0 w-full flex-col overflow-hidden border border-zinc-200/80 bg-white shadow-[0_-12px_40px_rgba(0,0,0,0.12)] dark:border-zinc-700/80 dark:bg-zinc-900 dark:shadow-[0_-12px_40px_rgba(0,0,0,0.45)] ${widthClasses.panel}`}
-              style={{ height: maxHeight, maxHeight, transition: HEIGHT_TRANSITION }}
+              className={`flex min-h-0 w-full flex-col overflow-hidden border border-zinc-200/80 bg-white shadow-[0_-12px_40px_rgba(0,0,0,0.12)] outline-none dark:border-zinc-700/80 dark:bg-zinc-900 dark:shadow-[0_-12px_40px_rgba(0,0,0,0.45)] ${widthClasses.panel}`}
+              style={{ height: maxHeight, maxHeight, transition: heightTransition }}
               onClick={(e) => e.stopPropagation()}
             >
               {/* drag handle */}
@@ -304,7 +376,12 @@ export default function BottomSheet({
               </div>
 
               {/* content */}
-              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 text-sm text-zinc-700 dark:text-zinc-300 sm:px-6">
+              <div
+                className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4 text-sm text-zinc-700 dark:text-zinc-300 sm:px-6"
+                style={{
+                  paddingBottom: "calc(1rem + env(safe-area-inset-bottom))",
+                }}
+              >
                 {children ?? (
                   <p className="leading-relaxed">
                     Pass{" "}

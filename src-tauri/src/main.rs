@@ -44,10 +44,17 @@ fn main() {
             let actual_size_item = MenuItemBuilder::with_id("zoom_reset", "Actual Size")
                 .accelerator("CmdOrCtrl+0")
                 .build(app)?;
+            let toggle_left_panel =
+                MenuItemBuilder::with_id("toggle_left_panel", "Toggle Left Panel")
+                    .accelerator("CmdOrCtrl+1")
+                    .build(app)?;
+
             let view_menu = SubmenuBuilder::new(app, "View")
                 .item(&zoom_in_item)
                 .item(&zoom_out_item)
                 .item(&actual_size_item)
+                .separator()
+                .item(&toggle_left_panel)
                 .build()?;
 
             let go_menu = SubmenuBuilder::new(app, "Go")
@@ -99,6 +106,9 @@ fn main() {
                     }
                     "zoom_reset" => {
                         let _ = app_handle.emit("menu-zoom", "reset");
+                    }
+                    "toggle_left_panel" => {
+                        let _ = app_handle.emit("toggle-left-panel", ());
                     }
                     _ => {
                         // Ignore unrelated native menu events.

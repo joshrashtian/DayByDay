@@ -218,7 +218,14 @@ export type ConnectedCalendar = {
 
 // ── Home Visual Styles ────────────────────────────────────────────────────
 
-export type RibbonVisualStyle = "default" | "muted" | "high-contrast";
+export type RibbonVisualStyle =
+  | "default"
+  | "muted"
+  | "high-contrast"
+  | "solid"
+  | "glass"
+  | "outline"
+  | "classic";
 
 export type TasksVisualStyle =
   | "default"
@@ -242,4 +249,17 @@ export type HomeVisualPrefs = {
   /** Theme id from the home theme registry (core ids match clock templates). */
   clockStyle: string;
   clockScale: number;
+};
+
+export type AudioPrefs = {
+  soundEnabled: boolean;
+  volume: number;
+  taskClickSoundId: string;
+};
+
+export type CustomSound = {
+  id: string;
+  name: string;
+  dataUrl: string;
+  mimeType: string;
 };

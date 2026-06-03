@@ -10,7 +10,7 @@ import { isIcsTask } from "../../lib/icsTasks";
 import { useDisplayedBlockName } from "../../hooks/useDisplayedBlockName";
 import { useHomeFocusStore } from "../../stores/homeFocusStore";
 import { useTasksStore } from "../../stores/tasksStore";
-import { IoAdd, IoCheckmark, IoPencil, IoTrash } from "react-icons/io5";
+import { IoAdd, IoPencil, IoTrash } from "react-icons/io5";
 import type { Task } from "@/types";
 import { useContextMenu } from "../../providers/ContextMenuProvider";
 import { usePopup } from "../../providers/PopupProvider";

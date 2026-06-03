@@ -15,7 +15,6 @@ import {
   IoDocumentTextOutline,
   IoPricetagsOutline,
   IoSparkles,
-  IoSparklesOutline,
   IoTerminalOutline,
   IoTimeOutline,
   IoWarning,

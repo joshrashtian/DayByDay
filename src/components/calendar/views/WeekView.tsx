@@ -832,7 +832,6 @@ export function WeekView({
     const id = window.setInterval(tick, 60_000);
     return () => window.clearInterval(id);
   }, []);
-  const showWeekMeta = anchorToWeekStart && safeDayCount === 7;
   const [dragSelection, setDragSelection] = useState<WeekDragSelection | null>(
     null,
   );

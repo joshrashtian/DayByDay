@@ -21,6 +21,7 @@ import CognitionBar from "./ui/CognitionBar";
 import { GlobalPomodoroDock } from "./components/global/GlobalPomodoroDock";
 import { TaskDragGhost } from "./components/global/TaskDragGhost";
 import { PomodoroTicker } from "./components/global/PomodoroTicker";
+import { PomodoroLinkedTaskSync } from "./components/global/PomodoroLinkedTaskSync";
 import { useAppZoom } from "./hooks/useAppZoom";
 import { useMenuNavigation } from "./hooks/useMenuNavigation";
 import { useCreateTaskAction } from "./hooks/useCreateTaskAction";
@@ -193,6 +194,7 @@ export default function App() {
         </motion.div>
         <CognitionBar />
         <PomodoroTicker />
+        <PomodoroLinkedTaskSync />
         <GlobalPomodoroDock />
         <TaskDragGhost />
       </motion.div>
