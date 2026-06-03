@@ -28,7 +28,7 @@ export function SidebarModeToggle({
         <div className="relative grid grid-cols-3 items-center">
           <motion.span
             aria-hidden
-            className={`pointer-events-none absolute inset-y-0 transition-colors left-0 w-1/3 rounded-xl border border-sky-300/60 duration-1000 bg-linear-to-r ${sidebarMode === "tasks" ? "bg-sky-400" : sidebarMode === "social" ? "bg-purple-400" : "bg-green-400"} shadow-[0_8px_22px_-12px_rgba(14,116,255,0.95)]`}
+            className={`pointer-events-none absolute inset-y-0 transition-colors left-0 w-1/3 rounded-xl bg-zinc-500  duration-1000 bg-linear-to-r  shadow-[0_8px_22px_-12px_rgba(14,116,255,0.95)]`}
             animate={{ x: `${sidebarModeIndex * 100}%` }}
             transition={{
               type: "spring",
