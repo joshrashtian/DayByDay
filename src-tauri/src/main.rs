@@ -48,6 +48,10 @@ fn main() {
                 MenuItemBuilder::with_id("toggle_left_panel", "Toggle Left Panel")
                     .accelerator("CmdOrCtrl+1")
                     .build(app)?;
+            let toggle_right_panel =
+                MenuItemBuilder::with_id("toggle_right_panel", "Toggle Right Panel")
+                    .accelerator("CmdOrCtrl+2")
+                    .build(app)?;
 
             let view_menu = SubmenuBuilder::new(app, "View")
                 .item(&zoom_in_item)
@@ -55,6 +59,7 @@ fn main() {
                 .item(&actual_size_item)
                 .separator()
                 .item(&toggle_left_panel)
+                .item(&toggle_right_panel)
                 .build()?;
 
             let go_menu = SubmenuBuilder::new(app, "Go")
@@ -109,6 +114,9 @@ fn main() {
                     }
                     "toggle_left_panel" => {
                         let _ = app_handle.emit("toggle-left-panel", ());
+                    }
+                    "toggle_right_panel" => {
+                        let _ = app_handle.emit("toggle-right-panel", ());
                     }
                     _ => {
                         // Ignore unrelated native menu events.

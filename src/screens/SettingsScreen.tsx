@@ -1,15 +1,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { getVersion } from "@tauri-apps/api/app";
-import {
-  IoCloudOutline,
-  IoColorPaletteOutline,
-  IoBrushOutline,
-  IoSettings,
-  IoPersonOutline,
-  IoCalendarOutline,
-  IoVolumeHighOutline,
-} from "react-icons/io5";
+import { IoSettings, IoChevronBackOutline } from "react-icons/io5";
 import { WeatherSection } from "./settings/WeatherSection";
 import { CategoriesSection } from "./settings/CategoriesSection";
 import { BlocksCssSection } from "./settings/BlocksCssSection";
@@ -18,39 +10,8 @@ import { ProfileSection } from "./settings/ProfileSection";
 import { AudioSection } from "./settings/AudioSection";
 import HomeSection from "./settings/HomeSection";
 import { SettingsProvider, useSettings } from "@/providers/SettingsProvider";
-
-type SettingsSection =
-  | "home"
-  | "weather"
-  | "categories"
-  | "blocks-css"
-  | "profile"
-  | "connected-calendars"
-  | "audio";
-
-const DEFAULT_SECTION: SettingsSection = "weather";
-
-const SECTIONS: {
-  id: SettingsSection;
-  label: string;
-  icon: React.ReactNode;
-}[] = [
-  { id: "home", label: "Home", icon: <IoSettings /> },
-  { id: "weather", label: "Weather", icon: <IoCloudOutline /> },
-  {
-    id: "categories",
-    label: "Categories",
-    icon: <IoColorPaletteOutline />,
-  },
-  { id: "blocks-css", label: "Blocks CSS", icon: <IoBrushOutline /> },
-  { id: "profile", label: "Profile", icon: <IoPersonOutline /> },
-  {
-    id: "connected-calendars",
-    label: "Connected Calendars",
-    icon: <IoCalendarOutline />,
-  },
-  { id: "audio", label: "Audio", icon: <IoVolumeHighOutline /> },
-];
+import { DEFAULT_SECTION, SECTIONS } from "./settings/sections";
+import type { SettingsSection } from "./settings/sections";
 
 export const SettingsScreen = ({ modal = false }: { modal?: boolean }) => {
   return (
@@ -205,6 +166,16 @@ const SettingsScreenContent = ({ modal = false }: { modal?: boolean }) => {
 */}
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-2xl px-6 py-6">
+            {activeSection !== "home" && (
+              <button
+                type="button"
+                onClick={() => navigate("home")}
+                className="mb-4 inline-flex items-center gap-1 rounded-lg px-2 py-1 -ml-2 text-sm font-medium text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+              >
+                <IoChevronBackOutline aria-hidden="true" />
+                Back to Settings
+              </button>
+            )}
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeSection}

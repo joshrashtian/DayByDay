@@ -25,12 +25,12 @@ import { PomodoroLinkedTaskSync } from "./components/global/PomodoroLinkedTaskSy
 import { useAppZoom } from "./hooks/useAppZoom";
 import { useMenuNavigation } from "./hooks/useMenuNavigation";
 import { useCreateTaskAction } from "./hooks/useCreateTaskAction";
-import { useProfile } from "./providers/ProfileProvider";
+import { useRightPanel } from "./providers/RightPanelProvider";
 
 export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { openProfile } = useProfile();
+  const { togglePanel } = useRightPanel();
   useMenuNavigation();
   useAppZoom();
   useCreateTaskAction();
@@ -75,7 +75,7 @@ export default function App() {
     <div id="app-zoom-root" className="h-full w-full overflow-hidden">
       <SideBar
         onWidthChange={setSidebarOffset}
-        onOpenProfile={openProfile}
+        onOpenProfile={() => togglePanel("profile")}
         onOpenSettings={() => setShowSettingsModal(true)}
       />
       <motion.div
