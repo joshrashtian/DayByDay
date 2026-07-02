@@ -45,6 +45,20 @@ function normalizeClockMinutes(raw: unknown): number | undefined {
   return floored;
 }
 
+function normalizeBlockColor(raw: unknown): string | undefined {
+  if (typeof raw !== "string") return undefined;
+  const value = raw.trim();
+  if (/^#([0-9a-fA-F]{6})$/.test(value)) return value.toLowerCase();
+  return undefined;
+}
+
+function normalizeBlockIcon(raw: unknown): string | undefined {
+  if (typeof raw !== "string") return undefined;
+  const trimmed = raw.trim();
+  if (!trimmed) return undefined;
+  return trimmed.slice(0, 64);
+}
+
 function normalizeBlockConfig(raw: unknown): BlockConfig | undefined {
   if (!raw || typeof raw !== "object") return undefined;
   const item = raw as Record<string, unknown>;
@@ -57,10 +71,14 @@ function normalizeBlockConfig(raw: unknown): BlockConfig | undefined {
     typeof rawCustomCss === "string" && rawCustomCss.trim().length > 0
       ? rawCustomCss
       : undefined;
+  const color = normalizeBlockColor(item.color);
+  const icon = normalizeBlockIcon(item.icon);
   return {
     name,
     startMinutes,
     endMinutes,
+    ...(color ? { color } : {}),
+    ...(icon ? { icon } : {}),
     ...(customCss ? { customCss } : {}),
   };
 }

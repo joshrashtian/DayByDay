@@ -15,6 +15,16 @@ import { useSettingsStore } from "../stores/settingsStore";
 import "./BlockScreen.css";
 import BottomSheet from "../ui/BottomSheet";
 import { IoAdd } from "react-icons/io5";
+import BlockDial, { getBlockColor } from "../components/blocks/BlockDial";
+import { getActiveBlockNameAt } from "../lib/taskBlocks";
+import { ColorPicker } from "../components/base/input/color-picker";
+import { IconPicker } from "../components/base/input/icon-picker";
+import { renderCategoryIcon } from "../lib/categoryIcons";
+
+const nowMinuteOfDay = () => {
+  const now = new Date();
+  return now.getHours() * 60 + now.getMinutes();
+};
 
 type BlockRowVariant =
   | "early-morning"
@@ -30,6 +40,8 @@ type Block = {
   startTime: string;
   endTime: string;
   blockKey: string;
+  color?: string;
+  icon?: string;
   customCss?: string;
   rowVariant?: BlockRowVariant;
 };
@@ -88,11 +100,22 @@ const BlockScreen = () => {
   const [editorStartTime, setEditorStartTime] = useState("08:00");
   const [editorEndTime, setEditorEndTime] = useState("12:00");
   const [editorCustomCss, setEditorCustomCss] = useState("");
+  const [editorColor, setEditorColor] = useState("#ee6c2b");
+  const [editorIcon, setEditorIcon] = useState("");
+  const [nowMinute, setNowMinute] = useState(() => nowMinuteOfDay());
   const editorBlockKey = blockKeyFromName(
     editorMode === "edit"
       ? (editingBlockName ?? editorBlockName)
       : editorBlockName,
   );
+
+  useEffect(() => {
+    const timer = window.setInterval(
+      () => setNowMinute(nowMinuteOfDay()),
+      30_000,
+    );
+    return () => window.clearInterval(timer);
+  }, []);
 
   useLayoutEffect(() => {
     const el = userStyleRef.current;
@@ -138,6 +161,8 @@ const BlockScreen = () => {
       startTime: formatMinutesAsTimeInput(config?.startMinutes ?? 8 * 60),
       endTime: formatMinutesAsTimeInput(config?.endMinutes ?? 12 * 60),
       blockKey: blockKeyFromName(name),
+      color: config?.color,
+      icon: config?.icon,
       customCss: config?.customCss,
       rowVariant:
         normalizedName === "early morning"
@@ -148,6 +173,15 @@ const BlockScreen = () => {
     };
   });
 
+  const activeBlockName = getActiveBlockNameAt(nowMinute);
+  const taskCountByBlock = blocks.reduce<Record<string, number>>(
+    (acc, block) => {
+      acc[block.name.trim().toLowerCase()] = block.taskCount;
+      return acc;
+    },
+    {},
+  );
+
   const openCreateEditor = () => {
     setEditorMode("create");
     setEditingBlockName(null);
@@ -155,6 +189,8 @@ const BlockScreen = () => {
     setEditorStartTime("08:00");
     setEditorEndTime("12:00");
     setEditorCustomCss("");
+    setEditorColor(getBlockColor("", blockConfigs.length));
+    setEditorIcon("");
     setEditorOpen(true);
   };
 
@@ -165,6 +201,16 @@ const BlockScreen = () => {
     setEditorStartTime(block.startTime);
     setEditorEndTime(block.endTime);
     setEditorCustomCss(block.customCss ?? "");
+    setEditorColor(
+      block.color ??
+        getBlockColor(
+          block.name,
+          blockConfigs.findIndex(
+            (c) => c.name.toLowerCase() === block.name.toLowerCase(),
+          ),
+        ),
+    );
+    setEditorIcon(block.icon ?? "");
     setEditorOpen(true);
   };
 
@@ -178,10 +224,15 @@ const BlockScreen = () => {
     const startMinutes = parseTimeInputToMinutes(editorStartTime);
     const endMinutes = parseTimeInputToMinutes(editorEndTime);
     if (startMinutes == null || endMinutes == null) return;
+    const color = /^#([0-9a-fA-F]{6})$/.test(editorColor.trim())
+      ? editorColor.trim().toLowerCase()
+      : undefined;
     setOrUpdateBlockConfig({
       name: trimmed,
       startMinutes,
       endMinutes,
+      color,
+      icon: editorIcon.trim() || undefined,
       customCss: editorCustomCss.trim() || undefined,
     });
     setEditorOpen(false);
@@ -209,10 +260,6 @@ const BlockScreen = () => {
         <div className="block-screen__header">
           <div className="block-screen__heading-group">
             <h1 className="block-screen__title">Blocks</h1>
-            <p className="block-screen__subtitle">
-              Segment tasks by time blocks (like Morning) or life blocks (like
-              Work, School, Home). Set a block while creating a task.
-            </p>
           </div>
           <button
             onClick={() => {
@@ -224,12 +271,18 @@ const BlockScreen = () => {
             +
           </button>
         </div>
+        {blockConfigs.length > 0 ? (
+          <BlockDial
+            blocks={blockConfigs}
+            nowMinute={nowMinute}
+            activeBlockName={activeBlockName}
+            taskCountByBlock={taskCountByBlock}
+          />
+        ) : null}
         <div className="block-screen__list w-full">
           {blocks.length === 0 ? (
             <div className="block-screen__row block-screen__empty">
-              <h2 className="block-screen__row--title">
-                No blocks yet
-              </h2>
+              <h2 className="block-screen__row--title">No blocks yet</h2>
               <p className="block-screen__row--description">
                 Create your own block with custom timing to start segmenting
                 your day.
@@ -247,7 +300,19 @@ const BlockScreen = () => {
               className={rowClassName(block.rowVariant)}
             >
               <div className="block-screen__card-header">
-                <h2 className="block-screen__row--title">{block.name}</h2>
+                <div className="block-screen__title-group">
+                  {block.color || block.icon ? (
+                    <span
+                      className="block-screen__icon-badge"
+                      style={{
+                        background: block.color ?? "rgba(113, 113, 122, 0.16)",
+                      }}
+                    >
+                      {renderCategoryIcon(block.icon, "h-4 w-4 text-white")}
+                    </span>
+                  ) : null}
+                  <h2 className="block-screen__row--title">{block.name}</h2>
+                </div>
                 <span className="block-screen__count-pill">
                   {block.taskCount} {block.taskCount === 1 ? "task" : "tasks"}
                 </span>
@@ -329,12 +394,32 @@ const BlockScreen = () => {
               className="rounded-lg border border-zinc-300/80 bg-white/80 px-2 py-1 text-xs text-zinc-900 outline-none dark:border-zinc-600 dark:bg-zinc-900/70 dark:text-zinc-100"
             />
           </div>
+          <div>
+            <p className="mb-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400">
+              Color
+            </p>
+            <ColorPicker
+              value={editorColor}
+              onChange={setEditorColor}
+              aria-label="Block color"
+            />
+          </div>
+          <div>
+            <p className="mb-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400">
+              Icon
+            </p>
+            <IconPicker
+              value={editorIcon}
+              onChange={setEditorIcon}
+              onClear={() => setEditorIcon("")}
+            />
+          </div>
           <button
             type="button"
             onClick={saveEditor}
             className="self-start rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
-            {editorMode === "create" ? "Create block" : "Save timing"}
+            {editorMode === "create" ? "Create block" : "Save block"}
           </button>
           {editorMode === "edit" ? (
             <button

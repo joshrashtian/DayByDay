@@ -8,6 +8,7 @@ import { BlocksCssSection } from "./settings/BlocksCssSection";
 import { ConnectedCalendarsSection } from "./settings/ConnectedCalendarsSection";
 import { ProfileSection } from "./settings/ProfileSection";
 import { AudioSection } from "./settings/AudioSection";
+import { AppearanceSection } from "./settings/AppearanceSection";
 import HomeSection from "./settings/HomeSection";
 import { SettingsProvider, useSettings } from "@/providers/SettingsProvider";
 import { DEFAULT_SECTION, SECTIONS } from "./settings/sections";
@@ -34,6 +35,7 @@ const SettingsScreenContent = ({ modal = false }: { modal?: boolean }) => {
 
   const sectionContent: Record<SettingsSection, () => React.ReactNode> = {
     home: () => <HomeSection />,
+    appearance: () => <AppearanceSection />,
     weather: () => <WeatherSection />,
     categories: () => <CategoriesSection />,
     "blocks-css": () => <BlocksCssSection />,

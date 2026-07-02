@@ -16,6 +16,7 @@ import {
   evictTaskClickSoundFromCache,
   normalizeAudioPrefs,
 } from "@/lib/taskClickSounds";
+import { DEFAULT_SIDEBAR_STYLE_ID } from "@/themes/sidebarStyles";
 
 type SidebarMode = "tasks" | "social" | "apps";
 
@@ -23,6 +24,7 @@ type SidebarState = {
   open: boolean;
   width: number;
   mode: SidebarMode;
+  style: string;
   taskOrder: string[];
   socialOrder: string[];
   appOrder: string[];
@@ -74,6 +76,7 @@ const DEFAULT_SIDEBAR: SidebarState = {
   open: true,
   width: 220,
   mode: "tasks",
+  style: DEFAULT_SIDEBAR_STYLE_ID,
   taskOrder: [],
   socialOrder: [],
   appOrder: [],

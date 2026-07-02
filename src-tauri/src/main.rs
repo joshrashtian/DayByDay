@@ -1,17 +1,25 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use tauri::{
-    menu::{MenuBuilder, MenuItemBuilder, SubmenuBuilder},
+    menu::{AboutMetadata, AboutMetadataBuilder, MenuBuilder, MenuItemBuilder, SubmenuBuilder},
     Emitter,
 };
 
 fn main() {
     tauri::Builder::default()
         .setup(|app| {
+            let about_metadata = AboutMetadataBuilder::new()
+                .version(Some("0.1.0 Beta"))
+                .authors(Some(vec!["Joshua Rashtian".to_string()]))
+                .comments(Some("DayByDay — segment-based day planning"))
+                .copyright(Some("© 2026 Joshua Rashtian"))
+                .build();
+
             let settings_item = MenuItemBuilder::with_id("settings", "Settings...")
                 .accelerator("CmdOrCtrl+,")
                 .build(app)?;
+
             let app_menu = SubmenuBuilder::new(app, app.package_info().name.clone())
-                .about(None)
+                .about(Some(about_metadata))
                 .separator()
                 .item(&settings_item)
                 .separator()

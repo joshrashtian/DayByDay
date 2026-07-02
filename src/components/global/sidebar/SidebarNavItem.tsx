@@ -1,4 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
+import { useSidebarStyle } from "./SidebarStyleContext";
 
 export type SidebarNavItem = {
   label: string;
@@ -22,6 +23,7 @@ export function SidebarNavItemView({
   onOpenSettings,
 }: Props) {
   const location = useLocation();
+  const tokens = useSidebarStyle();
 
   if (item.link === "/profile") {
     return (
@@ -31,7 +33,7 @@ export function SidebarNavItemView({
         draggable={false}
         aria-label={item.label}
         title={!sidebarOpen ? item.label : undefined}
-        className="group relative flex h-10 w-full items-center rounded-xl px-2 text-base text-white/70 transition-all duration-150 ease-out hover:bg-white/15 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2"
+        className={`group relative flex h-10 w-full items-center rounded-xl px-2 text-base transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 ${tokens.navItemIdle}`}
       >
         <span
           className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r opacity-0 transition-opacity duration-150"
@@ -59,7 +61,7 @@ export function SidebarNavItemView({
         draggable={false}
         aria-label={item.label}
         title={!sidebarOpen ? item.label : undefined}
-        className="group relative flex h-10 w-full items-center rounded-xl px-2 text-base text-white/70 transition-all duration-150 ease-out hover:bg-white/15 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2"
+        className={`group relative flex h-10 w-full items-center rounded-xl px-2 text-base transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 ${tokens.navItemIdle}`}
       >
         <span
           className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r opacity-0 transition-opacity duration-150"
@@ -91,14 +93,12 @@ export function SidebarNavItemView({
       aria-label={item.label}
       title={!sidebarOpen ? item.label : undefined}
       className={`group relative flex h-10 items-center rounded-xl px-2 text-base transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 ${
-        isActive
-          ? "bg-white/25 text-white"
-          : "text-white/70 hover:bg-white/15 hover:text-white"
+        isActive ? tokens.navItemActive : tokens.navItemIdle
       }`}
     >
       <span
         className={`absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r transition-opacity duration-150 ${
-          isActive ? "bg-white opacity-100" : "opacity-0"
+          isActive ? `${tokens.navAccent} opacity-100` : "opacity-0"
         }`}
         aria-hidden
       />

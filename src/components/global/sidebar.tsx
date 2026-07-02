@@ -8,6 +8,7 @@ import {
   IoHomeOutline,
   IoHourglassOutline,
   IoListOutline,
+  IoPeople,
   IoPersonOutline,
   IoSettingsOutline,
 } from "react-icons/io5";
@@ -23,6 +24,8 @@ import {
 } from "./sidebar/SidebarNavItem";
 import { SidebarModeToggle } from "./sidebar/SidebarModeToggle";
 import { SidebarInlineTaskList } from "./sidebar/SidebarInlineTaskList";
+import { SidebarStyleProvider } from "./sidebar/SidebarStyleContext";
+import { getSidebarStyle } from "@/themes/sidebarStyles";
 import { listen } from "@tauri-apps/api/event";
 
 const taskDefaultNavItems: SidebarNavItem[] = [
@@ -33,7 +36,13 @@ const taskDefaultNavItems: SidebarNavItem[] = [
   { label: "Pomodoro", icon: <IoHourglassOutline />, link: "/pomodoro" },
 ];
 
-const socialDefaultNavItems: SidebarNavItem[] = [];
+const socialDefaultNavItems: SidebarNavItem[] = [
+  {
+    label: "My Circle",
+    icon: <IoPeople />,
+    link: "/social/home",
+  },
+];
 
 const buildPinnedPanelNavItems = (panelIds: string[]): SidebarNavItem[] => {
   const panelById = new Map(TOOLKIT_PANELS.map((panel) => [panel.id, panel]));
@@ -205,6 +214,7 @@ const SideBar = ({
 
   const resolvedWidth = previewWidth ?? sidebarWidth;
   const showLabel = sidebarOpen && resolvedWidth >= LABEL_REVEAL_WIDTH;
+  const styleTokens = getSidebarStyle(sidebarState.style).tokens;
   const activeItems =
     sidebarMode === "tasks"
       ? taskItems
@@ -219,7 +229,7 @@ const SideBar = ({
           <motion.nav
             key="sidebar-nav"
             aria-label="Primary navigation"
-            className="relative flex h-full justify-between flex-col overflow-hidden  bg-linear-to-tr from-blue-700 to-purple-500 rounded-r-3xl px-3 py-3 shadow-lg backdrop-blur-sm"
+            className={`relative flex h-full justify-between flex-col overflow-hidden rounded-r-3xl px-3 py-3 shadow-lg backdrop-blur-sm ${styleTokens.surface}`}
             style={{ width: resolvedWidth }}
             initial={{ x: -24 }}
             animate={{ x: 0 }}
@@ -247,92 +257,98 @@ const SideBar = ({
             }}
             onPointerCancel={() => setSwipeStartX(null)}
           >
-            {/* Nav items — compact, non-scrolling */}
-            <div className="flex shrink-0 flex-col gap-2">
-              <SidebarModeToggle
-                showLabel={showLabel}
-                sidebarMode={sidebarMode}
-                setSidebarMode={setSidebarMode}
+            <SidebarStyleProvider value={styleTokens}>
+              {/* Nav items — compact, non-scrolling */}
+              <div className="flex shrink-0 flex-col gap-2">
+                <SidebarModeToggle
+                  showLabel={showLabel}
+                  sidebarMode={sidebarMode}
+                  setSidebarMode={setSidebarMode}
+                />
+                <Reorder.Group
+                  axis="y"
+                  className="flex flex-col gap-0.5"
+                  values={activeItems}
+                  onReorder={
+                    sidebarMode === "tasks"
+                      ? setTaskItems
+                      : sidebarMode === "social"
+                        ? setSocialItems
+                        : setAppItems
+                  }
+                >
+                  {activeItems.map((item) => (
+                    <Reorder.Item
+                      key={`${sidebarMode}-${item.link}`}
+                      value={item}
+                      className="list-none"
+                    >
+                      <SidebarNavItemView
+                        item={item}
+                        showLabel={showLabel}
+                        sidebarOpen={sidebarOpen}
+                        onOpenProfile={onOpenProfile}
+                        onOpenSettings={onOpenSettings}
+                      />
+                    </Reorder.Item>
+                  ))}
+                </Reorder.Group>
+              </div>
+
+              {/* Divider */}
+              {sidebarMode === "tasks" && (
+                <div
+                  className={`my-0.5 mx-1 shrink-0 border-t ${styleTokens.divider}`}
+                />
+              )}
+
+              {/* Inline task list — fills remaining space */}
+              {sidebarMode === "tasks" ? (
+                <SidebarInlineTaskList showLabel={showLabel} />
+              ) : (
+                <div className="flex-1" />
+              )}
+
+              {/* Utility icon bar */}
+              <div
+                className={`flex shrink-0 items-center justify-around border-t pt-2 ${styleTokens.divider}`}
+              >
+                <button
+                  type="button"
+                  onClick={onOpenProfile}
+                  aria-label="Profile"
+                  title="Profile"
+                  className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${styleTokens.utilityButton}`}
+                >
+                  <IoPersonOutline className="text-base" />
+                </button>
+                <button
+                  type="button"
+                  onClick={onOpenSettings}
+                  aria-label="Settings"
+                  title="Settings"
+                  className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${styleTokens.utilityButton}`}
+                >
+                  <IoSettingsOutline className="text-base" />
+                </button>
+                <NavLink
+                  to="/help"
+                  aria-label="Help"
+                  title="Help"
+                  className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${styleTokens.utilityButton}`}
+                >
+                  <IoHelpCircleOutline className="text-base" />
+                </NavLink>
+              </div>
+              <div
+                aria-label="Resize sidebar"
+                onPointerDown={(event) => {
+                  event.preventDefault();
+                  setIsResizing(true);
+                }}
+                className="absolute right-0 top-0 h-full w-3 translate-x-1/2 cursor-e-resize bg-transparent"
               />
-              <Reorder.Group
-                axis="y"
-                className="flex flex-col gap-0.5"
-                values={activeItems}
-                onReorder={
-                  sidebarMode === "tasks"
-                    ? setTaskItems
-                    : sidebarMode === "social"
-                      ? setSocialItems
-                      : setAppItems
-                }
-              >
-                {activeItems.map((item) => (
-                  <Reorder.Item
-                    key={`${sidebarMode}-${item.link}`}
-                    value={item}
-                    className="list-none"
-                  >
-                    <SidebarNavItemView
-                      item={item}
-                      showLabel={showLabel}
-                      sidebarOpen={sidebarOpen}
-                      onOpenProfile={onOpenProfile}
-                      onOpenSettings={onOpenSettings}
-                    />
-                  </Reorder.Item>
-                ))}
-              </Reorder.Group>
-            </div>
-
-            {/* Divider */}
-            {sidebarMode === "tasks" && (
-              <div className="my-0.5 mx-1 shrink-0 border-t border-white/20" />
-            )}
-
-            {/* Inline task list — fills remaining space */}
-            {sidebarMode === "tasks" ? (
-              <SidebarInlineTaskList showLabel={showLabel} />
-            ) : (
-              <div className="flex-1" />
-            )}
-
-            {/* Utility icon bar */}
-            <div className="flex shrink-0 items-center justify-around border-t border-white/20 pt-2">
-              <button
-                type="button"
-                onClick={onOpenProfile}
-                aria-label="Profile"
-                title="Profile"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-white/60 transition-colors hover:bg-white/20 hover:text-white"
-              >
-                <IoPersonOutline className="text-base" />
-              </button>
-              <button
-                type="button"
-                onClick={onOpenSettings}
-                aria-label="Settings"
-                title="Settings"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-white/60 transition-colors hover:bg-white/20 hover:text-white"
-              >
-                <IoSettingsOutline className="text-base" />
-              </button>
-              <NavLink
-                to="/help"
-                aria-label="Help"
-                title="Help"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-white/60 transition-colors hover:bg-white/20 hover:text-white"
-              >
-                <IoHelpCircleOutline className="text-base" />
-              </NavLink>
-            </div>
-            <div
-              aria-label="Resize sidebar"
-              onPointerDown={(event) => {
-                event.preventDefault();
-                setIsResizing(true);
-              }}
-              className="absolute right-0 top-0 h-full w-3 translate-x-1/2 cursor-e-resize bg-transparent"
-            />
+            </SidebarStyleProvider>
           </motion.nav>
         ) : (
           <motion.div

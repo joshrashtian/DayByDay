@@ -7,7 +7,8 @@
 // ── Tasks ─────────────────────────────────────────────────────────────────
 
 export type TaskPriority = "low" | "medium" | "high";
-export type TaskKind = "task" | "event" | "reminder" | "habit" | "class" | "ics";
+export type TaskKind =
+  "task" | "event" | "reminder" | "habit" | "class" | "ics";
 
 export type RecurrenceFrequency = "daily" | "weekly" | "monthly";
 export type RecurrenceWeekday = 1 | 2 | 3 | 4 | 5 | 6 | 7;
@@ -50,6 +51,8 @@ export type Task = {
   recurringSourceId?: string;
   /** Stable UID from an imported `.ics` event — used for dedup on re-import. */
   icsUid?: string;
+  //sub tasks
+  children_tasks: string[];
 };
 
 export type ImportIcsTaskPayload = {
@@ -105,6 +108,10 @@ export type BlockConfig = {
   name: string;
   startMinutes: number;
   endMinutes: number;
+  /** Hex color (e.g. "#ee6c2b") used for the dial arc, legend, and row accent. */
+  color?: string;
+  /** Icon id from CATEGORY_ICON_OPTIONS. */
+  icon?: string;
   customCss?: string;
 };
 
@@ -168,7 +175,7 @@ export type ClockTemplate =
   | "orbit"
   | "neon"
   | "editorial"
-  | "pinkBiology";  
+  | "pinkBiology";
 
 export type ClockStyleSource = "core" | "user" | "marketplace";
 
@@ -249,6 +256,44 @@ export type HomeVisualPrefs = {
   /** Theme id from the home theme registry (core ids match clock templates). */
   clockStyle: string;
   clockScale: number;
+};
+
+/** Tailwind class tokens that paint one sidebar style. */
+export type SidebarStyleTokens = {
+  /** Outer nav container surface — replaces the default gradient. */
+  surface: string;
+  /** Active nav item background + text. */
+  navItemActive: string;
+  /** Idle nav item text + hover treatment. */
+  navItemIdle: string;
+  /** Active-item accent bar color. */
+  navAccent: string;
+  /** Divider / section border color. */
+  divider: string;
+  /** Utility icon button (profile / settings / help) treatment. */
+  utilityButton: string;
+  /** Primary text on the surface (task titles, etc). */
+  primaryText: string;
+  /** Muted/secondary text (labels, counts, metadata). */
+  mutedText: string;
+  /** Subtle chip / pill background + text. */
+  softChip: string;
+  /** Focused task row background + ring. */
+  focusedItem: string;
+  /** Hover state for an idle task row. */
+  rowHover: string;
+  /** Dashed "add task" button treatment. */
+  addButton: string;
+};
+
+/** One selectable sidebar style — mirrors the home theme registry. */
+export type SidebarStyleDefinition = {
+  id: string;
+  label: string;
+  description: string;
+  /** Tailwind gradient classes for the picker swatch. */
+  swatch: string;
+  tokens: SidebarStyleTokens;
 };
 
 export type AudioPrefs = {

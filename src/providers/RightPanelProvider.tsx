@@ -16,11 +16,8 @@ import { ProfilePanel } from "@/components/panels/ProfilePanel";
 export type RightPanelId = "profile";
 
 type PanelConfig = {
-  /** Small uppercase eyebrow label shown above the title */
   label: string;
-  /** Bold title rendered in the panel header */
   title: React.ReactNode;
-  /** The scrollable body content */
   Component: React.ComponentType;
 };
 
@@ -29,9 +26,9 @@ const PANELS: Record<RightPanelId, PanelConfig> = {
     label: "Profile",
     title: (
       <>
-        Your{" "}
+        Your
         <span className="font-black italic underline underline-offset-4">
-          Persona
+          self
         </span>
         .
       </>
@@ -55,20 +52,24 @@ const RightPanelContext = createContext<RightPanelContextType | undefined>(
 
 export const useRightPanel = () => {
   const ctx = useContext(RightPanelContext);
-  if (!ctx) throw new Error("useRightPanel must be used within RightPanelProvider");
+  if (!ctx)
+    throw new Error("useRightPanel must be used within RightPanelProvider");
   return ctx;
 };
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
-export function RightPanelProvider({ children }: { children: React.ReactNode }) {
+export function RightPanelProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [activePanel, setActivePanel] = useState<RightPanelId | null>(null);
 
   const openPanel = useCallback((id: RightPanelId) => setActivePanel(id), []);
   const closePanel = useCallback(() => setActivePanel(null), []);
   const togglePanel = useCallback(
-    (id: RightPanelId) =>
-      setActivePanel((prev) => (prev === id ? null : id)),
+    (id: RightPanelId) => setActivePanel((prev) => (prev === id ? null : id)),
     [],
   );
 
@@ -114,12 +115,12 @@ export function RightPanelProvider({ children }: { children: React.ReactNode }) 
       <aside
         role="complementary"
         aria-label={panelConfig?.label ?? "Right panel"}
-        className={`fixed inset-y-0 right-0 z-60 flex w-[360px] flex-col border-l border-zinc-200 bg-white shadow-2xl transition-transform duration-200 ease-out dark:border-zinc-800 dark:bg-zinc-950 ${
+        className={`fixed inset-y-0 right-0 z-60 flex w-[360px] rounded-l-3xl flex-col bg-linear-to-bl from-slate-100 to-blue-100 shadow-2xl transition-transform duration-200 ease-out dark:border-zinc-800 dark:bg-zinc-950 ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
         {/* Header */}
-        <header className="shrink-0 border-b border-zinc-200 bg-white px-5 py-4 dark:border-zinc-800 dark:bg-zinc-950">
+        <header className="shrink-0  px-5 py-4 ">
           <div className="pr-10">
             <p className="font-display text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
               {panelConfig?.label ?? ""}

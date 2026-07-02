@@ -4,13 +4,20 @@ import { useShallow } from "zustand/react/shallow";
 import { usePopup } from "../../providers/PopupProvider";
 import { useTasksStore } from "../../stores/tasksStore";
 import { taskEditorPopupContent } from "./taskEditorPopupContent";
-import { formatTaskDue, isTaskOverdue, isTaskDueToday } from "../../lib/taskDates";
+import {
+  formatTaskDue,
+  isTaskOverdue,
+  isTaskDueToday,
+} from "../../lib/taskDates";
 import {
   IoCheckmarkCircle,
   IoCheckmarkCircleOutline,
   IoCreateOutline,
 } from "react-icons/io5";
-import { HomePomodoroPanel, HomePomodoroToggle } from "../home/HomePomodoroRail";
+import {
+  HomePomodoroPanel,
+  HomePomodoroToggle,
+} from "../home/HomePomodoroRail";
 import { getBlockScopedSidebarTasks } from "../../lib/sidebarTasks";
 import { useHomeFocusStore } from "../../stores/homeFocusStore";
 import { usePomodoroStore } from "../../stores/pomodoroStore";
@@ -153,7 +160,10 @@ export const TasksFrontPage = ({
 
   return (
     <div className={themeInnerClass}>
-      <motion.div layout className="flex min-h-100 flex-col gap-4 sm:min-h-112 sm:gap-5">
+      <motion.div
+        layout
+        className="flex min-h-100 flex-col gap-4 sm:min-h-112 sm:gap-5"
+      >
         <div className="flex w-full items-start justify-between gap-3">
           <div className="min-w-0 flex flex-col items-start gap-1">
             <p className="font-baron text-lg font-bold uppercase tracking-[0.14em]">
@@ -216,7 +226,7 @@ export const TasksFrontPage = ({
               className={`flex min-h-36 flex-col items-center justify-between gap-4 sm:min-h-32 ${pomodoroPanelOpen ? "pointer-events-none opacity-40" : ""}`}
             >
               <div>
-                <h2 className="wrap-break-word text-center text-3xl font-semibold font-ppneue sm:text-5xl">
+                <h2 className="wrap-break-word text-center text-3xl font-semibold font-eudoxus sm:text-5xl">
                   {visibleFocusedTask.title}
                 </h2>
                 {visibleFocusedTask.description ? (
@@ -275,7 +285,10 @@ export const TasksFrontPage = ({
                       onPress={() => openTaskEditor(visibleFocusedTask.id)}
                       className="inline-flex items-center justify-center rounded-full bg-white p-3 text-zinc-500 transition-colors hover:bg-amber-500 hover:text-white dark:bg-zinc-700/70 dark:text-zinc-300 dark:hover:bg-amber-600"
                     >
-                      <IoCreateOutline className={TASK_ICON_LG_CLASS} aria-hidden />
+                      <IoCreateOutline
+                        className={TASK_ICON_LG_CLASS}
+                        aria-hidden
+                      />
                     </TooltipTrigger>
                   </Tooltip>
                   <Tooltip
@@ -302,7 +315,10 @@ export const TasksFrontPage = ({
                       className="inline-flex items-center justify-center rounded-full bg-white p-3 text-zinc-500 transition-colors hover:bg-emerald-600 hover:text-white dark:bg-zinc-700/70 dark:text-zinc-300 dark:hover:bg-emerald-600"
                     >
                       {visibleFocusedTask.done ? (
-                        <IoCheckmarkCircle className={TASK_ICON_LG_CLASS} aria-hidden />
+                        <IoCheckmarkCircle
+                          className={TASK_ICON_LG_CLASS}
+                          aria-hidden
+                        />
                       ) : (
                         <IoCheckmarkCircleOutline
                           className={TASK_ICON_LG_CLASS}
@@ -316,7 +332,6 @@ export const TasksFrontPage = ({
             </motion.div>
           )}
         </motion.div>
-
       </motion.div>
     </div>
   );

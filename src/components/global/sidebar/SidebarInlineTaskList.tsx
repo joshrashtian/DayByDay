@@ -13,6 +13,7 @@ import { taskCreatorPopupContent } from "../../tasks/taskCreatorPopupContent";
 import { taskEditorPopupContent } from "../../tasks/taskEditorPopupContent";
 import { isIcsTask } from "../../../lib/icsTasks";
 import { useDisplayedBlockName } from "../../../hooks/useDisplayedBlockName";
+import { useSidebarStyle } from "./SidebarStyleContext";
 
 function formatTaskDuration(task: Task): string | null {
   if (!task.dueDate || !task.endDate) return null;
@@ -49,6 +50,7 @@ export function SidebarInlineTaskList({ showLabel }: Props) {
   );
   const { open: openPopup, close: closePopup } = usePopup();
   const contextMenu = useContextMenu();
+  const tokens = useSidebarStyle();
 
   const editTask = useCallback(
     (taskId: string) => {
@@ -78,15 +80,21 @@ export function SidebarInlineTaskList({ showLabel }: Props) {
       <div className="flex items-center justify-between px-1 pt-1">
         {showLabel ? (
           <>
-            <span className="font-eudoxus text-[10px] font-semibold uppercase tracking-[0.12em] text-white/60">
+            <span
+              className={`font-eudoxus text-[10px] font-semibold uppercase tracking-[0.12em] ${tokens.mutedText}`}
+            >
               {scopeLabel}
             </span>
-            <span className="rounded-full bg-white/20 px-1.5 py-0.5 font-eudoxus text-[10px] font-medium text-white/70">
+            <span
+              className={`rounded-full px-1.5 py-0.5 font-eudoxus text-[10px] font-medium ${tokens.softChip}`}
+            >
               {activeCount} active
             </span>
           </>
         ) : (
-          <span className="mx-auto font-eudoxus text-[10px] font-semibold text-white/60">
+          <span
+            className={`mx-auto font-eudoxus text-[10px] font-semibold ${tokens.mutedText}`}
+          >
             {activeCount}
           </span>
         )}
@@ -96,7 +104,7 @@ export function SidebarInlineTaskList({ showLabel }: Props) {
       <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto">
         {panelTasks.length === 0 ? (
           showLabel ? (
-            <p className="px-2 py-2 font-eudoxus text-xs text-white/60">
+            <p className={`px-2 py-2 font-eudoxus text-xs ${tokens.mutedText}`}>
               Nothing scheduled.
             </p>
           ) : null
@@ -148,9 +156,7 @@ export function SidebarInlineTaskList({ showLabel }: Props) {
                   );
                 }}
                 className={`w-full rounded-xl px-2.5 py-2 text-left transition-colors ${
-                  isFocused
-                    ? "bg-white/25 ring-1 ring-inset ring-white/30"
-                    : "hover:bg-white/10"
+                  isFocused ? tokens.focusedItem : tokens.rowHover
                 } ${task.done ? "opacity-50" : ""} ${
                   canDragTask && !isIcsTask(task)
                     ? "cursor-grab active:cursor-grabbing"
@@ -159,20 +165,24 @@ export function SidebarInlineTaskList({ showLabel }: Props) {
               >
                 <div className="flex items-start justify-between gap-1.5">
                   <span
-                    className={`flex-1 truncate font-ppneue text-[12.5px] font-medium leading-snug text-white ${
+                    className={`flex-1 truncate font-ppneue text-[12.5px] font-medium leading-snug ${tokens.primaryText} ${
                       task.done ? "line-through" : ""
                     }`}
                   >
                     {task.title}
                   </span>
                   {isFocused && showLabel && (
-                    <span className="shrink-0 rounded-full bg-white/25 px-1.5 py-px font-eudoxus text-[9px] font-bold uppercase tracking-wide text-white">
+                    <span
+                      className={`shrink-0 rounded-full px-1.5 py-px font-eudoxus text-[9px] font-bold uppercase tracking-wide ${tokens.softChip}`}
+                    >
                       Focus
                     </span>
                   )}
                 </div>
                 {showLabel && (category || duration) && (
-                  <div className="mt-0.5 flex items-center gap-1 font-eudoxus text-[10px] text-white/60">
+                  <div
+                    className={`mt-0.5 flex items-center gap-1 font-eudoxus text-[10px] ${tokens.mutedText}`}
+                  >
                     {category && (
                       <>
                         <span
@@ -196,7 +206,7 @@ export function SidebarInlineTaskList({ showLabel }: Props) {
       <button
         type="button"
         onClick={openTaskFormPopup}
-        className="flex shrink-0 w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-white/30 bg-white/10 px-3 py-2 font-eudoxus text-[11px] font-medium text-white/80 transition-colors hover:border-white/50 hover:bg-white/20"
+        className={`flex shrink-0 w-full items-center justify-center gap-1.5 rounded-xl border border-dashed px-3 py-2 font-eudoxus text-[11px] font-medium transition-colors ${tokens.addButton}`}
       >
         <IoAdd className="text-sm" aria-hidden />
         {showLabel ? "Add a task" : ""}

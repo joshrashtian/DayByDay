@@ -1,78 +1,26 @@
-import { useRef, useState, type PointerEvent, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { WeatherBadge } from "./WeatherBadge";
 import { useWeather } from "../hooks/useWeather";
 import { useStyle } from "../providers/StyleProvider";
-import { useContextMenu } from "../providers/ContextMenuProvider";
-import { useHomeThemeList } from "../themes/ThemeRegistryProvider";
 import type { ClockStylePrototype } from "@/types";
-import { IoSunnyOutline } from "react-icons/io5";
-import { IoMdClock } from "react-icons/io";
-
-const CLOCK_STYLE_ICONS: Partial<Record<string, ReactNode>> = {
-  minimal: <IoMdClock />,
-  basic: <IoSunnyOutline />,
-};
 
 type Props = {
   variant?: string;
   rootClassName?: string;
   scale?: number;
-  onScaleChange?: (nextScale: number) => void;
-  onVariantChange?: (nextVariant: string) => void;
-  onOpenStyleSheet?: () => void;
 };
 
 export const DateCorner = ({
   variant: variantOverride,
   rootClassName,
   scale: scaleOverride,
-  onScaleChange,
-  onVariantChange,
-  onOpenStyleSheet,
 }: Props) => {
   const today = new Date();
   const { style, getClockStyle } = useStyle();
-  const context = useContextMenu();
-  const themeList = useHomeThemeList();
   const resolvedVariant = variantOverride ?? style ?? "minimal";
   const stylePrototype = getClockStyle(resolvedVariant);
   const weather = useWeather();
-  const [scale, setScale] = useState(1);
-  const [isDragging, setIsDragging] = useState(false);
-  const dragStartY = useRef(0);
-  const dragStartScale = useRef(1);
-  const clampScale = (value: number) => Math.min(2, Math.max(0.65, value));
-  const resolvedScale = scaleOverride ?? scale;
-
-  const applyScale = (nextScale: number) => {
-    const clamped = clampScale(nextScale);
-    if (scaleOverride === undefined) setScale(clamped);
-    onScaleChange?.(clamped);
-  };
-
-  const applyVariant = (nextVariant: string) => {
-    onVariantChange?.(nextVariant);
-  };
-
-  const onResizeStart = (event: PointerEvent<HTMLButtonElement>) => {
-    event.preventDefault();
-    dragStartY.current = event.clientY;
-    dragStartScale.current = resolvedScale;
-    setIsDragging(true);
-    event.currentTarget.setPointerCapture(event.pointerId);
-  };
-
-  const onResizeMove = (event: PointerEvent<HTMLButtonElement>) => {
-    if (!isDragging) return;
-    const deltaY = event.clientY - dragStartY.current;
-    applyScale(dragStartScale.current + deltaY * 0.004);
-  };
-
-  const onResizeEnd = (event: PointerEvent<HTMLButtonElement>) => {
-    if (!isDragging) return;
-    setIsDragging(false);
-    event.currentTarget.releasePointerCapture(event.pointerId);
-  };
+  const resolvedScale = scaleOverride ?? 1;
 
   const weekday = today
     .toLocaleDateString("en-US", { weekday: "long" })
@@ -85,9 +33,7 @@ export const DateCorner = ({
   const day = today.getDate().toString().padStart(2, "0");
 
   const root = rootClassName ?? stylePrototype.rootClassName;
-  const wrapperClassName = `${stylePrototype.wrapperClassName} ${
-    isDragging ? "" : stylePrototype.wrapperIdleClassName
-  }`;
+  const wrapperClassName = `${stylePrototype.wrapperClassName} ${stylePrototype.wrapperIdleClassName}`;
 
   const weatherBadge = (
     <WeatherBadge
@@ -99,71 +45,8 @@ export const DateCorner = ({
     />
   );
 
-  const resizeHandle = (
-    <button
-      type="button"
-      className={stylePrototype.resizeHandleClassName}
-      aria-label="Resize date corner"
-      onPointerDown={onResizeStart}
-      onPointerMove={onResizeMove}
-      onPointerUp={onResizeEnd}
-      onPointerCancel={onResizeEnd}
-    />
-  );
-
   const shell = (content: ReactNode) => (
     <div
-      onContextMenu={(event) =>
-        context.openMenu(event, [
-          {
-            id: "clock-header",
-            type: "header",
-            header: "Clock Styles",
-          },
-          ...themeList.map((option) => ({
-            id: option.id,
-            label: option.label,
-            onSelect: () => applyVariant(option.id),
-            icon: CLOCK_STYLE_ICONS[option.id],
-            type: "item" as const,
-          })),
-          { id: "clock-break", type: "break" },
-          {
-            id: "clock-size-header",
-            type: "header",
-            header: "Clock Size",
-          },
-          {
-            id: "clock-small",
-            label: "Small",
-            onSelect: () => applyScale(0.65),
-            type: "item" as const,
-          },
-          {
-            id: "clock-medium",
-            label: "Medium",
-            onSelect: () => applyScale(1),
-            type: "item" as const,
-          },
-          {
-            id: "clock-large",
-            label: "Large",
-            onSelect: () => applyScale(1.5),
-            type: "item" as const,
-          },
-          ...(onOpenStyleSheet
-            ? [
-                { id: "clock-sheet-break", type: "break" as const },
-                {
-                  id: "clock-open-sheet",
-                  label: "Open style sheet…",
-                  onSelect: onOpenStyleSheet,
-                  type: "item" as const,
-                },
-              ]
-            : []),
-        ])
-      }
       className={wrapperClassName}
       style={{
         transform: `scale(${resolvedScale})`,
@@ -171,7 +54,6 @@ export const DateCorner = ({
       }}
     >
       {content}
-      {resizeHandle}
     </div>
   );
 

@@ -6,7 +6,6 @@ import { IoClose } from "react-icons/io5";
 import { AnimatedPage } from "./components/layout/AnimatedPage";
 import SideBar from "./components/global/sidebar";
 import { HomeScreen } from "./screens/HomeScreen";
-import { HomeStyleWindowScreen } from "./screens/HomeStyleWindowScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
 import TasksScreen from "./screens/TasksScreen";
 import CalendarScreen from "./screens/CalendarScreen";
@@ -36,7 +35,6 @@ export default function App() {
   useCreateTaskAction();
   const [sidebarOffset, setSidebarOffset] = useState(220);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const isStyleWindow = location.pathname === "/home/style";
 
   useEffect(() => {
     const onOpenSettings = () => setShowSettingsModal(true);
@@ -62,14 +60,6 @@ export default function App() {
     window.addEventListener("keydown", onEscClose);
     return () => window.removeEventListener("keydown", onEscClose);
   }, [showSettingsModal]);
-
-  if (isStyleWindow) {
-    return (
-      <div id="app-zoom-root" className="h-full w-full overflow-hidden">
-        <HomeStyleWindowScreen />
-      </div>
-    );
-  }
 
   return (
     <div id="app-zoom-root" className="h-full w-full overflow-hidden">

@@ -6,10 +6,12 @@ import {
   IoPersonOutline,
   IoCalendarOutline,
   IoVolumeHighOutline,
+  IoLayersOutline,
 } from "react-icons/io5";
 
 export type SettingsSection =
   | "home"
+  | "appearance"
   | "weather"
   | "categories"
   | "blocks-css"
@@ -32,6 +34,12 @@ export const SECTIONS: SectionMeta[] = [
     label: "Home",
     description: "Settings overview",
     icon: <IoHomeOutline />,
+  },
+  {
+    id: "appearance",
+    label: "Appearance",
+    description: "Sidebar style and theme",
+    icon: <IoLayersOutline />,
   },
   {
     id: "weather",

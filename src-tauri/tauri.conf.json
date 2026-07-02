@@ -12,7 +12,8 @@
   "app": {
     "windows": [
       {
-        "title": "",
+        "title": "DayByDay",
+        "hiddenTitle": true,
         "width": 800,
         "height": 600,
         "decorations": true,
