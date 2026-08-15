@@ -23,6 +23,7 @@ import {
 import { usePopup } from "../providers/PopupProvider";
 import { useCalendarTaskDrop } from "../hooks/useCalendarTaskDrop";
 import { useTasksStore } from "../stores/tasksStore";
+import { useSettingsStore } from "../stores/settingsStore";
 import { DatePicker } from "../components/application/date-picker/date-picker";
 
 type CalendarMode = "month" | "week" | "day" | "three" | "custom";
@@ -58,6 +59,7 @@ export default function CalendarScreen() {
       updateTask: s.updateTask,
     })),
   );
+  const categoryConfigs = useSettingsStore((s) => s.categoryConfigs);
 
   const [mode, setMode] = useState<CalendarMode>("week");
   const focus = useMemo(() => {
@@ -97,7 +99,7 @@ export default function CalendarScreen() {
   );
 
   const openAddTaskForRange = useCallback(
-    (start: DateTime, end: DateTime) => {
+    (start: DateTime, end: DateTime, category?: string) => {
       openPopup(
         taskCreatorPopupContent({
           addTask,
@@ -105,6 +107,7 @@ export default function CalendarScreen() {
           initialDueLocal: localInputForDateTime(start),
           initialEndLocal: localInputForDateTime(end),
           initialKind: "event",
+          initialCategory: category,
         }),
       );
     },
@@ -112,12 +115,13 @@ export default function CalendarScreen() {
   );
 
   const quickAddTaskForRange = useCallback(
-    (title: string, start: DateTime, end: DateTime) => {
+    (title: string, start: DateTime, end: DateTime, category?: string) => {
       addTask({
         kind: "event",
         title,
         dueDate: start.toJSDate(),
         endDate: end.toJSDate(),
+        category,
       });
     },
     [addTask],
@@ -370,6 +374,7 @@ export default function CalendarScreen() {
                   onAddTaskForDay={openAddTaskForDay}
                   onCreateTimedTask={openAddTaskForRange}
                   onQuickAddTimedTask={quickAddTaskForRange}
+                  categoryConfigs={categoryConfigs}
                   onUpdateTaskSchedule={(taskId, dueDate, endDate) =>
                     setTaskSchedule(taskId, dueDate, endDate)
                   }
@@ -389,6 +394,7 @@ export default function CalendarScreen() {
                 onAddTaskForDay={openAddTaskForDay}
                 onCreateTimedTask={openAddTaskForRange}
                 onQuickAddTimedTask={quickAddTaskForRange}
+                categoryConfigs={categoryConfigs}
                 onUpdateTaskSchedule={(taskId, dueDate, endDate) =>
                   setTaskSchedule(taskId, dueDate, endDate)
                 }
@@ -406,6 +412,7 @@ export default function CalendarScreen() {
                   onAddTaskForDay={openAddTaskForDay}
                   onCreateTimedTask={openAddTaskForRange}
                   onQuickAddTimedTask={quickAddTaskForRange}
+                  categoryConfigs={categoryConfigs}
                   onUpdateTaskSchedule={(taskId, dueDate, endDate) =>
                     setTaskSchedule(taskId, dueDate, endDate)
                   }

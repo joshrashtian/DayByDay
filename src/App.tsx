@@ -25,6 +25,7 @@ import { useAppZoom } from "./hooks/useAppZoom";
 import { useMenuNavigation } from "./hooks/useMenuNavigation";
 import { useCreateTaskAction } from "./hooks/useCreateTaskAction";
 import { useRightPanel } from "./providers/RightPanelProvider";
+import SocialScreen from "./screens/social/SocialScreen";
 
 export default function App() {
   const location = useLocation();
@@ -154,6 +155,14 @@ export default function App() {
                 </AnimatedPage>
               }
             />
+            <Route
+              path="/social/home"
+              element={
+                <AnimatedPage>
+                  <SocialScreen />
+                </AnimatedPage>
+              }
+              />
           </Routes>
           {showSettingsModal ? (
             <div

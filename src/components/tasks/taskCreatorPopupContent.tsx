@@ -9,6 +9,7 @@ type Args = {
   initialEndLocal?: string;
   initialKind?: TaskKind;
   initialBlock?: string;
+  initialCategory?: string;
 };
 
 export function taskCreatorPopupContent({
@@ -18,15 +19,17 @@ export function taskCreatorPopupContent({
   initialEndLocal,
   initialKind,
   initialBlock,
+  initialCategory,
 }: Args): ReactNode {
   return (
     <div className="p-5 pb-0 sm:p-6 sm:pb-0">
       <TaskCreatorPopupForm
-        key={`${initialDueLocal ?? "__default__"}::${initialEndLocal ?? "__none__"}::${initialBlock ?? "__none__"}`}
+        key={`${initialDueLocal ?? "__default__"}::${initialEndLocal ?? "__none__"}::${initialBlock ?? "__none__"}::${initialCategory ?? "__none__"}`}
         initialKind={initialKind}
         initialDueLocal={initialDueLocal}
         initialEndLocal={initialEndLocal}
         initialBlock={initialBlock}
+        initialCategory={initialCategory}
         onAdd={(payload) => {
           addTask(payload);
           closePopup();

@@ -7,8 +7,14 @@ import {
   type CSSProperties,
   type MouseEvent as ReactMouseEvent,
 } from "react";
-import { IoAdd, IoClose, IoDocument, IoEllipseOutline } from "react-icons/io5";
-import type { CalendarTaskRow, Task } from "@/types";
+import {
+  IoAdd,
+  IoClose,
+  IoDocument,
+  IoEllipseOutline,
+  IoTimeOutline,
+} from "react-icons/io5";
+import type { CalendarTaskRow, CategoryConfig, Task } from "@/types";
 import { tasksByDueDateKeyInRange } from "../../../lib/calendarUtils";
 import {
   getCategoryIconOption,
@@ -103,14 +109,24 @@ type WeekViewProps = {
   onDuplicateTask?: (taskId: string) => void;
   onPickDay: (day: DateTime) => void;
   onAddTaskForDay?: (day: DateTime) => void;
-  onCreateTimedTask?: (start: DateTime, end: DateTime) => void;
-  onQuickAddTimedTask?: (title: string, start: DateTime, end: DateTime) => void;
+  onCreateTimedTask?: (
+    start: DateTime,
+    end: DateTime,
+    category?: string,
+  ) => void;
+  onQuickAddTimedTask?: (
+    title: string,
+    start: DateTime,
+    end: DateTime,
+    category?: string,
+  ) => void;
   onUpdateTaskSchedule?: (
     taskId: string,
     dueDate: Date,
     endDate?: Date,
   ) => void;
   onEditTask?: (task: Task) => void;
+  categoryConfigs?: CategoryConfig[];
   dayCount?: number;
   anchorToWeekStart?: boolean;
 };
@@ -124,13 +140,23 @@ type ThreeDayProps = {
   onDuplicateTask?: (taskId: string) => void;
   onPickDay: (day: DateTime) => void;
   onAddTaskForDay?: (day: DateTime) => void;
-  onCreateTimedTask?: (start: DateTime, end: DateTime) => void;
-  onQuickAddTimedTask?: (title: string, start: DateTime, end: DateTime) => void;
+  onCreateTimedTask?: (
+    start: DateTime,
+    end: DateTime,
+    category?: string,
+  ) => void;
+  onQuickAddTimedTask?: (
+    title: string,
+    start: DateTime,
+    end: DateTime,
+    category?: string,
+  ) => void;
   onUpdateTaskSchedule?: (
     taskId: string,
     dueDate: Date,
     endDate?: Date,
   ) => void;
+  categoryConfigs?: CategoryConfig[];
 };
 
 type WeekDragSelection = {
@@ -208,6 +234,33 @@ function minuteOfDayToClockLabel(minuteOfDay: number): string {
 
 function slotDateTime(day: DateTime, minuteOfDay: number): DateTime {
   return day.startOf("day").plus({ minutes: minuteOfDay });
+}
+
+function quickAddClockLabel(dt: DateTime): string {
+  return dt.minute === 0 ? dt.toFormat("h") : dt.toFormat("h:mm");
+}
+
+function quickAddTimeRangeLabel(start: DateTime, end: DateTime): string {
+  const startMeridiem = start.toFormat("a");
+  const endMeridiem = end.toFormat("a");
+  const startLabel = quickAddClockLabel(start);
+  const endLabel = quickAddClockLabel(end);
+  if (startMeridiem === endMeridiem) {
+    return `${startLabel}–${endLabel} ${endMeridiem}`;
+  }
+  return `${startLabel} ${startMeridiem}–${endLabel} ${endMeridiem}`;
+}
+
+function quickAddDurationLabel(start: DateTime, end: DateTime): string {
+  const totalMinutes = Math.max(
+    0,
+    Math.round(end.diff(start, "minutes").minutes),
+  );
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours && minutes) return `${hours} hr ${minutes} min`;
+  if (hours) return `${hours} hr`;
+  return `${minutes} min`;
 }
 
 type MinuteRange = {
@@ -802,6 +855,7 @@ export function WeekView({
   onQuickAddTimedTask,
   onUpdateTaskSchedule,
   onEditTask,
+  categoryConfigs = [],
   dayCount = 7,
   anchorToWeekStart = true,
 }: WeekViewProps) {
@@ -846,6 +900,9 @@ export function WeekView({
   const [quickAddAnchor, setQuickAddAnchor] =
     useState<WeekQuickAddAnchor | null>(null);
   const [quickAddTitle, setQuickAddTitle] = useState("");
+  const [quickAddCategory, setQuickAddCategory] = useState<
+    string | undefined
+  >(undefined);
   const editPreviewRange = resolvePreviewRange(editInteraction, editTarget);
   const createPreviewRange = resolveCreatePreviewRange(dragSelection);
   const previewRange = editPreviewRange ?? createPreviewRange;
@@ -866,6 +923,7 @@ export function WeekView({
     setQuickAddDraft(null);
     setQuickAddAnchor(null);
     setQuickAddTitle("");
+    setQuickAddCategory(undefined);
   };
 
   const getWeekTaskContextMenuItems = (task: Task) => {
@@ -957,6 +1015,7 @@ export function WeekView({
     if (onCreateTimedTask) {
       setQuickAddDraft(range);
       setQuickAddAnchor(resolveQuickAddAnchor(clientX, clientY));
+      setQuickAddCategory(categoryConfigs[0]?.name);
     } else {
       onPickDay(dragSelection.day);
     }
@@ -1288,36 +1347,70 @@ export function WeekView({
       </div>
       {quickAddDraft ? (
         <div
-          className="fixed z-50 w-[min(92vw,560px)] bg-white origin-top-left shadow-lg border border-zinc-200/80 p-4 -translate-x-1/2 -translate-y-full rounded-2xl "
+          className="fixed z-50 w-[min(92vw,420px)] origin-top-left rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-lg -translate-x-1/2 -translate-y-full dark:border-zinc-700 dark:bg-zinc-900"
           style={{
             left: quickAddAnchor?.left ?? undefined,
             top: quickAddAnchor?.top ?? undefined,
           }}
         >
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-sm text-zinc-600 dark:text-zinc-300">
-                {quickAddDraft.start.toFormat("EEE d MMM")} ·{" "}
-                {quickAddDraft.start.toFormat("h:mm a")}-
-                {quickAddDraft.end.toFormat("h:mm a")}
-              </p>
-            </div>
+          <div className="flex items-center justify-between gap-3">
+            <p className="flex items-center gap-1.5 text-sm text-zinc-500 dark:text-zinc-400">
+              <IoTimeOutline className="text-base" />
+              {quickAddDraft.start.toFormat("EEE")} ·{" "}
+              {quickAddTimeRangeLabel(quickAddDraft.start, quickAddDraft.end)}{" "}
+              · {quickAddDurationLabel(quickAddDraft.start, quickAddDraft.end)}
+            </p>
             <button
               type="button"
               onClick={clearQuickAdd}
-              className="rounded-md px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-zinc-500/10 dark:text-zinc-400 dark:hover:bg-white/10"
+              className="rounded-md p-1 text-zinc-400 hover:bg-zinc-500/10 hover:text-zinc-600 dark:text-zinc-500 dark:hover:bg-white/10 dark:hover:text-zinc-300"
             >
               <IoClose />
             </button>
           </div>
-          <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-            <input
-              type="text"
-              value={quickAddTitle}
-              onChange={(e) => setQuickAddTitle(e.target.value)}
-              placeholder="Task title..."
-              className="min-w-0 flex-1 rounded-lg border border-zinc-300/80 bg-white/90 px-3 py-2 text-sm text-zinc-900 outline-none ring-sky-400/40 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100"
-            />
+          <input
+            type="text"
+            autoFocus
+            value={quickAddTitle}
+            onChange={(e) => setQuickAddTitle(e.target.value)}
+            placeholder="Task title..."
+            className="mt-3 w-full rounded-lg border border-zinc-300/80 bg-white px-3 py-2.5 text-base font-semibold text-zinc-900 outline-none ring-sky-400/40 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100"
+          />
+          {categoryConfigs.length > 0 ? (
+            <div className="mt-3 flex flex-wrap items-center gap-2.5">
+              {categoryConfigs.map((config) => {
+                const isSelected = quickAddCategory === config.name;
+                return (
+                  <button
+                    key={config.name}
+                    type="button"
+                    title={config.name}
+                    onClick={() =>
+                      setQuickAddCategory(isSelected ? undefined : config.name)
+                    }
+                    className={`relative flex h-7 w-7 items-center justify-center rounded-full transition-transform hover:scale-105 ${
+                      isSelected
+                        ? "ring-2 ring-offset-2 ring-offset-white dark:ring-offset-zinc-900"
+                        : ""
+                    }`}
+                    style={{
+                      backgroundColor: config.color,
+                      ...(isSelected
+                        ? ({
+                            "--tw-ring-color": config.color,
+                          } as CSSProperties)
+                        : {}),
+                    }}
+                  >
+                    {isSelected ? (
+                      <span className="h-2 w-2 rounded-full bg-white" />
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
             <button
               type="button"
               disabled={!quickAddTitle.trim() || !onQuickAddTimedTask}
@@ -1328,20 +1421,25 @@ export function WeekView({
                   title,
                   quickAddDraft.start,
                   quickAddDraft.end,
+                  quickAddCategory,
                 );
                 clearQuickAdd();
               }}
-              className="rounded-lg flex flex-row items-center justify-center gap-2 bg-zinc-900 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
+              className="flex flex-1 flex-row items-center justify-center gap-2 rounded-lg bg-sky-600 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-500 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <IoAdd /> Quick Add
             </button>
             <button
               type="button"
               onClick={() => {
-                onCreateTimedTask?.(quickAddDraft.start, quickAddDraft.end);
+                onCreateTimedTask?.(
+                  quickAddDraft.start,
+                  quickAddDraft.end,
+                  quickAddCategory,
+                );
                 clearQuickAdd();
               }}
-              className="rounded-lg border flex flex-row items-center justify-center gap-2 border-zinc-300/80 bg-white/80 px-3 py-2 text-sm font-medium text-zinc-800 transition-colors hover:bg-white dark:border-zinc-700 dark:bg-zinc-900/60 dark:text-zinc-100 dark:hover:bg-zinc-900"
+              className="flex flex-row items-center justify-center gap-2 rounded-lg border border-zinc-300/80 bg-white px-3 py-2.5 text-sm font-medium text-zinc-800 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900/60 dark:text-zinc-100 dark:hover:bg-zinc-800"
             >
               <IoDocument /> Editor
             </button>
@@ -1439,6 +1537,7 @@ export function ThreeDayView({
   onCreateTimedTask,
   onQuickAddTimedTask,
   onUpdateTaskSchedule,
+  categoryConfigs,
 }: ThreeDayProps) {
   return (
     <WeekView
@@ -1453,6 +1552,7 @@ export function ThreeDayView({
       onQuickAddTimedTask={onQuickAddTimedTask}
       onUpdateTaskSchedule={onUpdateTaskSchedule}
       onEditTask={onEditTask}
+      categoryConfigs={categoryConfigs}
       dayCount={3}
       anchorToWeekStart={false}
     />

@@ -15,11 +15,17 @@ export const POMODORO_DURATIONS: Record<PomodoroPhase, number> = {
 
 const LONG_BREAK_EVERY = 4;
 
+function getDayKey(date = new Date()): string {
+  return date.toDateString();
+}
+
 type PomodoroState = {
   phase: PomodoroPhase;
   secondsLeft: number;
   isRunning: boolean;
   completedFocusSessions: number;
+  /** Calendar day (toDateString) the session count last belonged to */
+  lastActiveDay: string;
   linkedTaskTitle?: string;
   /** Home focus-zone overlay */
   panelOpen: boolean;
@@ -31,6 +37,7 @@ type PomodoroState = {
   reset: () => void;
   skipToNextPhase: () => void;
   tick: () => void;
+  checkDayReset: () => void;
   setLinkedTaskTitle: (title?: string) => void;
   setPanelOpen: (open: boolean) => void;
   togglePanelOpen: () => void;
@@ -54,11 +61,22 @@ export const usePomodoroStore = create<PomodoroState>()(
       secondsLeft: POMODORO_DURATIONS.focus,
       isRunning: false,
       completedFocusSessions: 0,
+      lastActiveDay: getDayKey(),
       linkedTaskTitle: undefined,
       panelOpen: false,
       dockExpanded: false,
 
-      start: () => set({ isRunning: true }),
+      checkDayReset: () => {
+        const { lastActiveDay } = get();
+        const today = getDayKey();
+        if (lastActiveDay === today) return;
+        set({ completedFocusSessions: 0, lastActiveDay: today });
+      },
+
+      start: () => {
+        get().checkDayReset();
+        set({ isRunning: true });
+      },
       pause: () => set({ isRunning: false }),
 
       reset: () => {
@@ -90,6 +108,7 @@ export const usePomodoroStore = create<PomodoroState>()(
       },
 
       tick: () => {
+        get().checkDayReset();
         const { isRunning, secondsLeft, phase, completedFocusSessions } = get();
         if (!isRunning) return;
 
@@ -131,6 +150,7 @@ export const usePomodoroStore = create<PomodoroState>()(
         secondsLeft: state.secondsLeft,
         isRunning: state.isRunning,
         completedFocusSessions: state.completedFocusSessions,
+        lastActiveDay: state.lastActiveDay,
         linkedTaskTitle: state.linkedTaskTitle,
       }),
     },
