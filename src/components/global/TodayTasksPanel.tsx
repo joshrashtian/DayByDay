@@ -180,7 +180,7 @@ export function TodayTasksPanel({ compact = false }: TodayTasksPanelProps) {
           } ${
             focusedTaskId === task.id
               ? "border-sky-400 bg-sky-50 dark:border-sky-500 dark:bg-sky-950/25"
-              : "border-line/90 bg-surface/85 hover:bg-sunken dark:bg-overlay"
+              : "border-line/90 bg-surface/85 hover:bg-sunken"
           } ${task.done ? "opacity-60" : ""} ${canDragTask && !isIcsTask(task) ? "cursor-grab active:cursor-grabbing" : ""}`}
         >
           {!compact ? (
@@ -219,7 +219,7 @@ export function TodayTasksPanel({ compact = false }: TodayTasksPanelProps) {
       <button
         type="button"
         onClick={openTaskFormPopup}
-        className={`mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-line-strong/90 bg-surface/50 font-eudoxus text-[11px] font-medium text-sky-600 transition-colors hover:border-sky-400/60 hover:bg-sky-50 dark:bg-overlay dark:text-sky-400 dark:hover:border-sky-500/50 dark:hover:bg-sky-950/30 ${
+        className={`mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-line-strong/90 bg-surface/50 font-eudoxus text-[11px] font-medium text-sky-600 transition-colors hover:border-sky-400/60 hover:bg-sky-50 dark:text-sky-400 dark:hover:border-sky-500/50 dark:hover:bg-sky-950/30 ${
           compact ? "px-2 py-1.5" : "px-3 py-2"
         }`}
       >

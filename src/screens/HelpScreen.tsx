@@ -31,7 +31,7 @@ function SectionCard({
   return (
     <section
       id={id}
-      className="scroll-mt-24 rounded-2xl border border-line/80 bg-surface/70 p-5 shadow-sm backdrop-blur dark:bg-overlay"
+      className="scroll-mt-24 rounded-2xl border border-line/80 bg-surface/70 p-5 shadow-sm backdrop-blur"
     >
       <h3 className="text-xl font-bold text-ink">{title}</h3>
       {subtitle ? (
@@ -61,7 +61,7 @@ const HelpScreen = () => {
   return (
     <div className="flex flex-col items-start justify-start gap-5 overflow-x-hidden p-4">
       <motion.div
-        className="relative translate-x-4 -mx-4 w-[calc(100%+2rem)] max-w-none origin-right overflow-hidden rounded-2xl p-4 text-blue-500 before:absolute before:inset-0 before:z-0 before:rounded-2xl before:bg-blue-500 before:content-[''] -rotate-4"
+        className="relative translate-x-4 -mx-4 w-[calc(100%+2rem)] max-w-none origin-right overflow-hidden rounded-2xl p-4 text-accent before:absolute before:inset-0 before:z-0 before:rounded-2xl before:bg-accent before:content-[''] -rotate-4"
         initial={{ opacity: 0, x: -100, rotate: 24 }}
         animate={{ opacity: 1, x: 0, rotate: 0 }}
         exit={{ opacity: 0, x: -100, rotate: 24 }}
@@ -92,7 +92,7 @@ const HelpScreen = () => {
               key={section.id}
               type="button"
               onClick={() => scrollToSection(section.id)}
-              className="rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-muted transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 dark:hover:border-blue-700/60 dark:hover:bg-blue-950/40 dark:hover:text-blue-300"
+              className="rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-muted transition-colors hover:border-accent hover:bg-accent-soft hover:text-accent dark:hover:border-accent dark:hover:bg-blue-950/40 dark:hover:text-accent"
             >
               {section.label}
             </button>
@@ -113,7 +113,7 @@ const HelpScreen = () => {
               <li>Press <Kbd className="bg-gray-200 font-display">Enter</Kbd> to create it.</li>
               <li>Use one line per task for cleaner parsing and easier edits.</li>
             </ol>
-            <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50/70 p-3 text-sm text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200">
+            <div className="mt-4 rounded-xl border border-accent bg-accent-soft p-3 text-sm text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200">
               Tip: tokens can appear in any order, but placing them before the title keeps
               entries readable and reduces mistakes.
             </div>
@@ -305,7 +305,7 @@ const HelpScreen = () => {
           </SectionCard>
         </div>
 
-        <aside className="sticky top-5 hidden w-full max-w-[240px] self-start rounded-2xl border border-line bg-surface/90 p-4 shadow-sm backdrop-blur lg:block dark:bg-overlay">
+        <aside className="sticky top-5 hidden w-full max-w-[240px] self-start rounded-2xl border border-line bg-surface/90 p-4 shadow-sm backdrop-blur lg:block">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted">
             On this page
           </p>
@@ -315,7 +315,7 @@ const HelpScreen = () => {
                 key={section.id}
                 type="button"
                 onClick={() => scrollToSection(section.id)}
-                className="rounded-md px-2 py-1.5 text-sm font-medium text-muted transition-colors hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-950/40 dark:hover:text-blue-300"
+                className="rounded-md px-2 py-1.5 text-sm font-medium text-muted transition-colors hover:bg-accent-soft hover:text-accent dark:hover:bg-blue-950/40 dark:hover:text-accent"
               >
                 {section.label}
               </button>

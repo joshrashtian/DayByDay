@@ -82,8 +82,8 @@ export function MonthGridView({
                 onClick={() => onPickDay(day.startOf("day"))}
                 className={`flex min-h-[92px] flex-col gap-1 rounded-xl border p-2 text-left ring-1 transition-colors hover:bg-surface/50 ${
                   inMonth
-                    ? "border-line/60 bg-surface/35 dark:bg-overlay"
-                    : "border-transparent bg-surface/15 opacity-60 dark:bg-overlay dark:opacity-50"
+                    ? "border-line/60 bg-surface/35"
+                    : "border-transparent bg-surface/15 opacity-60 dark:opacity-50"
                 } ${
                   isToday
                     ? "ring-2 ring-sky-400/70 dark:ring-sky-500/50"

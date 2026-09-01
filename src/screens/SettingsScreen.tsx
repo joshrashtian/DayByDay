@@ -108,9 +108,9 @@ const SettingsScreenContent = ({ modal = false }: { modal?: boolean }) => {
                 type="button"
                 onClick={() => navigate(section.id)}
                 aria-current={isActive ? "true" : undefined}
-                className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 ${
+                className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
                   isActive
-                    ? "bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300"
+                    ? "bg-accent-soft text-accent dark:bg-blue-950/50 dark:text-blue-300"
                     : "text-muted hover:bg-sunken hover:text-ink"
                 }`}
               >
@@ -125,7 +125,7 @@ const SettingsScreenContent = ({ modal = false }: { modal?: boolean }) => {
       <div className="flex min-h-0 flex-1">
         {/*  <nav
           aria-label="Settings sections"
-          className="hidden w-52 shrink-0 flex-col border-r border-line bg-sunken/50 p-3 md:flex dark:bg-overlay"
+          className="hidden w-52 shrink-0 flex-col border-r border-line bg-sunken/50 p-3 md:flex"
         >
           <div className="flex flex-col gap-0.5">
             {SECTIONS.map((section) => {
@@ -136,7 +136,7 @@ const SettingsScreenContent = ({ modal = false }: { modal?: boolean }) => {
                   type="button"
                   onClick={() => navigate(section.id)}
                   aria-current={isActive ? "true" : undefined}
-                  className={`group relative flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 ${
+                  className={`group relative flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
                     isActive
                       ? "bg-surface text-ink shadow-sm"
                       : "text-muted hover:bg-surface/60 hover:text-ink"
@@ -144,7 +144,7 @@ const SettingsScreenContent = ({ modal = false }: { modal?: boolean }) => {
                 >
                   <span
                     className={`absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r transition-all ${
-                      isActive ? "bg-blue-500 opacity-100" : "opacity-0"
+                      isActive ? "bg-accent opacity-100" : "opacity-0"
                     }`}
                     aria-hidden="true"
                   />
@@ -170,7 +170,7 @@ const SettingsScreenContent = ({ modal = false }: { modal?: boolean }) => {
               <button
                 type="button"
                 onClick={() => navigate("home")}
-                className="mb-4 inline-flex items-center gap-1 rounded-lg px-2 py-1 -ml-2 text-sm font-medium text-muted transition-colors hover:bg-sunken hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+                className="mb-4 inline-flex items-center gap-1 rounded-lg px-2 py-1 -ml-2 text-sm font-medium text-muted transition-colors hover:bg-sunken hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
               >
                 <IoChevronBackOutline aria-hidden="true" />
                 Back to Settings

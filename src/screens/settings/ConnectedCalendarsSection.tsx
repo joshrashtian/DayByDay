@@ -169,7 +169,7 @@ export function ConnectedCalendarsSection() {
       </div>
 
       <div
-        className="rounded-xl border border-blue-100 bg-blue-50/70 p-3 text-sm text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200"
+        className="rounded-xl border border-accent bg-accent-soft p-3 text-sm text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200"
         role="note"
       >
         One-way import only. ICS events stay locked so schedules match the
@@ -178,7 +178,7 @@ export function ConnectedCalendarsSection() {
 
       <section
         aria-labelledby={`${uid}-ics-heading`}
-        className="overflow-hidden rounded-2xl border border-line/80 bg-surface/70 dark:bg-overlay"
+        className="overflow-hidden rounded-2xl border border-line/80 bg-surface/70"
       >
         <div className="flex flex-wrap items-start justify-between gap-4 border-b border-line px-4 py-4">
           <div className="flex items-start gap-3">
@@ -233,7 +233,7 @@ export function ConnectedCalendarsSection() {
               type="button"
               onClick={onChooseIcsFile}
               disabled={isImportingIcs}
-              className="inline-flex items-center gap-2 rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60"
             >
               <IoDocumentTextOutline className="size-4" aria-hidden />
               {isImportingIcs ? "Importing…" : "Choose .ics file"}
@@ -242,7 +242,7 @@ export function ConnectedCalendarsSection() {
               <button
                 type="button"
                 onClick={onClearIcsImports}
-                className="rounded-lg border border-line bg-surface px-4 py-2 text-sm font-medium text-muted transition-colors hover:bg-sunken focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+                className="rounded-lg border border-line bg-surface px-4 py-2 text-sm font-medium text-muted transition-colors hover:bg-sunken focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
               >
                 Remove all ICS imports
               </button>
@@ -253,7 +253,7 @@ export function ConnectedCalendarsSection() {
 
       <section
         aria-labelledby={`${uid}-google-heading`}
-        className="overflow-hidden rounded-2xl border border-line/80 bg-surface/70 dark:bg-overlay"
+        className="overflow-hidden rounded-2xl border border-line/80 bg-surface/70"
       >
         <div className="flex flex-wrap items-start justify-between gap-4 border-b border-line px-4 py-4">
           <div className="flex items-start gap-3">
@@ -284,7 +284,7 @@ export function ConnectedCalendarsSection() {
             <button
               type="button"
               onClick={onDisconnectGoogle}
-              className="rounded-lg border border-line bg-surface px-4 py-2 text-sm font-medium text-muted transition-colors hover:bg-sunken focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+              className="rounded-lg border border-line bg-surface px-4 py-2 text-sm font-medium text-muted transition-colors hover:bg-sunken focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
               Disconnect
             </button>
@@ -292,7 +292,7 @@ export function ConnectedCalendarsSection() {
             <button
               type="button"
               onClick={onConnectGoogle}
-              className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+              className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
               Connect Google
             </button>
@@ -309,7 +309,7 @@ export function ConnectedCalendarsSection() {
                 {google.calendars.map((calendar) => (
                   <li
                     key={calendar.id}
-                    className="flex items-center gap-3 rounded-xl border border-line bg-sunken/80 px-3 py-2.5 dark:bg-overlay"
+                    className="flex items-center gap-3 rounded-xl border border-line bg-sunken/80 px-3 py-2.5"
                   >
                     <CalendarColorDot color={calendar.color} />
                     <Checkbox
@@ -347,7 +347,7 @@ export function ConnectedCalendarsSection() {
                       importFutureMonths,
                     )
                   }
-                  className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 />
               </div>
               <div className="flex flex-col gap-1">
@@ -369,7 +369,7 @@ export function ConnectedCalendarsSection() {
                       Number(event.target.value),
                     )
                   }
-                  className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 />
               </div>
             </fieldset>
@@ -378,7 +378,7 @@ export function ConnectedCalendarsSection() {
               <button
                 type="button"
                 onClick={onImport}
-                className="inline-flex items-center gap-2 rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+                className="inline-flex items-center gap-2 rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
               >
                 <IoCalendarOutline className="size-4" aria-hidden />
                 Import events

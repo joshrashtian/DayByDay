@@ -132,7 +132,7 @@ export function RightPanelProvider({
           <button
             type="button"
             onClick={closePanel}
-            className="absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full border border-line bg-surface text-muted transition-colors hover:bg-sunken hover:text-ink dark:bg-overlay"
+            className="absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full border border-line bg-surface text-muted transition-colors hover:bg-sunken hover:text-ink"
             aria-label="Close panel"
           >
             <IoClose className="h-5 w-5" />

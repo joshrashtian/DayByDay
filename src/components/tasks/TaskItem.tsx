@@ -134,7 +134,7 @@ export function TaskItem({
             onToggle();
           }
         }}
-        className="group relative cursor-pointer overflow-hidden rounded-2xl border border-line/70 bg-surface/45 px-4 py-3.5 shadow-[0_4px_24px_rgba(15,15,15,0.06),inset_0_1px_0_rgba(255,255,255,0.85)] outline-none backdrop-blur-xl backdrop-saturate-150 ring-1 ring-line/30 transition-shadow hover:shadow-[0_14px_40px_rgba(15,15,15,0.1)] focus-visible:ring-2 focus-visible:ring-line-strong/50 active:scale-[0.99] dark:bg-overlay dark:shadow-[0_4px_28px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)] dark:hover:shadow-[0_14px_40px_rgba(0,0,0,0.45)]"
+        className="group relative cursor-pointer overflow-hidden rounded-2xl border border-line/70 bg-surface/45 px-4 py-3.5 shadow-[0_4px_24px_rgba(15,15,15,0.06),inset_0_1px_0_rgba(255,255,255,0.85)] outline-none backdrop-blur-xl backdrop-saturate-150 ring-1 ring-line/30 transition-shadow hover:shadow-[0_14px_40px_rgba(15,15,15,0.1)] focus-visible:ring-2 focus-visible:ring-line-strong/50 active:scale-[0.99] dark:shadow-[0_4px_28px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)] dark:hover:shadow-[0_14px_40px_rgba(0,0,0,0.45)]"
       >
         <div
           className="pointer-events-none absolute inset-0 rounded-2xl bg-linear-to-br from-white/70 via-white/15 to-transparent opacity-80"
@@ -226,7 +226,7 @@ export function TaskItem({
             {task.dueDate ? (
               <time
                 dateTime={taskDueToIso(task.dueDate)}
-                className="rounded-md bg-surface/50 px-2 py-0.5 ring-1 ring-line/80 dark:bg-overlay"
+                className="rounded-md bg-surface/50 px-2 py-0.5 ring-1 ring-line/80"
               >
                 {formatTaskDue(task.dueDate)}
               </time>
@@ -240,7 +240,7 @@ export function TaskItem({
             ) : null}
             {task.recurrence ? (
               <span
-                className="inline-flex items-center gap-0.5 rounded-md bg-surface/50 px-2 py-0.5 ring-1 ring-line/80 dark:bg-overlay"
+                className="inline-flex items-center gap-0.5 rounded-md bg-surface/50 px-2 py-0.5 ring-1 ring-line/80"
                 title={recurrenceLabel(task)}
               >
                 <IoRepeatOutline

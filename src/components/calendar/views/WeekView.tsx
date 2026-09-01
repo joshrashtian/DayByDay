@@ -730,8 +730,8 @@ function WeekDayTimeColumn({
     <div
       className={`relative min-h-0 border-r border-line/80 ${
         dayIndex % 2 === 0
-          ? "bg-sunken/35 dark:bg-overlay"
-          : "bg-surface/55 dark:bg-overlay"
+          ? "bg-sunken/35"
+          : "bg-surface/55"
       }`}
       style={{
         gridRow: `3 / span ${SLOTS_PER_DAY}`,
@@ -762,8 +762,8 @@ function WeekDayTimeColumn({
           className="pointer-events-none absolute inset-x-0 z-20 flex items-center"
           style={{ top: `${(nowMinuteOfDay / MINUTES_PER_DAY) * 100}%` }}
         >
-          <span className="ml-0.5 h-2 w-2 shrink-0 rounded-full bg-blue-500" />
-          <span className="h-px flex-1 bg-blue-500/70" />
+          <span className="ml-0.5 h-2 w-2 shrink-0 rounded-full bg-accent" />
+          <span className="h-px flex-1 bg-accent/70" />
         </div>
       ) : null}
 
@@ -817,7 +817,7 @@ function WeekDayTimeColumn({
       </LayoutGroup>
 
       {hiddenCount > 0 ? (
-        <p className="pointer-events-none absolute inset-x-1 bottom-1 z-20 rounded bg-surface/90 px-1 py-0.5 text-center text-[9px] font-medium text-muted shadow-sm dark:bg-overlay">
+        <p className="pointer-events-none absolute inset-x-1 bottom-1 z-20 rounded bg-surface/90 px-1 py-0.5 text-center text-[9px] font-medium text-muted shadow-sm">
           +{hiddenCount} more
         </p>
       ) : null}
@@ -828,7 +828,7 @@ function WeekDayTimeColumn({
 function WeekTimeLabelsColumn({ quarterSlots }: { quarterSlots: number[] }) {
   return (
     <div
-      className="grid grid-rows-96 border-r border-line/80 bg-sunken/55 dark:bg-overlay"
+      className="grid grid-rows-96 border-r border-line/80 bg-sunken/55"
       style={{ gridRow: `3 / span ${SLOTS_PER_DAY}`, gridColumn: 1 }}
     >
       {quarterSlots.map((minuteOfDay) => (
@@ -1083,7 +1083,7 @@ export function WeekView({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="min-h-0 flex-1 overflow-auto rounded-none border-0 bg-surface/75 dark:bg-overlay [&>div]:min-h-full">
+      <div className="min-h-0 flex-1 overflow-auto rounded-none border-0 bg-surface/75 [&>div]:min-h-full">
         <div
           className="grid min-h-full"
           style={{
@@ -1092,7 +1092,7 @@ export function WeekView({
             minWidth: `${74 + safeDayCount * 116}px`,
           }}
         >
-          <div className="sticky top-0 z-30 border-b border-r border-line/80 bg-sunken/95 px-2 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted backdrop-blur dark:bg-overlay">
+          <div className="sticky top-0 z-30 border-b border-r border-line/80 bg-sunken/95 px-2 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted backdrop-blur">
             Time
           </div>
           {days.map((day, dayIndex) => {
@@ -1125,17 +1125,17 @@ export function WeekView({
                 }
                 className={`sticky top-0 z-30 border-b border-r border-line/80 px-2 py-2 text-center flex flex-col items-center backdrop-blur transition-colors hover:bg-surface/80 ${
                   dayIndex % 2 === 0
-                    ? "bg-sunken/95 dark:bg-overlay"
-                    : "bg-surface/95 dark:bg-overlay"
+                    ? "bg-sunken/95"
+                    : "bg-surface/95"
                 }`}
               >
                 <p
-                  className={`text-[11px] font-display font-semibold uppercase tracking-wide  ${isToday ? "text-blue-600" : "text-muted"}`}
+                  className={`text-[11px] font-display font-semibold uppercase tracking-wide  ${isToday ? "text-accent" : "text-muted"}`}
                 >
                   {day.toFormat("ccc")}
                 </p>
                 <div
-                  className={` w-8 h-8 rounded-full flex justify-center items-center ${isToday ? "bg-blue-600 text-white font-display" : "text-ink"}`}
+                  className={` w-8 h-8 rounded-full flex justify-center items-center ${isToday ? "bg-accent text-white font-display" : "text-ink"}`}
                 >
                   <p
                     className={`text-sm font-black flex items-center justify-center `}
@@ -1147,7 +1147,7 @@ export function WeekView({
             );
           })}
 
-          <div className="border-r border-line/80 bg-sunken/60 p-2 dark:bg-overlay">
+          <div className="border-r border-line/80 bg-sunken/60 p-2">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-muted">
               All Day
             </p>
@@ -1164,8 +1164,8 @@ export function WeekView({
                 data-calendar-day={key}
                 className={`border-r border-line/80 p-1.5 ${
                   dayIndex % 2 === 0
-                    ? "bg-sunken/45 dark:bg-overlay"
-                    : "bg-surface/65 dark:bg-overlay"
+                    ? "bg-sunken/45"
+                    : "bg-surface/65"
                 }`}
               >
                 <div className="flex min-h-11 flex-col gap-1">
@@ -1374,7 +1374,7 @@ export function WeekView({
             value={quickAddTitle}
             onChange={(e) => setQuickAddTitle(e.target.value)}
             placeholder="Task title..."
-            className="mt-3 w-full rounded-lg border border-line-strong/80 bg-surface px-3 py-2.5 text-base font-semibold text-ink outline-none ring-sky-400/40 focus:ring-2 dark:bg-overlay"
+            className="mt-3 w-full rounded-lg border border-line-strong/80 bg-surface px-3 py-2.5 text-base font-semibold text-ink outline-none ring-sky-400/40 focus:ring-2"
           />
           {categoryConfigs.length > 0 ? (
             <div className="mt-3 flex flex-wrap items-center gap-2.5">
@@ -1390,7 +1390,7 @@ export function WeekView({
                     }
                     className={`relative flex h-7 w-7 items-center justify-center rounded-full transition-transform hover:scale-105 ${
                       isSelected
-                        ? "ring-2 ring-offset-2 ring-offset-white dark:ring-offset-zinc-900"
+                        ? "ring-2 ring-offset-2 ring-offset-canvas"
                         : ""
                     }`}
                     style={{
@@ -1439,7 +1439,7 @@ export function WeekView({
                 );
                 clearQuickAdd();
               }}
-              className="flex flex-row items-center justify-center gap-2 rounded-lg border border-line-strong/80 bg-surface px-3 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-sunken dark:bg-overlay"
+              className="flex flex-row items-center justify-center gap-2 rounded-lg border border-line-strong/80 bg-surface px-3 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-sunken"
             >
               <IoDocument /> Editor
             </button>
@@ -1478,7 +1478,7 @@ export function WeekView({
                 <p>Tags: {selectedTask.tags.join(", ")}</p>
               ) : null}
             </div>
-            <div className="rounded-xl border border-line/80 bg-sunken/80 p-3 dark:bg-overlay">
+            <div className="rounded-xl border border-line/80 bg-sunken/80 p-3">
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
                 Metadata
               </p>

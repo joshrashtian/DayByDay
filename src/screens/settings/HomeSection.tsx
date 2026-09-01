@@ -21,9 +21,9 @@ export default function HomeSection() {
             key={section.id}
             type="button"
             onClick={() => navigate(section.id)}
-            className="group flex items-start gap-3 rounded-2xl border border-line/80 bg-surface/70 p-4 text-left transition-all hover:border-blue-300 hover:bg-surface hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:bg-overlay dark:hover:border-blue-500/60"
+            className="group flex items-start gap-3 rounded-2xl border border-line/80 bg-surface/70 p-4 text-left transition-all hover:border-accent hover:bg-surface hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent dark:hover:border-accent"
           >
-            <span className="mt-0.5 text-2xl text-blue-600 transition-colors group-hover:text-blue-700 dark:text-blue-400">
+            <span className="mt-0.5 text-2xl text-accent transition-colors group-hover:text-accent dark:text-blue-400">
               {section.icon}
             </span>
             <span className="min-w-0">

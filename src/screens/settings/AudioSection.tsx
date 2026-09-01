@@ -78,7 +78,7 @@ export function AudioSection() {
         </p>
       </div>
 
-      <section className="overflow-hidden rounded-2xl border border-line/80 bg-surface/70 dark:bg-overlay">
+      <section className="overflow-hidden rounded-2xl border border-line/80 bg-surface/70">
         <div className="flex items-start gap-3 border-b border-line px-4 py-4">
           <span className="inline-flex size-10 items-center justify-center rounded-xl bg-violet-500/10 text-violet-700 dark:bg-violet-500/15 dark:text-violet-200">
             {audioPrefs.soundEnabled ? (
@@ -100,7 +100,7 @@ export function AudioSection() {
         </div>
 
         <div className="space-y-4 px-4 py-4">
-          <div className="flex items-start justify-between gap-4 rounded-xl border border-line bg-sunken/80 px-3 py-3 dark:bg-overlay">
+          <div className="flex items-start justify-between gap-4 rounded-xl border border-line bg-sunken/80 px-3 py-3">
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-ink">
                 Enable sound
@@ -137,7 +137,7 @@ export function AudioSection() {
                     taskClickSoundId: event.target.value,
                   }))
                 }
-                className="min-w-0 flex-1 rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none transition-shadow focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                className="min-w-0 flex-1 rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none transition-shadow focus:ring-2 focus:ring-accent disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <optgroup label="Built-in">
                   {BUILTIN_TASK_CLICK_SOUNDS.map((sound) => (
@@ -166,7 +166,7 @@ export function AudioSection() {
                 type="button"
                 onClick={() => previewTaskClickSound()}
                 disabled={soundsDisabled}
-                className="rounded-lg border border-line bg-surface px-4 py-2 text-sm font-medium text-muted transition-colors hover:bg-sunken focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-lg border border-line bg-surface px-4 py-2 text-sm font-medium text-muted transition-colors hover:bg-sunken focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Preview
               </button>
@@ -205,7 +205,7 @@ export function AudioSection() {
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-2xl border border-line/80 bg-surface/70 dark:bg-overlay">
+      <section className="overflow-hidden rounded-2xl border border-line/80 bg-surface/70">
         <div className="flex items-start gap-3 border-b border-line px-4 py-4">
           <span className="inline-flex size-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200">
             <IoMusicalNoteOutline className="size-5" aria-hidden />
@@ -222,7 +222,7 @@ export function AudioSection() {
 
         <div className="space-y-4 px-4 py-4">
           <div
-            className="rounded-xl border border-blue-100 bg-blue-50/70 p-3 text-sm text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200"
+            className="rounded-xl border border-accent bg-accent-soft p-3 text-sm text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200"
             role="note"
           >
             Supports `.mp3`, `.wav`, `.ogg`, `.m4a`, and `.aac` up to 512 KB.
@@ -241,7 +241,7 @@ export function AudioSection() {
             type="button"
             onClick={onChooseSoundFile}
             disabled={isImporting}
-            className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:opacity-60"
+            className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60"
           >
             {isImporting ? "Importing…" : "Choose audio file"}
           </button>
@@ -254,7 +254,7 @@ export function AudioSection() {
                 return (
                   <li
                     key={sound.id}
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-sunken/80 px-3 py-2.5 dark:bg-overlay"
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-sunken/80 px-3 py-2.5"
                   >
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-ink">

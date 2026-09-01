@@ -388,7 +388,7 @@ export function TaskCreatorPopupForm({
           <button
             type="button"
             onClick={onDismiss}
-            className="shrink-0 rounded-xl border border-line/80 bg-surface/70 p-2 text-muted transition-colors hover:bg-surface hover:text-ink dark:bg-overlay"
+            className="shrink-0 rounded-xl border border-line/80 bg-surface/70 p-2 text-muted transition-colors hover:bg-surface hover:text-ink"
             aria-label="Close"
           >
             <IoClose className="h-5 w-5" aria-hidden />
@@ -509,7 +509,7 @@ export function TaskCreatorPopupForm({
           ) : null}
 
           {showRepeats && recurrenceChoice !== "none" ? (
-            <div className="flex flex-col gap-3 rounded-xl border border-line/80 bg-surface/60 p-3 dark:bg-overlay">
+            <div className="flex flex-col gap-3 rounded-xl border border-line/80 bg-surface/60 p-3">
               <div className="flex flex-col gap-1.5">
                 <label
                   htmlFor="popup-task-repeat-interval"
@@ -616,7 +616,7 @@ export function TaskCreatorPopupForm({
           <button
             type="button"
             onClick={() => setShowAdvanced((v) => !v)}
-            className="self-start rounded-full border border-line/90 bg-surface/70 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted shadow-sm transition-colors hover:bg-surface dark:bg-overlay"
+            className="self-start rounded-full border border-line/90 bg-surface/70 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted shadow-sm transition-colors hover:bg-surface"
           >
             {showAdvanced ? "Hide details" : "More details"}
           </button>
@@ -707,7 +707,7 @@ export function TaskCreatorPopupForm({
         </section>
       </div>
 
-      <div className="sticky bottom-0 -mx-5 flex flex-wrap items-center gap-2.5 border-t border-line/80 bg-surface/90 px-5 py-4 backdrop-blur-md dark:bg-overlay sm:-mx-6 sm:px-6">
+      <div className="sticky bottom-0 -mx-5 flex flex-wrap items-center gap-2.5 border-t border-line/80 bg-surface/90 px-5 py-4 backdrop-blur-md sm:-mx-6 sm:px-6">
         {classValidationMessage ? (
           <p className="w-full text-xs font-medium text-amber-700 dark:text-amber-300">
             {classValidationMessage}

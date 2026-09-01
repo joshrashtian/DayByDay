@@ -110,7 +110,7 @@ function getPillConfig(hint: TaskChatHint): PillConfig {
         "",
       );
       return {
-        className: "bg-blue-500 text-white",
+        className: "bg-accent text-white",
         icon: <IoCalendarOutline className="h-3 w-3" />,
         label: cleaned,
       };

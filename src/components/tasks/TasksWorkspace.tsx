@@ -319,7 +319,7 @@ export function TasksWorkspace({
               <div className="flex flex-col gap-6 pb-8">
                 {viewMode === "all" ? (
                   <section
-                    className="rounded-2xl border border-line/50 bg-surface/25 p-3 shadow-[0_6px_24px_rgba(15,15,15,0.05)] backdrop-blur-sm dark:bg-overlay"
+                    className="rounded-2xl border border-line/50 bg-surface/25 p-3 shadow-[0_6px_24px_rgba(15,15,15,0.05)] backdrop-blur-sm"
                     aria-label="All tasks"
                   >
                     <header className="mb-3 flex items-center justify-between px-1">
@@ -355,7 +355,7 @@ export function TasksWorkspace({
                   groupedVisibleTasks.map((group) => (
                     <section
                       key={group.label}
-                      className="rounded-2xl border border-line/50 bg-surface/25 p-3 shadow-[0_6px_24px_rgba(15,15,15,0.05)] backdrop-blur-sm dark:bg-overlay"
+                      className="rounded-2xl border border-line/50 bg-surface/25 p-3 shadow-[0_6px_24px_rgba(15,15,15,0.05)] backdrop-blur-sm"
                       aria-label={`${group.label} task container`}
                     >
                       <header className="mb-3 flex items-center justify-between px-1">
@@ -390,7 +390,7 @@ export function TasksWorkspace({
         </div>
 
         {composerLayout === "bottomChat" ? (
-          <div className="sticky bottom-0 z-20 shrink-0 border-t border-line/40 bg-linear-to-t from-zinc-100/95 via-zinc-50/90 to-transparent pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md dark:from-zinc-950/95 dark:via-zinc-900/85 dark:to-transparent">
+          <div className="sticky bottom-0 z-20 shrink-0 border-t border-line/40 bg-linear-to-t from-canvas/95 via-canvas/90 to-transparent pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md">
             <div className={`mx-auto w-full px-5 sm:px-8 ${maxW}`}>
               <TaskCreator
                 onAdd={addTask}

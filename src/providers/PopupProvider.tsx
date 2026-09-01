@@ -103,7 +103,7 @@ export default function PopupProvider({ children }: { children: ReactNode }) {
                 role="dialog"
                 aria-modal="true"
                 data-popup-dialog
-                className="relative z-10 flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-line/70 bg-surface/95 shadow-[0_-8px_48px_rgba(15,15,15,0.18)] ring-1 ring-line/5 backdrop-blur-xl dark:bg-overlay dark:shadow-[0_-12px_56px_rgba(0,0,0,0.55)] sm:rounded-3xl sm:shadow-[0_24px_64px_rgba(15,15,15,0.2)]"
+                className="relative z-10 flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-line/70 bg-surface/95 shadow-[0_-8px_48px_rgba(15,15,15,0.18)] ring-1 ring-line/5 backdrop-blur-xl dark:shadow-[0_-12px_56px_rgba(0,0,0,0.55)] sm:rounded-3xl sm:shadow-[0_24px_64px_rgba(15,15,15,0.2)]"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}

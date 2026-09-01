@@ -74,7 +74,7 @@ export function GlobalPomodoroDock() {
             initial={{ opacity: 0, scale: 0.96, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 8 }}
-            className="w-[min(100vw-2rem,17rem)] overflow-hidden rounded-2xl border border-line/90 bg-surface/95 shadow-[0_12px_40px_-12px_rgba(15,23,42,0.25)] backdrop-blur-md dark:bg-overlay"
+            className="w-[min(100vw-2rem,17rem)] overflow-hidden rounded-2xl border border-line/90 bg-surface/95 shadow-[0_12px_40px_-12px_rgba(15,23,42,0.25)] backdrop-blur-md"
           >
             <div className="flex items-center justify-between gap-2 border-b border-line px-3 py-2">
               <motion.div layout className="flex items-center gap-2">
@@ -159,7 +159,7 @@ export function GlobalPomodoroDock() {
             className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-medium shadow-lg backdrop-blur-md transition-colors ${
               isActive
                 ? "border-rose-200/90 bg-surface text-rose-600 dark:border-rose-900/50 dark:text-rose-400"
-                : "border-line/90 bg-surface/95 text-muted dark:bg-overlay"
+                : "border-line/90 bg-surface/95 text-muted"
             }`}
           >
             <span

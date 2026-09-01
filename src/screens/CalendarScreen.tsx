@@ -249,7 +249,7 @@ export default function CalendarScreen() {
             </motion.p>
           </AnimatePresence>
           {/* Center: mode switcher */}
-          <div className="flex absolute left-1/2 -translate-x-1/2 items-center gap-0.5 rounded-xl border border-line/80 bg-surface/60 p-1 backdrop-blur-sm dark:bg-overlay">
+          <div className="flex absolute left-1/2 -translate-x-1/2 items-center gap-0.5 rounded-xl border border-line/80 bg-surface/60 p-1 backdrop-blur-sm">
             {modes.map(({ id, label }) => (
               <button
                 key={id}
@@ -265,7 +265,7 @@ export default function CalendarScreen() {
               </button>
             ))}
             {mode === "custom" && (
-              <label className="ml-1 flex items-center gap-1.5 rounded-lg border border-line/80 bg-surface/60 px-2 py-1 text-xs font-semibold text-muted dark:bg-overlay">
+              <label className="ml-1 flex items-center gap-1.5 rounded-lg border border-line/80 bg-surface/60 px-2 py-1 text-xs font-semibold text-muted">
                 Days
                 <input
                   type="number"
@@ -278,7 +278,7 @@ export default function CalendarScreen() {
                     if (Number.isNaN(parsed)) return;
                     setCustomDayCount(Math.max(1, Math.min(14, parsed)));
                   }}
-                  className="w-12 rounded-md border border-line-strong/80 bg-surface/90 px-1.5 py-0.5 text-xs font-bold text-ink outline-none ring-sky-400/40 focus:ring-2 dark:bg-overlay"
+                  className="w-12 rounded-md border border-line-strong/80 bg-surface/90 px-1.5 py-0.5 text-xs font-bold text-ink outline-none ring-sky-400/40 focus:ring-2"
                   aria-label="Custom day count"
                 />
               </label>
@@ -312,7 +312,7 @@ export default function CalendarScreen() {
                 type="button"
                 whileTap={{ scale: 0.94 }}
                 onClick={() => setFocus(DateTime.local().startOf("day"))}
-                className="rounded-full bg-blue-500 px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-blue-600"
+                className="rounded-full bg-accent px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-accent-hover"
               >
                 Today
               </motion.button>

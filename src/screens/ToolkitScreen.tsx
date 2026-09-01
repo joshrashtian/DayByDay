@@ -23,7 +23,7 @@ export default function ToolkitScreen() {
         ones you want to your app bar manually.
       </p>
 
-      <section className="mt-7 w-full max-w-3xl rounded-2xl border border-line/80 bg-surface/70 p-5 dark:bg-overlay">
+      <section className="mt-7 w-full max-w-3xl rounded-2xl border border-line/80 bg-surface/70 p-5">
         <h2 className="text-lg font-semibold text-ink">
           Available Panels
         </h2>
@@ -31,7 +31,7 @@ export default function ToolkitScreen() {
           {TOOLKIT_PANELS.map((panel) => (
             <li
               key={panel.id}
-              className="rounded-xl border border-line/80 bg-surface/70 p-3 dark:bg-overlay"
+              className="rounded-xl border border-line/80 bg-surface/70 p-3"
             >
               <p className="text-sm font-semibold text-ink">
                 {panel.label}

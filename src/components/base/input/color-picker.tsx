@@ -50,7 +50,7 @@ export function ColorPicker({
       <div className="flex items-center gap-2">
         <label
           htmlFor={swatchId}
-          className="relative inline-flex h-10 w-10 shrink-0 cursor-pointer overflow-hidden rounded-lg border border-line ring-2 ring-transparent transition-shadow hover:ring-line focus-within:ring-blue-500"
+          className="relative inline-flex h-10 w-10 shrink-0 cursor-pointer overflow-hidden rounded-lg border border-line ring-2 ring-transparent transition-shadow hover:ring-line focus-within:ring-accent"
           style={{ backgroundColor: nativeValue }}
           title="Pick a color"
         >
@@ -71,7 +71,7 @@ export function ColorPicker({
           placeholder="#6366f1"
           spellCheck={false}
           aria-label={`${ariaLabel} hex value`}
-          className="min-w-0 flex-1 rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none transition-shadow focus:ring-2 focus:ring-blue-500"
+          className="min-w-0 flex-1 rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none transition-shadow focus:ring-2 focus:ring-accent"
         />
       </div>
       <div
@@ -90,7 +90,7 @@ export function ColorPicker({
               aria-label={preset}
               title={preset}
               onClick={() => onChange(preset)}
-              className={`h-7 w-7 rounded-md border transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 ${
+              className={`h-7 w-7 rounded-md border transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
                 isSelected
                   ? "border-zinc-900 ring-2 ring-zinc-900/30"
                   : "border-line/80"

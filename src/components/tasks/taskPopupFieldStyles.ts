@@ -5,11 +5,11 @@ export const taskPopupField = {
   sectionTitle:
     "text-base font-bold uppercase font-quantify text-faint",
   input:
-    "w-full rounded-xl  bg-surface/90 px-3.5 py-2.5 text-sm text-ink border border-line/90 outline-none placeholder:text-faint focus:border-line-strong focus:ring-2 focus:ring-line/35 dark:bg-overlay",
+    "w-full rounded-xl  bg-surface/90 px-3.5 py-2.5 text-sm text-ink border border-line/90 outline-none placeholder:text-faint focus:border-line-strong focus:ring-2 focus:ring-line/35",
   selectLabel:
     "text-sm font-semibold uppercase font-quantify text-muted",
   selectTrigger:
-    "rounded-xl border border-line/90 bg-surface/90 shadow-sm ring-0 transition-[box-shadow,border-color] hover:border-line-strong focus:ring-2 focus:ring-line/35 dark:bg-overlay [&_*[data-icon]]:text-zinc-500 dark:[&_*[data-icon]]:text-zinc-400 [&_p]:text-zinc-900 dark:[&_p]:text-zinc-100",
+    "rounded-xl border border-line/90 bg-surface/90 shadow-sm ring-0 transition-[box-shadow,border-color] hover:border-line-strong focus:ring-2 focus:ring-line/35 [&_*[data-icon]]:text-zinc-500 dark:[&_*[data-icon]]:text-zinc-400 [&_p]:text-zinc-900 dark:[&_p]:text-zinc-100",
   selectPopover:
     "z-[100] overflow-hidden rounded-xl border border-line/95 bg-surface py-1 shadow-[0_18px_48px_rgba(15,15,15,0.14)] ring-1 ring-line/80 dark:shadow-[0_18px_48px_rgba(0,0,0,0.45)]",
   selectMenu:
@@ -21,5 +21,5 @@ export const taskPopupField = {
   weekdayActive:
     "border-transparent bg-ink text-white shadow-sm",
   weekdayIdle:
-    "border border-line/90 bg-surface/80 text-muted hover:border-line-strong dark:bg-overlay",
+    "border border-line/90 bg-surface/80 text-muted hover:border-line-strong",
 } as const;

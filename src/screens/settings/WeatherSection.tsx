@@ -65,7 +65,7 @@ export function WeatherSection() {
 
       <div
         id={weatherHintId}
-        className="rounded-xl border border-blue-100 bg-blue-50/70 p-3 text-sm text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200"
+        className="rounded-xl border border-accent bg-accent-soft p-3 text-sm text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200"
         role="note"
       >
         Leave these empty to use your device location (if permitted).
@@ -95,7 +95,7 @@ export function WeatherSection() {
             aria-invalid={
               saveError?.toLowerCase().includes("latitude") || undefined
             }
-            className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none transition-shadow focus:ring-2 focus:ring-blue-500"
+            className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none transition-shadow focus:ring-2 focus:ring-accent"
           />
         </div>
         <div className="flex flex-col gap-1">
@@ -116,7 +116,7 @@ export function WeatherSection() {
             aria-invalid={
               saveError?.toLowerCase().includes("longitude") || undefined
             }
-            className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none transition-shadow focus:ring-2 focus:ring-blue-500"
+            className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none transition-shadow focus:ring-2 focus:ring-accent"
           />
         </div>
       </fieldset>
@@ -141,14 +141,14 @@ export function WeatherSection() {
         <button
           type="button"
           onClick={onSaveWeatherLocation}
-          className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+          className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           Save Coordinates
         </button>
         <button
           type="button"
           onClick={onUseDeviceLocation}
-          className="rounded-lg border border-line bg-surface px-4 py-2 text-sm font-medium text-muted transition-colors hover:bg-sunken focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+          className="rounded-lg border border-line bg-surface px-4 py-2 text-sm font-medium text-muted transition-colors hover:bg-sunken focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           Use device location
         </button>

@@ -33,7 +33,7 @@ export function ProfilePanel() {
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="col-span-2 rounded-xl border border-line bg-surface p-3 dark:bg-overlay">
+        <div className="col-span-2 rounded-xl border border-line bg-surface p-3">
           <h2 className="font-eudoxus text-lg font-black text-ink">
             Your Taskcard
           </h2>
@@ -44,7 +44,7 @@ export function ProfilePanel() {
             </span>
           </p>
         </div>
-        <div className="rounded-xl border border-line bg-surface p-3 dark:bg-overlay">
+        <div className="rounded-xl border border-line bg-surface p-3">
           <p className="text-xs uppercase tracking-wide text-muted">
             Completion
           </p>
@@ -52,7 +52,7 @@ export function ProfilePanel() {
             {stats.completionRateLabel}
           </p>
         </div>
-        <div className="rounded-xl border border-line bg-surface p-3 dark:bg-overlay">
+        <div className="rounded-xl border border-line bg-surface p-3">
           <p className="text-xs uppercase tracking-wide text-muted">
             Categories
           </p>
@@ -62,7 +62,7 @@ export function ProfilePanel() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-line bg-surface p-4 dark:bg-overlay">
+      <div className="rounded-xl border border-line bg-surface p-4">
         <p className="text-xs uppercase tracking-wide text-muted">
           Active categories
         </p>

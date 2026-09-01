@@ -262,7 +262,7 @@ const MultiSelectRoot = ({
                     isDisabled={isDisabled}
                     className={({ isFocusVisible, isDisabled }) =>
                         cx(
-                            "flex w-full items-center gap-2 rounded-xl border border-line-strong/80 bg-surface/80 text-left text-ink shadow-sm transition-colors outline-none dark:bg-overlay",
+                            "flex w-full items-center gap-2 rounded-xl border border-line-strong/80 bg-surface/80 text-left text-ink shadow-sm transition-colors outline-none",
                             "focus-visible:ring-2 focus-visible:ring-line-strong/40",
                             isDisabled && "cursor-not-allowed opacity-50",
                             isInvalid && "border-red-500/60",
@@ -292,7 +292,7 @@ const MultiSelectRoot = ({
                     triggerRef={triggerRef}
                     className={({ isEntering, isExiting }) =>
                         cx(
-                            "overflow-hidden rounded-xl border border-line/80 bg-surface/95 shadow-xl backdrop-blur-sm outline-none dark:bg-overlay",
+                            "overflow-hidden rounded-xl border border-line/80 bg-surface/95 shadow-xl backdrop-blur-sm outline-none",
                             isEntering && "duration-150 ease-out animate-in fade-in placement-top:slide-in-from-bottom-1 placement-bottom:slide-in-from-top-1",
                             isExiting && "duration-100 ease-in animate-out fade-out placement-top:slide-out-to-bottom-1 placement-bottom:slide-out-to-top-1",
                             popoverClassName,

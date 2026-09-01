@@ -74,7 +74,7 @@ export function IconPicker({ value, onChange, onClear }: Props) {
         </p>
       )}
 
-      <div className="grid max-h-48 grid-cols-4 gap-2 overflow-y-auto rounded-lg border border-line bg-sunken p-2 dark:bg-overlay sm:grid-cols-6">
+      <div className="grid max-h-48 grid-cols-4 gap-2 overflow-y-auto rounded-lg border border-line bg-sunken p-2 sm:grid-cols-6">
         {filtered.map((option) => {
           const isSelected = option.id === value;
           return (

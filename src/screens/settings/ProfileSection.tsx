@@ -56,7 +56,7 @@ function AccountForm() {
           autoComplete="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent"
         />
       </div>
       <div className="flex flex-col gap-1">
@@ -74,7 +74,7 @@ function AccountForm() {
           autoComplete={mode === "signUp" ? "new-password" : "current-password"}
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent"
         />
       </div>
 
@@ -93,7 +93,7 @@ function AccountForm() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="inline-flex items-center gap-2 rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60"
         >
           {isSubmitting
             ? "Please wait…"
@@ -164,7 +164,7 @@ export function ProfileSection() {
         </p>
       </div>
 
-      <dl className="rounded-2xl border border-line/80 bg-surface/70 p-4 dark:bg-overlay">
+      <dl className="rounded-2xl border border-line/80 bg-surface/70 p-4">
         <div className="grid gap-1">
           <dt className="text-xs font-semibold uppercase tracking-wide text-muted">
             Name
@@ -183,7 +183,7 @@ export function ProfileSection() {
         </div>
       </dl>
 
-      <section className="overflow-hidden rounded-2xl border border-line/80 bg-surface/70 dark:bg-overlay">
+      <section className="overflow-hidden rounded-2xl border border-line/80 bg-surface/70">
         <div className="border-b border-line px-4 py-4">
           <h3 className="font-display text-lg font-semibold text-ink">
             Account & sync
@@ -207,7 +207,7 @@ export function ProfileSection() {
               <button
                 type="button"
                 onClick={() => signOut()}
-                className="rounded-lg border border-line bg-surface px-4 py-2 text-sm font-medium text-muted transition-colors hover:bg-sunken focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+                className="rounded-lg border border-line bg-surface px-4 py-2 text-sm font-medium text-muted transition-colors hover:bg-sunken focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
               >
                 Sign out
               </button>

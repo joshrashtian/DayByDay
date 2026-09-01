@@ -67,7 +67,7 @@ export function CategoryPicker({
   };
 
   return (
-    <div className="absolute left-3 right-3 top-0 -translate-y-full rounded-xl border border-line/80 bg-surface/95 skew-x-12 shadow-lg dark:bg-overlay">
+    <div className="absolute left-3 right-3 top-0 -translate-y-full rounded-xl border border-line/80 bg-surface/95 skew-x-12 shadow-lg">
       <div className="mb-2 flex items-center gap-2 p-2">
         <span className="shrink-0 text-[11px] font-semibold font-quantify -skew-x-12 uppercase tracking-wide text-muted">
           Category
@@ -82,7 +82,7 @@ export function CategoryPicker({
         />
       </div>
       {categoryOptionRows.length ? (
-        <ul className="max-h-36 overflow-y-auto rounded-md border border-line/80 bg-surface/80 dark:bg-overlay">
+        <ul className="max-h-36 overflow-y-auto rounded-md border border-line/80 bg-surface/80">
           {categoryOptionRows.map((row, index) => (
             <li key={`${row.value}-${index}`}>
               <button

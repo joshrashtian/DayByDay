@@ -46,7 +46,7 @@ const railButtonClass = (active: boolean, activeClass: string) =>
   `inline-flex h-11 w-11 items-center justify-center rounded-full transition-colors ${
     active
       ? activeClass
-      : "bg-surface/70 text-muted hover:bg-surface dark:bg-overlay"
+      : "bg-surface/70 text-muted hover:bg-surface"
   }`;
 
 function RailIconButton({

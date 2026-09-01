@@ -8,7 +8,7 @@ export default function AppsScreen() {
         Integrations you add will appear here. Connect your tools to bring tasks,
         timelines, and updates into RiseByDay.
       </p>
-      <div className="mt-6 w-full max-w-xl rounded-2xl border border-line/80 bg-surface/70 p-4 dark:bg-overlay">
+      <div className="mt-6 w-full max-w-xl rounded-2xl border border-line/80 bg-surface/70 p-4">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted">
           First Integration
         </p>

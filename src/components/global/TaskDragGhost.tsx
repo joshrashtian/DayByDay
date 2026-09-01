@@ -21,7 +21,7 @@ export function TaskDragGhost() {
 
   return (
     <motion.div
-      className="pointer-events-none fixed left-0 top-0 z-999 w-56 rounded-xl border border-line-strong/90 bg-surface/95 px-3 py-2 shadow-[0_18px_50px_-20px_rgba(15,23,42,0.55)] sm:w-72 dark:bg-overlay"
+      className="pointer-events-none fixed left-0 top-0 z-999 w-56 rounded-xl border border-line-strong/90 bg-surface/95 px-3 py-2 shadow-[0_18px_50px_-20px_rgba(15,23,42,0.55)] sm:w-72"
       style={{
         left: dragPointer.x - dragGrabOffset.x,
         top: dragPointer.y - dragGrabOffset.y,

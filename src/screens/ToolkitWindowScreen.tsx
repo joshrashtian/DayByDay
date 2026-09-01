@@ -206,7 +206,7 @@ function ClassesView() {
         Classes
       </h1>
 
-      <section className="mt-6 w-full rounded-2xl border border-line/80 bg-surface/80 p-5 shadow-[0_8px_30px_rgba(15,23,42,0.05)] dark:bg-overlay">
+      <section className="mt-6 w-full rounded-2xl border border-line/80 bg-surface/80 p-5 shadow-[0_8px_30px_rgba(15,23,42,0.05)]">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-ink">
             Your School Schedule
@@ -234,7 +234,7 @@ function ClassesView() {
                         return (
                           <li
                             key={task.id}
-                            className="-skew-x-12 rounded-lg border border-line/80 bg-surface/95 p-2.5 shadow-[0_2px_8px_rgba(15,23,42,0.04)] dark:bg-overlay"
+                            className="-skew-x-12 rounded-lg border border-line/80 bg-surface/95 p-2.5 shadow-[0_2px_8px_rgba(15,23,42,0.04)]"
                           >
                             <p className="skew-x-12 truncate text-xs font-semibold text-ink">
                               {task.title}
@@ -247,12 +247,12 @@ function ClassesView() {
                               </p>
                             ) : null}
                             <div className="mt-1.5 flex skew-x-12 flex-wrap items-center gap-1.5">
-                              <p className="whitespace-nowrap text-[11px] font-semibold text-blue-600 dark:text-blue-300">
+                              <p className="whitespace-nowrap text-[11px] font-semibold text-accent dark:text-blue-300">
                                 {formatTimeRange(task.dueDate, task.endDate)}
                               </p>
                               {task.metadata?.class?.grade ||
                               task.classGrade ? (
-                                <span className="inline-flex shrink-0 items-center rounded-md border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700 dark:border-blue-500/25 dark:bg-blue-500/20 dark:text-blue-200">
+                                <span className="inline-flex shrink-0 items-center rounded-md border border-blue-200 bg-accent-soft px-2 py-0.5 text-[10px] font-semibold text-accent dark:border-accent/25 dark:bg-accent/20 dark:text-blue-200">
                                   {task.metadata?.class?.grade ??
                                     task.classGrade}
                                 </span>
@@ -284,7 +284,7 @@ function ClassesView() {
         )}
       </section>
 
-      <section className="mt-5 w-full rounded-2xl border border-line/80 bg-surface/70 p-5 dark:bg-overlay">
+      <section className="mt-5 w-full rounded-2xl border border-line/80 bg-surface/70 p-5">
         <h2 className="text-lg font-semibold text-ink">
           Edit Class Tasks
         </h2>
@@ -296,7 +296,7 @@ function ClassesView() {
                 <form
                   key={task.id}
                   onSubmit={(event) => onSaveClassTask(task, event)}
-                  className="rounded-xl border border-line/80 bg-surface/80 p-3 dark:bg-overlay"
+                  className="rounded-xl border border-line/80 bg-surface/80 p-3"
                 >
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
                     <input
@@ -400,7 +400,7 @@ export default function ToolkitWindowScreen() {
           <p className="mt-3 max-w-2xl text-base text-muted">
             {selectedPanel.description}
           </p>
-          <div className="mt-6 w-full rounded-2xl border border-dashed border-line-strong/80 bg-sunken/80 p-5 dark:bg-overlay">
+          <div className="mt-6 w-full rounded-2xl border border-dashed border-line-strong/80 bg-sunken/80 p-5">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted">
               Coming Soon
             </p>

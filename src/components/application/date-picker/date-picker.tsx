@@ -54,7 +54,7 @@ export const DatePicker = ({
       <AriaGroup>
         <AriaButton
           className={cx(
-            "inline-flex items-center gap-2 rounded-lg border border-line/80 bg-surface/60 px-2.5 text-sm font-medium text-muted transition-colors hover:bg-surface hover:text-ink dark:bg-overlay",
+            "inline-flex items-center gap-2 rounded-lg border border-line/80 bg-surface/60 px-2.5 text-sm font-medium text-muted transition-colors hover:bg-surface hover:text-ink",
             size === "md" ? "h-10 px-3" : "h-8",
           )}
         >
@@ -76,7 +76,7 @@ export const DatePicker = ({
       >
         <AriaDialog
           aria-label="Date picker"
-          className="overflow-hidden rounded-2xl border border-line/70 bg-surface/95 shadow-[0_12px_40px_rgba(15,23,42,0.14)] backdrop-blur-xl dark:bg-overlay"
+          className="overflow-hidden rounded-2xl border border-line/70 bg-surface/95 shadow-[0_12px_40px_rgba(15,23,42,0.14)] backdrop-blur-xl"
         >
           <div className="p-3">
             <Calendar highlightedDates={highlightedDates} />

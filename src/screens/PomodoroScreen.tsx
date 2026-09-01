@@ -167,7 +167,7 @@ export default function PomodoroScreen() {
           type="button"
           onClick={reset}
           aria-label="Reset timer"
-          className="flex h-12 w-12 items-center justify-center rounded-full border border-line/80 bg-surface/80 text-muted shadow-sm transition-all hover:bg-surface hover:text-muted dark:bg-overlay"
+          className="flex h-12 w-12 items-center justify-center rounded-full border border-line/80 bg-surface/80 text-muted shadow-sm transition-all hover:bg-surface hover:text-muted"
         >
           <IoRefresh className="text-lg" aria-hidden />
         </button>
@@ -189,7 +189,7 @@ export default function PomodoroScreen() {
           type="button"
           onClick={skipToNextPhase}
           aria-label="Skip to next phase"
-          className="flex h-12 w-12 items-center justify-center rounded-full border border-line/80 bg-surface/80 text-muted shadow-sm transition-all hover:bg-surface hover:text-muted dark:bg-overlay"
+          className="flex h-12 w-12 items-center justify-center rounded-full border border-line/80 bg-surface/80 text-muted shadow-sm transition-all hover:bg-surface hover:text-muted"
         >
           <IoPlaySkipForward className="text-lg" aria-hidden />
         </button>

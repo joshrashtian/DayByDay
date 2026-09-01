@@ -146,7 +146,7 @@ export function CategoriesSection() {
             id={catSelectId}
             value={selectedCategory}
             onChange={(e) => onSelectCategory(e.target.value)}
-            className="min-w-[200px] rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none transition-shadow focus:ring-2 focus:ring-blue-500"
+            className="min-w-[200px] rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none transition-shadow focus:ring-2 focus:ring-accent"
           >
             <option value="">Select category…</option>
             {availableCategories.map((name) => (
@@ -159,7 +159,7 @@ export function CategoriesSection() {
         <button
           type="button"
           onClick={onStartNew}
-          className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium text-muted transition-colors hover:bg-sunken focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+          className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium text-muted transition-colors hover:bg-sunken focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           New category
         </button>
@@ -182,7 +182,7 @@ export function CategoriesSection() {
               setMessage(null);
             }}
             placeholder="Work, School, Fitness…"
-            className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none transition-shadow focus:ring-2 focus:ring-blue-500"
+            className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none transition-shadow focus:ring-2 focus:ring-accent"
           />
         </div>
         <div className="flex flex-col gap-1">
@@ -274,7 +274,7 @@ export function CategoriesSection() {
         <button
           type="button"
           onClick={onSave}
-          className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+          className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           Save category
         </button>

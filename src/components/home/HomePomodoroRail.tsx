@@ -85,7 +85,7 @@ export function HomePomodoroPanel({
           className="pointer-events-none absolute inset-0 z-10 flex items-start justify-end rounded-2xl pt-2 pr-0 sm:pt-3"
         >
           <div
-            className="absolute inset-0 rounded-2xl bg-linear-to-bl from-zinc-100/95 via-zinc-50/55 to-transparent dark:from-zinc-950/92 dark:via-zinc-950/45"
+            className="absolute inset-0 rounded-2xl bg-linear-to-bl from-sunken/95 via-sunken/55 to-transparent"
             aria-hidden
           />
           <motion.div className="pointer-events-auto relative flex max-w-[min(100%,13rem)] flex-col items-end gap-2 px-1 text-right sm:max-w-[15rem]">

@@ -87,7 +87,7 @@ export function TasksSortMenu({
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 8 }}
           transition={{ duration: 0.15, ease: [0.25, 0.1, 0.25, 1] }}
-          className={`w-[min(92vw,17rem)] rounded-2xl border border-line/60 bg-surface/95 p-3 shadow-xl backdrop-blur-xl dark:bg-overlay ${className}`}
+          className={`w-[min(92vw,17rem)] rounded-2xl border border-line/60 bg-surface/95 p-3 shadow-xl backdrop-blur-xl ${className}`}
           role="dialog"
           aria-label="Sort tasks"
         >

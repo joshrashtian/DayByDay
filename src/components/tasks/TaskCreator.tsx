@@ -124,8 +124,8 @@ export function TaskCreator({
   };
 
   const shellClass = isChatDock
-    ? "max-w-screen w-full rounded-[1.75rem] border border-line/90 bg-surface/90 shadow-[0_8px_44px_rgba(15,15,15,0.12),inset_0_1px_0_rgba(255,255,255,0.9)] ring-1 ring-line/5 backdrop-blur-xl backdrop-saturate-150 dark:bg-overlay dark:shadow-[0_12px_48px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.06)]"
-    : "max-w-screen w-full rounded-2xl border border-line/70 bg-surface/45 shadow-[0_4px_24px_rgba(15,15,15,0.06),inset_0_1px_0_rgba(255,255,255,0.85)] ring-1 ring-line/30 backdrop-blur-xl backdrop-saturate-150 dark:bg-overlay dark:shadow-[0_4px_28px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)]";
+    ? "max-w-screen w-full rounded-[1.75rem] border border-line/90 bg-surface/90 shadow-[0_8px_44px_rgba(15,15,15,0.12),inset_0_1px_0_rgba(255,255,255,0.9)] ring-1 ring-line/5 backdrop-blur-xl backdrop-saturate-150 dark:shadow-[0_12px_48px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.06)]"
+    : "max-w-screen w-full rounded-2xl border border-line/70 bg-surface/45 shadow-[0_4px_24px_rgba(15,15,15,0.06),inset_0_1px_0_rgba(255,255,255,0.85)] ring-1 ring-line/30 backdrop-blur-xl backdrop-saturate-150 dark:shadow-[0_4px_28px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)]";
 
   return (
     <div className={shellClass}>
@@ -261,7 +261,7 @@ export function TaskCreator({
                   onChange={(e) => setBlock(e.target.value)}
                   placeholder="Block (optional — e.g. Morning, Work, Home)"
                   autoComplete="off"
-                  className="w-full rounded-xl border border-line-strong/50 bg-surface/40 px-3 py-2 text-sm text-ink outline-none placeholder:text-faint focus:border-zinc-500 focus:ring-1 focus:ring-line-strong/40 dark:bg-overlay"
+                  className="w-full rounded-xl border border-line-strong/50 bg-surface/40 px-3 py-2 text-sm text-ink outline-none placeholder:text-faint focus:border-zinc-500 focus:ring-1 focus:ring-line-strong/40"
                 />
                 <datalist id="task-block-suggestions">
                   {blockSuggestions.map((option) => (
@@ -280,7 +280,7 @@ export function TaskCreator({
                   onChange={(e) => setCategory(e.target.value)}
                   placeholder="Category (optional — matched by task search)"
                   autoComplete="off"
-                  className="w-full rounded-xl border border-line-strong/50 bg-surface/40 px-3 py-2 text-sm text-ink outline-none placeholder:text-faint focus:border-zinc-500 focus:ring-1 focus:ring-line-strong/40 dark:bg-overlay"
+                  className="w-full rounded-xl border border-line-strong/50 bg-surface/40 px-3 py-2 text-sm text-ink outline-none placeholder:text-faint focus:border-zinc-500 focus:ring-1 focus:ring-line-strong/40"
                 />
               </div>
               <div>
@@ -294,7 +294,7 @@ export function TaskCreator({
                   onChange={(e) => setTagsInput(e.target.value)}
                   placeholder="Tags (optional — e.g. school, urgent)"
                   autoComplete="off"
-                  className="w-full rounded-xl border border-line-strong/50 bg-surface/40 px-3 py-2 text-sm text-ink outline-none placeholder:text-faint focus:border-zinc-500 focus:ring-1 focus:ring-line-strong/40 dark:bg-overlay"
+                  className="w-full rounded-xl border border-line-strong/50 bg-surface/40 px-3 py-2 text-sm text-ink outline-none placeholder:text-faint focus:border-zinc-500 focus:ring-1 focus:ring-line-strong/40"
                 />
               </div>
             </div>
@@ -329,7 +329,7 @@ export function TaskCreator({
                       type="datetime-local"
                       value={dueLocal}
                       onChange={(e) => setDueLocal(e.target.value)}
-                      className="rounded-xl border border-line-strong/80 bg-surface/60 px-3 py-2 text-sm text-ink outline-none focus:border-zinc-500 focus:ring-1 focus:ring-line-strong/50 dark:bg-overlay"
+                      className="rounded-xl border border-line-strong/80 bg-surface/60 px-3 py-2 text-sm text-ink outline-none focus:border-zinc-500 focus:ring-1 focus:ring-line-strong/50"
                     />
                   </div>
                   <div className="flex flex-col gap-2">
@@ -343,7 +343,7 @@ export function TaskCreator({
                         className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
                           priority === ""
                             ? "border-line bg-ink text-white"
-                            : "border-line-strong/80 bg-surface/50 text-muted hover:border-line-strong dark:bg-overlay"
+                            : "border-line-strong/80 bg-surface/50 text-muted hover:border-line-strong"
                         }`}
                       >
                         None
@@ -360,7 +360,7 @@ export function TaskCreator({
                                 : value === "medium"
                                   ? "border-amber-500/60 bg-amber-500/20 text-amber-900 dark:text-amber-100"
                                   : "border-slate-500/50 bg-slate-500/15 text-slate-800"
-                              : "border-line-strong/80 bg-surface/50 text-muted hover:border-line-strong dark:bg-overlay"
+                              : "border-line-strong/80 bg-surface/50 text-muted hover:border-line-strong"
                           }`}
                         >
                           {label}

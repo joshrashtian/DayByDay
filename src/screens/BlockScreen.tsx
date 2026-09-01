@@ -323,7 +323,7 @@ const BlockScreen = () => {
               type="time"
               value={editorStartTime}
               onChange={(e) => setEditorStartTime(e.target.value)}
-              className="rounded-lg border border-line-strong/80 bg-surface/80 px-2 py-1 text-xs text-ink outline-none dark:bg-overlay"
+              className="rounded-lg border border-line-strong/80 bg-surface/80 px-2 py-1 text-xs text-ink outline-none"
             />
             <label
               htmlFor="block-editor-end"
@@ -336,7 +336,7 @@ const BlockScreen = () => {
               type="time"
               value={editorEndTime}
               onChange={(e) => setEditorEndTime(e.target.value)}
-              className="rounded-lg border border-line-strong/80 bg-surface/80 px-2 py-1 text-xs text-ink outline-none dark:bg-overlay"
+              className="rounded-lg border border-line-strong/80 bg-surface/80 px-2 py-1 text-xs text-ink outline-none"
             />
           </div>
           <div>

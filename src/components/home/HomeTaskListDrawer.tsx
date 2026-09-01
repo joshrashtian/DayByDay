@@ -128,7 +128,7 @@ export function HomeTaskListDrawer({
 
   return (
     <motion.div
-      className={`${fullWidth ? "w-full" : "w-[min(100%,17.5rem)]"} relative shrink-0 self-start overflow-hidden rounded-t-2xl bg-surface/30 ring-1 ring-line/80 backdrop-blur-3xl dark:bg-overlay dark:shadow-[0_8px_32px_-8px_rgba(0,0,0,0.55)]`}
+      className={`${fullWidth ? "w-full" : "w-[min(100%,17.5rem)]"} relative shrink-0 self-start overflow-hidden rounded-t-2xl bg-surface/30 ring-1 ring-line/80 backdrop-blur-3xl dark:shadow-[0_8px_32px_-8px_rgba(0,0,0,0.55)]`}
       style={{ height: heightPx, maxHeight }}
       transition={{ height: { duration: 0.22, ease: [0.32, 0.72, 0, 1] } }}
     >
