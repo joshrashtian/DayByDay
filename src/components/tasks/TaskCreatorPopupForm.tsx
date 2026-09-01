@@ -375,12 +375,12 @@ export function TaskCreatorPopupForm({
 
   return (
     <form onSubmit={submit} className="task-popup-form flex flex-col gap-4">
-      <div className="flex items-start justify-between gap-3 border-b border-zinc-200/80 pb-4 dark:border-zinc-700/80">
+      <div className="flex items-start justify-between gap-3 border-b border-line/80 pb-4">
         <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase text-zinc-400 dark:text-zinc-500">
+          <p className="text-[10px] font-bold uppercase text-faint">
             {isEditMode ? "How Can We Readjust?" : "What Needs Doing?"}
           </p>
-          <h2 className="font-display text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+          <h2 className="font-display text-2xl font-bold tracking-tight text-ink">
             {headingText}
           </h2>
         </div>
@@ -388,7 +388,7 @@ export function TaskCreatorPopupForm({
           <button
             type="button"
             onClick={onDismiss}
-            className="shrink-0 rounded-xl border border-zinc-200/80 bg-white/70 p-2 text-zinc-500 transition-colors hover:bg-white hover:text-zinc-900 dark:border-zinc-600 dark:bg-zinc-900/60 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+            className="shrink-0 rounded-xl border border-line/80 bg-surface/70 p-2 text-muted transition-colors hover:bg-surface hover:text-ink dark:bg-overlay"
             aria-label="Close"
           >
             <IoClose className="h-5 w-5" aria-hidden />
@@ -509,7 +509,7 @@ export function TaskCreatorPopupForm({
           ) : null}
 
           {showRepeats && recurrenceChoice !== "none" ? (
-            <div className="flex flex-col gap-3 rounded-xl border border-zinc-200/80 bg-white/60 p-3 dark:border-zinc-700/70 dark:bg-zinc-950/40">
+            <div className="flex flex-col gap-3 rounded-xl border border-line/80 bg-surface/60 p-3 dark:bg-overlay">
               <div className="flex flex-col gap-1.5">
                 <label
                   htmlFor="popup-task-repeat-interval"
@@ -531,7 +531,7 @@ export function TaskCreatorPopupForm({
                     }
                     className={`${inputClass} max-w-24`}
                   />
-                  <span className="text-sm text-zinc-600 dark:text-zinc-400">
+                  <span className="text-sm text-muted">
                     {recurrenceChoice === "daily"
                       ? recurrenceInterval === 1
                         ? "day"
@@ -603,7 +603,7 @@ export function TaskCreatorPopupForm({
                 }`}
               >
                 <IoWarning
-                  className={`h-4 w-4 ${critical ? "text-red-500" : "text-zinc-500"}`}
+                  className={`h-4 w-4 ${critical ? "text-red-500" : "text-muted"}`}
                   aria-hidden
                 />
                 Critical
@@ -616,7 +616,7 @@ export function TaskCreatorPopupForm({
           <button
             type="button"
             onClick={() => setShowAdvanced((v) => !v)}
-            className="self-start rounded-full border border-zinc-200/90 bg-white/70 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-zinc-600 shadow-sm transition-colors hover:bg-white dark:border-zinc-600 dark:bg-zinc-900/55 dark:text-zinc-300 dark:hover:bg-zinc-800"
+            className="self-start rounded-full border border-line/90 bg-surface/70 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted shadow-sm transition-colors hover:bg-surface dark:bg-overlay"
           >
             {showAdvanced ? "Hide details" : "More details"}
           </button>
@@ -707,7 +707,7 @@ export function TaskCreatorPopupForm({
         </section>
       </div>
 
-      <div className="sticky bottom-0 -mx-5 flex flex-wrap items-center gap-2.5 border-t border-zinc-200/80 bg-white/90 px-5 py-4 backdrop-blur-md dark:border-zinc-700/80 dark:bg-zinc-900/90 sm:-mx-6 sm:px-6">
+      <div className="sticky bottom-0 -mx-5 flex flex-wrap items-center gap-2.5 border-t border-line/80 bg-surface/90 px-5 py-4 backdrop-blur-md dark:bg-overlay sm:-mx-6 sm:px-6">
         {classValidationMessage ? (
           <p className="w-full text-xs font-medium text-amber-700 dark:text-amber-300">
             {classValidationMessage}
@@ -716,7 +716,7 @@ export function TaskCreatorPopupForm({
         <button
           type="submit"
           disabled={!canSubmit}
-          className="min-w-32 flex-1 font-quantify rounded-xl bg-zinc-900 px-4 py-3 text-sm font-semibold text-white transition-opacity enabled:hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-35 dark:bg-white dark:text-zinc-900 dark:enabled:hover:bg-zinc-100"
+          className="min-w-32 flex-1 font-quantify rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white transition-opacity enabled:hover:bg-ink disabled:cursor-not-allowed disabled:opacity-35"
         >
           {submitText}
         </button>
@@ -725,7 +725,7 @@ export function TaskCreatorPopupForm({
             type="button"
             disabled={!canSubmit}
             onClick={handleAddAnother}
-            className="min-w-32 rounded-xl border border-zinc-300/80 bg-white px-4 py-3 text-sm font-semibold text-zinc-900 transition-colors enabled:hover:bg-zinc-50 font-display disabled:cursor-not-allowed disabled:opacity-35 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:enabled:hover:bg-zinc-700"
+            className="min-w-32 rounded-xl border border-line-strong/80 bg-surface px-4 py-3 text-sm font-semibold text-ink transition-colors enabled:hover:bg-sunken font-display disabled:cursor-not-allowed disabled:opacity-35"
           >
             1 More
           </button>
@@ -734,7 +734,7 @@ export function TaskCreatorPopupForm({
           <button
             type="button"
             onClick={onDismiss}
-            className="rounded-xl border border-zinc-300/80 bg-white/60 px-4 py-3 text-sm font-medium text-zinc-800 transition-colors hover:bg-white dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+            className="rounded-xl border border-line-strong/80 bg-surface/60 px-4 py-3 text-sm font-medium text-ink transition-colors hover:bg-surface"
           >
             Cancel
           </button>

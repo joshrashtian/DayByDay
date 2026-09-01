@@ -118,14 +118,14 @@ export default function PomodoroScreen() {
         <span>
           {PHASE_LABELS[phase]}
           {phase === "focus" && (
-            <span className="text-zinc-400"> · Round {roundNumber}</span>
+            <span className="text-faint"> · Round {roundNumber}</span>
           )}
         </span>
       </motion.div>
 
       {/* Timer display */}
       <div
-        className="flex items-baseline justify-center font-display tabular-nums font-black leading-none tracking-tight text-zinc-900 dark:text-zinc-50"
+        className="flex items-baseline justify-center font-display tabular-nums font-black leading-none tracking-tight text-ink"
         style={{ fontSize: "clamp(3rem, 12vw, 15rem)" }}
       >
         {digits.map((char, i) => (
@@ -144,7 +144,7 @@ export default function PomodoroScreen() {
             transition={{ duration: 0.8, ease: "linear" }}
           />
         </div>
-        <div className="mt-2 flex justify-between text-xs text-zinc-400">
+        <div className="mt-2 flex justify-between text-xs text-faint">
           <span>{minIn} min in</span>
           <span>{minLeft} min left</span>
         </div>
@@ -153,11 +153,11 @@ export default function PomodoroScreen() {
       {/* Linked task */}
       <div className="mt-6 flex min-h-[1.5rem] items-center justify-center px-8">
         {linkedTaskTitle ? (
-          <p className="max-w-xs truncate text-center text-sm font-medium text-zinc-600 dark:text-zinc-300">
+          <p className="max-w-xs truncate text-center text-sm font-medium text-muted">
             {linkedTaskTitle}
           </p>
         ) : (
-          <p className="text-xs text-zinc-400">No task linked</p>
+          <p className="text-xs text-faint">No task linked</p>
         )}
       </div>
 
@@ -167,7 +167,7 @@ export default function PomodoroScreen() {
           type="button"
           onClick={reset}
           aria-label="Reset timer"
-          className="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-200/80 bg-white/80 text-zinc-500 shadow-sm transition-all hover:bg-white hover:text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900/80 dark:text-zinc-400"
+          className="flex h-12 w-12 items-center justify-center rounded-full border border-line/80 bg-surface/80 text-muted shadow-sm transition-all hover:bg-surface hover:text-muted dark:bg-overlay"
         >
           <IoRefresh className="text-lg" aria-hidden />
         </button>
@@ -189,7 +189,7 @@ export default function PomodoroScreen() {
           type="button"
           onClick={skipToNextPhase}
           aria-label="Skip to next phase"
-          className="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-200/80 bg-white/80 text-zinc-500 shadow-sm transition-all hover:bg-white hover:text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900/80 dark:text-zinc-400"
+          className="flex h-12 w-12 items-center justify-center rounded-full border border-line/80 bg-surface/80 text-muted shadow-sm transition-all hover:bg-surface hover:text-muted dark:bg-overlay"
         >
           <IoPlaySkipForward className="text-lg" aria-hidden />
         </button>

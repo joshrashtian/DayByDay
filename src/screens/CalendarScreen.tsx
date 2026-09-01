@@ -204,7 +204,7 @@ export default function CalendarScreen() {
   const viewKey = `${mode}-${focus.toISODate()}-${monthRef.toISODate()}-${customDayCount}`;
 
   return (
-    <main className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-zinc-50 dark:bg-zinc-950">
+    <main className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-sunken">
       <div
         className="pointer-events-none absolute -right-24 top-1/4 h-80 w-80 rounded-full bg-sky-200/35 blur-3xl dark:bg-sky-900/25"
         aria-hidden
@@ -216,12 +216,12 @@ export default function CalendarScreen() {
 
       <div className="relative z-10 flex h-full w-full min-h-0 flex-col">
         {/* Calendar header */}
-        <motion.div className="flex shrink-0 items-center justify-between gap-3 border-b border-zinc-200/60 px-4 py-2.5 dark:border-zinc-800/60">
+        <motion.div className="flex shrink-0 items-center justify-between gap-3 border-b border-line/60 px-4 py-2.5">
           {/* Left: title */}
           <AnimatePresence mode="wait">
             <motion.p
               key={title}
-              className="min-w-0 flex flex-row truncate z-50 font-display text-2xl font-semibold text-zinc-800 dark:text-zinc-100"
+              className="min-w-0 flex flex-row truncate z-50 font-display text-2xl font-semibold text-ink"
               initial="hidden"
               animate="visible"
               exit="hidden"
@@ -249,7 +249,7 @@ export default function CalendarScreen() {
             </motion.p>
           </AnimatePresence>
           {/* Center: mode switcher */}
-          <div className="flex absolute left-1/2 -translate-x-1/2 items-center gap-0.5 rounded-xl border border-zinc-200/80 bg-white/60 p-1 backdrop-blur-sm dark:border-zinc-700/60 dark:bg-zinc-900/60">
+          <div className="flex absolute left-1/2 -translate-x-1/2 items-center gap-0.5 rounded-xl border border-line/80 bg-surface/60 p-1 backdrop-blur-sm dark:bg-overlay">
             {modes.map(({ id, label }) => (
               <button
                 key={id}
@@ -257,15 +257,15 @@ export default function CalendarScreen() {
                 onClick={() => setMode(id)}
                 className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
                   mode === id
-                    ? "bg-zinc-900 text-white shadow-sm dark:bg-white dark:text-zinc-900"
-                    : "text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-100"
+                    ? "bg-ink text-white shadow-sm"
+                    : "text-muted hover:text-ink"
                 }`}
               >
                 {label}
               </button>
             ))}
             {mode === "custom" && (
-              <label className="ml-1 flex items-center gap-1.5 rounded-lg border border-zinc-200/80 bg-white/60 px-2 py-1 text-xs font-semibold text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900/50 dark:text-zinc-300">
+              <label className="ml-1 flex items-center gap-1.5 rounded-lg border border-line/80 bg-surface/60 px-2 py-1 text-xs font-semibold text-muted dark:bg-overlay">
                 Days
                 <input
                   type="number"
@@ -278,7 +278,7 @@ export default function CalendarScreen() {
                     if (Number.isNaN(parsed)) return;
                     setCustomDayCount(Math.max(1, Math.min(14, parsed)));
                   }}
-                  className="w-12 rounded-md border border-zinc-300/80 bg-white/90 px-1.5 py-0.5 text-xs font-bold text-zinc-900 outline-none ring-sky-400/40 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100"
+                  className="w-12 rounded-md border border-line-strong/80 bg-surface/90 px-1.5 py-0.5 text-xs font-bold text-ink outline-none ring-sky-400/40 focus:ring-2 dark:bg-overlay"
                   aria-label="Custom day count"
                 />
               </label>
@@ -303,7 +303,7 @@ export default function CalendarScreen() {
                 type="button"
                 whileTap={{ scale: 0.94 }}
                 onClick={goPrev}
-                className="rounded-full bg-zinc-100 px-3 py-1.5 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+                className="rounded-full bg-sunken px-3 py-1.5 text-sm font-semibold text-muted transition-colors hover:bg-sunken"
                 aria-label="Previous"
               >
                 ←
@@ -320,7 +320,7 @@ export default function CalendarScreen() {
                 type="button"
                 whileTap={{ scale: 0.94 }}
                 onClick={goNext}
-                className="rounded-full bg-zinc-100 px-3 py-1.5 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+                className="rounded-full bg-sunken px-3 py-1.5 text-sm font-semibold text-muted transition-colors hover:bg-sunken"
                 aria-label="Next"
               >
                 →

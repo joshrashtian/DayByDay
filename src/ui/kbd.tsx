@@ -9,7 +9,7 @@ const Kbd = ({
 }) => {
   return (
     <div
-      className={`border  text-xs border-gray-300 rounded-md px-2 py-1 bg-gray-100 ${className ?? ""}`}
+      className={`border  text-xs border-gray-300 rounded-md px-2 py-1 bg-sunken ${className ?? ""}`}
     >
       {children}
     </div>

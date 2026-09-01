@@ -1,82 +1,82 @@
+import { IoContrast, IoMoon, IoSunny } from "react-icons/io5";
 import { useSettingsStore } from "@/stores/settingsStore";
-import {
-  listSidebarStyles,
-  normalizeSidebarStyleId,
-} from "@/themes/sidebarStyles";
-import { HomeStyleEditor } from "@/components/home/HomeStyleEditor";
+import type { ThemePreference } from "@/lib/appTheme";
+
+const OPTIONS: {
+  id: ThemePreference;
+  label: string;
+  description: string;
+  icon: React.ReactNode;
+}[] = [
+  {
+    id: "light",
+    label: "Light",
+    description: "Always light, whatever the system is set to.",
+    icon: <IoSunny />,
+  },
+  {
+    id: "dark",
+    label: "Dark",
+    description: "Always dark, whatever the system is set to.",
+    icon: <IoMoon />,
+  },
+  {
+    id: "system",
+    label: "System",
+    description: "Follow your macOS appearance setting.",
+    icon: <IoContrast />,
+  },
+];
 
 export function AppearanceSection() {
-  const sidebarStyle = useSettingsStore((s) => s.sidebar.style);
-  const setSidebar = useSettingsStore((s) => s.setSidebar);
-  const homeVisualPrefs = useSettingsStore((s) => s.homeVisualPrefs);
-  const setHomeVisualPrefs = useSettingsStore((s) => s.setHomeVisualPrefs);
-
-  const activeId = normalizeSidebarStyleId(sidebarStyle);
-  const styles = listSidebarStyles();
+  const theme = useSettingsStore((s) => s.theme);
+  const setTheme = useSettingsStore((s) => s.setTheme);
 
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="font-display text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
+        <h2 className="font-display text-2xl font-semibold text-ink">
           Appearance
         </h2>
-        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-          Customize how the app looks — the sidebar and the home page.
+        <p className="mt-1 text-sm text-muted">
+          Choose how RiseByDay looks.
         </p>
       </div>
 
       <section>
-        <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
-          Sidebar Style
+        <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+          Theme
         </h3>
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {styles.map((style) => {
-            const selected = activeId === style.id;
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {OPTIONS.map((option) => {
+            const selected = theme === option.id;
             return (
               <button
-                key={style.id}
+                key={option.id}
                 type="button"
-                onClick={() => setSidebar({ style: style.id })}
+                onClick={() => setTheme(option.id)}
                 aria-pressed={selected}
-                className={`flex flex-col overflow-hidden rounded-xl border text-left transition-all ${
+                className={`flex flex-col gap-1.5 rounded-xl border p-4 text-left transition-colors ${
                   selected
-                    ? "border-zinc-900 ring-2 ring-zinc-900/20 dark:border-white dark:ring-white/20"
-                    : "border-zinc-200 hover:border-zinc-300 dark:border-zinc-700 dark:hover:border-zinc-600"
+                    ? "border-accent bg-accent-soft"
+                    : "border-line bg-surface hover:border-line-strong"
                 }`}
               >
-                <div
-                  className={`h-14 bg-gradient-to-br ${style.swatch}`}
+                <span
+                  className={`text-xl ${selected ? "text-accent" : "text-muted"}`}
                   aria-hidden
-                />
-                <div className="flex flex-col gap-0.5 px-3 py-2.5">
-                  <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                    {style.label}
-                  </span>
-                  <span className="line-clamp-2 text-[11px] leading-snug text-zinc-500 dark:text-zinc-400">
-                    {style.description}
-                  </span>
-                  {selected ? (
-                    <span className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                      Active
-                    </span>
-                  ) : null}
-                </div>
+                >
+                  {option.icon}
+                </span>
+                <span className="text-sm font-semibold text-ink">
+                  {option.label}
+                </span>
+                <span className="text-[11px] leading-snug text-muted">
+                  {option.description}
+                </span>
               </button>
             );
           })}
-        </div>
-      </section>
-
-      <section className="border-t border-zinc-100 pt-6 dark:border-zinc-800">
-        <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
-          Home Page
-        </h3>
-        <div className="mt-4">
-          <HomeStyleEditor
-            prefs={homeVisualPrefs}
-            onPrefsChange={setHomeVisualPrefs}
-            layout="window"
-          />
         </div>
       </section>
     </div>

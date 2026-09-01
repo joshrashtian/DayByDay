@@ -263,7 +263,7 @@ export default function BottomSheet({
           {/* backdrop — decorative; the "Done" button is the labelled close affordance */}
           <motion.div
             aria-hidden
-            className="absolute inset-0 bg-zinc-950/45 backdrop-blur-[2px]"
+            className="absolute inset-0 bg-overlay backdrop-blur-[2px]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -295,7 +295,7 @@ export default function BottomSheet({
               dragMomentum={false}
               onDragEnd={handleDragEnd}
               animate={dragY}
-              className={`flex min-h-0 w-full flex-col overflow-hidden border border-zinc-200/80 bg-white shadow-[0_-12px_40px_rgba(0,0,0,0.12)] outline-none dark:border-zinc-700/80 dark:bg-zinc-900 dark:shadow-[0_-12px_40px_rgba(0,0,0,0.45)] ${widthClasses.panel}`}
+              className={`flex min-h-0 w-full flex-col overflow-hidden border border-line/80 bg-surface shadow-[0_-12px_40px_rgba(0,0,0,0.12)] outline-none dark:shadow-[0_-12px_40px_rgba(0,0,0,0.45)] ${widthClasses.panel}`}
               style={{ height: maxHeight, maxHeight, transition: heightTransition }}
               onClick={(e) => e.stopPropagation()}
             >
@@ -305,23 +305,23 @@ export default function BottomSheet({
                 onPointerDown={(e) => dragControls.start(e)}
               >
                 <span
-                  className="h-1 w-10 rounded-full bg-zinc-300 dark:bg-zinc-600"
+                  className="h-1 w-10 rounded-full bg-zinc-300"
                   aria-hidden
                 />
               </div>
 
               {/* header */}
-              <div className="flex shrink-0 items-center justify-between gap-3 border-b border-zinc-100 px-4 pb-3 pt-1 dark:border-zinc-800 sm:px-6">
+              <div className="flex shrink-0 items-center justify-between gap-3 border-b border-line px-4 pb-3 pt-1 sm:px-6">
                 {title ? (
                   <h2
                     id="bottom-sheet-title"
-                    className={`flex flex-row items-center gap-2 -skew-x-3 text-lg font-semibold text-zinc-900 dark:text-zinc-100 ${titleClassName ?? ""}`}
+                    className={`flex flex-row items-center gap-2 -skew-x-3 text-lg font-semibold text-ink ${titleClassName ?? ""}`}
                   >
                     {titleIcon}
                     {title}
                   </h2>
                 ) : (
-                  <span className="text-sm text-zinc-500 dark:text-zinc-400">
+                  <span className="text-sm text-muted">
                     Bottom sheet
                   </span>
                 )}
@@ -339,7 +339,7 @@ export default function BottomSheet({
                           ? "Use shorter snap"
                           : "Use taller snap"
                     }
-                    className="rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+                    className="rounded-lg p-1.5 text-faint transition-colors hover:bg-sunken hover:text-muted"
                   >
                     {snap === stableEnabled[stableEnabled.length - 1] ? (
                       <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -368,7 +368,7 @@ export default function BottomSheet({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="rounded-lg px-2 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                    className="rounded-lg px-2 py-1 text-sm font-medium text-muted hover:bg-sunken"
                   >
                     Done
                   </button>
@@ -377,7 +377,7 @@ export default function BottomSheet({
 
               {/* content */}
               <div
-                className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4 text-sm text-zinc-700 dark:text-zinc-300 sm:px-6"
+                className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4 text-sm text-muted sm:px-6"
                 style={{
                   paddingBottom: "calc(1rem + env(safe-area-inset-bottom))",
                 }}
@@ -385,7 +385,7 @@ export default function BottomSheet({
                 {children ?? (
                   <p className="leading-relaxed">
                     Pass{" "}
-                    <code className="rounded bg-zinc-100 px-1 py-0.5 font-mono text-[13px] dark:bg-zinc-800">
+                    <code className="rounded bg-sunken px-1 py-0.5 font-mono text-[13px]">
                       children
                     </code>{" "}
                     for content. Drag the handle, tap the backdrop, or press

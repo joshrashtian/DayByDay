@@ -79,7 +79,7 @@ const MultiSelectFooter = ({ size = "sm", onReset, onSelectAll, className }: Mul
     const btnSize = footerButtonSize[size];
 
     return (
-        <div className={cx("flex items-center justify-between border-t border-zinc-200/80 p-3 dark:border-zinc-700/70", className)}>
+        <div className={cx("flex items-center justify-between border-t border-line/80 p-3", className)}>
             <Button size={btnSize} color="secondary" onClick={onReset}>
                 Reset
             </Button>
@@ -104,12 +104,12 @@ const MultiSelectEmptyState = ({
     className,
 }: MultiSelectEmptyStateProps) => (
     <div className={cx("flex flex-col items-center gap-2 px-4 py-6 text-center", className)}>
-        <div className="flex size-9 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+        <div className="flex size-9 items-center justify-center rounded-lg border border-line bg-surface text-muted">
             <IoSearch className="size-4" aria-hidden />
         </div>
         <div className="space-y-0.5">
-            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{title}</p>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">{description}</p>
+            <p className="text-sm font-semibold text-ink">{title}</p>
+            <p className="text-xs text-muted">{description}</p>
         </div>
         {onClearSearch && (
             <Button size="sm" color="link-gray" onClick={onClearSearch}>
@@ -131,8 +131,8 @@ const MultiSelectItem = ({ children, description, className, ...props }: MultiSe
         className={({ isFocused, isSelected, isDisabled }) =>
             cx(
                 "relative mx-1 flex cursor-pointer items-start justify-between gap-2 rounded-lg px-3 py-2 outline-none transition-colors",
-                isFocused && "bg-zinc-100 dark:bg-zinc-800/80",
-                isSelected && "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100",
+                isFocused && "bg-sunken",
+                isSelected && "bg-sunken text-ink",
                 isDisabled && "cursor-not-allowed opacity-50",
                 className,
             )
@@ -142,9 +142,9 @@ const MultiSelectItem = ({ children, description, className, ...props }: MultiSe
             <>
                 <div className="min-w-0">
                     <div className="truncate text-sm font-medium">{children}</div>
-                    {description ? <div className="truncate text-xs text-zinc-500 dark:text-zinc-400">{description}</div> : null}
+                    {description ? <div className="truncate text-xs text-muted">{description}</div> : null}
                 </div>
-                <IoCheckmark className={cx("mt-0.5 size-4 shrink-0 text-zinc-700 dark:text-zinc-200", !isSelected && "invisible")} aria-hidden />
+                <IoCheckmark className={cx("mt-0.5 size-4 shrink-0 text-muted", !isSelected && "invisible")} aria-hidden />
             </>
         )}
     </AriaListBoxItem>
@@ -262,11 +262,11 @@ const MultiSelectRoot = ({
                     isDisabled={isDisabled}
                     className={({ isFocusVisible, isDisabled }) =>
                         cx(
-                            "flex w-full items-center gap-2 rounded-xl border border-zinc-300/80 bg-white/80 text-left text-zinc-900 shadow-sm transition-colors outline-none dark:border-zinc-600/80 dark:bg-zinc-950/50 dark:text-zinc-100",
-                            "focus-visible:ring-2 focus-visible:ring-zinc-400/40 dark:focus-visible:ring-zinc-500/40",
+                            "flex w-full items-center gap-2 rounded-xl border border-line-strong/80 bg-surface/80 text-left text-ink shadow-sm transition-colors outline-none dark:bg-overlay",
+                            "focus-visible:ring-2 focus-visible:ring-line-strong/40",
                             isDisabled && "cursor-not-allowed opacity-50",
                             isInvalid && "border-red-500/60",
-                            isFocusVisible && "border-zinc-500 dark:border-zinc-500",
+                            isFocusVisible && "border-zinc-500",
                             triggerSizes[size],
                         )
                     }
@@ -277,13 +277,13 @@ const MultiSelectRoot = ({
                                 <span className="truncate font-medium">
                                     {selectedCountFormatter ? selectedCountFormatter(selectedCount) : `${selectedCount} selected`}
                                 </span>
-                                {supportingText ? <span className="truncate text-zinc-500 dark:text-zinc-400">{supportingText}</span> : null}
+                                {supportingText ? <span className="truncate text-muted">{supportingText}</span> : null}
                             </span>
                         ) : (
-                            <span className="text-zinc-500 dark:text-zinc-400">{placeholder}</span>
+                            <span className="text-muted">{placeholder}</span>
                         )}
                     </span>
-                    <IoChevronDown className="size-4 shrink-0 text-zinc-500 dark:text-zinc-400" aria-hidden />
+                    <IoChevronDown className="size-4 shrink-0 text-muted" aria-hidden />
                 </AriaButton>
 
                 <AriaPopover
@@ -292,7 +292,7 @@ const MultiSelectRoot = ({
                     triggerRef={triggerRef}
                     className={({ isEntering, isExiting }) =>
                         cx(
-                            "overflow-hidden rounded-xl border border-zinc-200/80 bg-white/95 shadow-xl backdrop-blur-sm outline-none dark:border-zinc-700/80 dark:bg-zinc-900/95",
+                            "overflow-hidden rounded-xl border border-line/80 bg-surface/95 shadow-xl backdrop-blur-sm outline-none dark:bg-overlay",
                             isEntering && "duration-150 ease-out animate-in fade-in placement-top:slide-in-from-bottom-1 placement-bottom:slide-in-from-top-1",
                             isExiting && "duration-100 ease-in animate-out fade-out placement-top:slide-out-to-bottom-1 placement-bottom:slide-out-to-top-1",
                             popoverClassName,
@@ -302,13 +302,13 @@ const MultiSelectRoot = ({
                     <AriaDialog className="outline-none">
                         <AriaAutocomplete filter={contains} inputValue={searchValue} onInputChange={setSearchValue}>
                             {showSearch ? (
-                                <div className="border-b border-zinc-200/80 dark:border-zinc-700/70">
+                                <div className="border-b border-line/80">
                                     <AriaSearchField aria-label="Search options" value={searchValue} onChange={setSearchValue} autoFocus>
                                         <div className={cx("flex items-center gap-2", searchSizes[size])}>
-                                            <IoSearch className="size-4 shrink-0 text-zinc-500 dark:text-zinc-400" aria-hidden />
+                                            <IoSearch className="size-4 shrink-0 text-muted" aria-hidden />
                                             <AriaInput
                                                 placeholder="Search"
-                                                className="w-full bg-transparent text-sm text-zinc-900 outline-none placeholder:text-zinc-400 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                                                className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-faint"
                                             />
                                         </div>
                                     </AriaSearchField>

@@ -12,7 +12,7 @@ const GuideProvider = ({ children }: { children: ReactNode }) => {
   return (
     <GuideContext.Provider value={{ guide, setGuide }}>
       {guide && ( 
-        <div className="fixed h-full w-full bg-zinc-950/50 backdrop-blur-sm p-20 flex flex-col items-start justify-start gap-10 z-76">
+        <div className="fixed h-full w-full bg-overlay backdrop-blur-sm p-20 flex flex-col items-start justify-start gap-10 z-76">
           <h1 className="text-6xl text-white font-bold"> Guide </h1>
           <button onClick={() => setGuide(false)}>
             <IoClose className="text-2xl" />

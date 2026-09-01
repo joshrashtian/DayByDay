@@ -39,8 +39,8 @@ export function HomePomodoroToggle() {
       aria-label={panelOpen ? "Hide focus timer" : "Show focus timer"}
       className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 font-eudoxus text-xs font-medium tracking-wide transition-all ${
         isActive
-          ? "bg-white text-rose-600 shadow-sm dark:bg-zinc-700 dark:text-rose-400"
-          : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+          ? "bg-surface text-rose-600 shadow-sm dark:text-rose-400"
+          : "text-muted hover:text-muted"
       }`}
     >
       <span className="font-quantify tabular-nums">
@@ -90,7 +90,7 @@ export function HomePomodoroPanel({
           />
           <motion.div className="pointer-events-auto relative flex max-w-[min(100%,13rem)] flex-col items-end gap-2 px-1 text-right sm:max-w-[15rem]">
             <div className="space-y-0.5">
-              <p className="font-baron text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-500">
+              <p className="font-baron text-[10px] font-bold uppercase tracking-[0.2em] text-faint">
                 Pomodoro
               </p>
               <p
@@ -98,7 +98,7 @@ export function HomePomodoroPanel({
               >
                 {formatPomodoroTime(secondsLeft)}
               </p>
-              <p className="font-eudoxus text-[11px] text-zinc-500 dark:text-zinc-400">
+              <p className="font-eudoxus text-[11px] text-muted">
                 {PHASE_LABELS[phase]}
                 {completedFocusSessions > 0
                   ? ` · ${completedFocusSessions} today`
@@ -106,12 +106,12 @@ export function HomePomodoroPanel({
               </p>
             </div>
             {linkedTaskTitle ? (
-              <p className="max-w-full truncate font-ppneue text-sm font-medium text-zinc-700 dark:text-zinc-200">
+              <p className="max-w-full truncate font-ppneue text-sm font-medium text-muted">
                 {linkedTaskTitle}
               </p>
             ) : null}
             <div
-              className="h-1 w-full overflow-hidden rounded-full bg-zinc-200/80 dark:bg-zinc-700/80"
+              className="h-1 w-full overflow-hidden rounded-full bg-sunken/80"
               role="progressbar"
               aria-valuenow={Math.round(progress * 100)}
               aria-valuemin={0}
@@ -134,7 +134,7 @@ export function HomePomodoroPanel({
                 <button
                   type="button"
                   onClick={isRunning ? pause : start}
-                  className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1.5 text-[11px] font-medium text-zinc-700 shadow-sm dark:bg-zinc-700/80 dark:text-zinc-100"
+                  className="inline-flex items-center gap-1 rounded-full bg-surface px-2.5 py-1.5 text-[11px] font-medium text-muted shadow-sm"
                 >
                   {isRunning ? (
                     <IoPause className="text-sm" aria-hidden />
@@ -149,7 +149,7 @@ export function HomePomodoroPanel({
                   type="button"
                   onClick={reset}
                   aria-label="Reset timer"
-                  className="rounded-full bg-white p-2 text-zinc-500 shadow-sm dark:bg-zinc-700/80"
+                  className="rounded-full bg-surface p-2 text-muted shadow-sm"
                 >
                   <IoRefresh className="text-sm" aria-hidden />
                 </button>
@@ -159,7 +159,7 @@ export function HomePomodoroPanel({
                   type="button"
                   onClick={skipToNextPhase}
                   aria-label="Skip phase"
-                  className="rounded-full bg-white p-2 text-zinc-500 shadow-sm dark:bg-zinc-700/80"
+                  className="rounded-full bg-surface p-2 text-muted shadow-sm"
                 >
                   <IoPlaySkipForward className="text-sm" aria-hidden />
                 </button>

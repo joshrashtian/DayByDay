@@ -148,7 +148,7 @@ function getPillConfig(hint: TaskChatHint): PillConfig {
     default:
       return {
         className:
-          "border border-zinc-300/80 bg-zinc-100/70 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800/70 dark:text-zinc-200",
+          "border border-line-strong/80 bg-sunken/70 text-muted",
         icon: null,
         label: hint.label,
       };
@@ -422,11 +422,11 @@ export function TaskCalendarCommandBar() {
     taskParsePreview?.hints.filter((h) => TOKEN_HINT_KEYS.has(h.key)) ?? [];
 
   const inputIcon = isCommandInput ? (
-    <IoTerminalOutline className="h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500" />
+    <IoTerminalOutline className="h-3.5 w-3.5 text-faint" />
   ) : mode === "calendar" ? (
-    <IoCalendarOutline className="h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500" />
+    <IoCalendarOutline className="h-3.5 w-3.5 text-faint" />
   ) : (
-    <IoSparkles className="h-3.5 w-3.5 text-zinc-400 dark:text-blue-300" />
+    <IoSparkles className="h-3.5 w-3.5 text-faint dark:text-blue-300" />
   );
 
   return (
@@ -443,7 +443,7 @@ export function TaskCalendarCommandBar() {
           />
         ) : null}
 
-        <div className=" rounded-2xl bg-white/60 backdrop-blur-2xl shadow-[0_8px_36px_rgba(15,15,15,0.18)] dark:bg-zinc-900">
+        <div className=" rounded-2xl bg-surface/60 backdrop-blur-2xl shadow-[0_8px_36px_rgba(15,15,15,0.18)]">
           {(isTaskInput || isCommandInput) && (
             <div className="px-5 pt-4 pb-3">
               {isTaskInput && (
@@ -466,8 +466,8 @@ export function TaskCalendarCommandBar() {
                       ? "text-rose-600 dark:text-rose-400"
                       : feedback?.tone === "success"
                         ? "text-emerald-600 dark:text-emerald-400"
-                        : "text-zinc-500 dark:text-zinc-400"
-                    : "text-zinc-900 dark:text-zinc-100"
+                        : "text-muted"
+                    : "text-ink"
                 }`}
               >
                 {isCommandInput
@@ -513,7 +513,7 @@ export function TaskCalendarCommandBar() {
           )}
 
           <div
-            className={`flex items-center gap-2 px-5 ${isTaskInput ? "border-t border-zinc-100 py-3 dark:border-zinc-800" : "py-3"}`}
+            className={`flex items-center gap-2 px-5 ${isTaskInput ? "border-t border-line py-3" : "py-3"}`}
           >
             {inputIcon}
             <input
@@ -522,13 +522,13 @@ export function TaskCalendarCommandBar() {
               onChange={(e) => setRaw(e.target.value)}
               onKeyDown={onMainInputKeyDown}
               placeholder="Type a task or command. Use /help."
-              className="min-w-0 flex-1 bg-transparent text-sm text-zinc-700 outline-none placeholder:text-zinc-400 dark:text-zinc-300 dark:placeholder:text-zinc-600"
+              className="min-w-0 flex-1 bg-transparent text-sm text-muted outline-none placeholder:text-faint"
               aria-label="Global command input"
             />
             <button
               type="submit"
               disabled={!raw.trim() || (isTaskInput && !isUnderstood)}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-zinc-900 text-white transition-colors hover:bg-zinc-700 disabled:opacity-40 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-ink text-white transition-colors hover:bg-ink disabled:opacity-40"
               aria-label="Submit"
             >
               <IoArrowUp className="h-4 w-4" />
@@ -542,7 +542,7 @@ export function TaskCalendarCommandBar() {
                   ? "text-rose-600 dark:text-rose-400"
                   : feedback.tone === "success"
                     ? "text-emerald-600 dark:text-emerald-400"
-                    : "text-zinc-500 dark:text-zinc-400"
+                    : "text-muted"
               }`}
             >
               {feedback.text}

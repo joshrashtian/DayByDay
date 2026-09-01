@@ -32,7 +32,7 @@ export function IconPicker({ value, onChange, onClear }: Props) {
       <div className="flex items-center gap-2">
         <div className="relative min-w-0 flex-1">
           <IoSearch
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400"
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint"
             aria-hidden
           />
           <input
@@ -40,13 +40,13 @@ export function IconPicker({ value, onChange, onClear }: Props) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search icons..."
-            className="w-full rounded-lg border border-zinc-200 bg-zinc-50 py-2 pl-9 pr-3 text-sm text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+            className="w-full rounded-lg border border-line bg-sunken py-2 pl-9 pr-3 text-sm text-ink outline-none ring-line-strong focus:ring-2"
           />
         </div>
         <button
           type="button"
           onClick={onClear}
-          className="inline-flex items-center gap-1 rounded-lg border border-zinc-300 bg-white px-2.5 py-2 text-xs font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+          className="inline-flex items-center gap-1 rounded-lg border border-line-strong bg-surface px-2.5 py-2 text-xs font-medium text-muted hover:bg-sunken"
         >
           <IoClose className="h-4 w-4" aria-hidden />
           Clear
@@ -54,7 +54,7 @@ export function IconPicker({ value, onChange, onClear }: Props) {
       </div>
 
       {selected ? (
-        <p className="text-xs text-zinc-600 dark:text-zinc-300">
+        <p className="text-xs text-muted">
           Selected:{" "}
           <span className="inline-flex items-center gap-1 font-semibold">
             <selected.Icon className="h-4 w-4" aria-hidden />
@@ -62,19 +62,19 @@ export function IconPicker({ value, onChange, onClear }: Props) {
           </span>
         </p>
       ) : value.trim() ? (
-        <p className="text-xs text-zinc-600 dark:text-zinc-300">
+        <p className="text-xs text-muted">
           Selected custom icon:{" "}
-          <span className="font-semibold text-zinc-800 dark:text-zinc-200">
+          <span className="font-semibold text-ink">
             {value}
           </span>
         </p>
       ) : (
-        <p className="text-xs text-zinc-500 dark:text-zinc-400">
+        <p className="text-xs text-muted">
           No icon selected.
         </p>
       )}
 
-      <div className="grid max-h-48 grid-cols-4 gap-2 overflow-y-auto rounded-lg border border-zinc-200 bg-zinc-50 p-2 dark:border-zinc-700 dark:bg-zinc-900/60 sm:grid-cols-6">
+      <div className="grid max-h-48 grid-cols-4 gap-2 overflow-y-auto rounded-lg border border-line bg-sunken p-2 dark:bg-overlay sm:grid-cols-6">
         {filtered.map((option) => {
           const isSelected = option.id === value;
           return (
@@ -84,8 +84,8 @@ export function IconPicker({ value, onChange, onClear }: Props) {
               onClick={() => onChange(option.id)}
               className={`group inline-flex flex-col items-center justify-center gap-1 rounded-lg border px-1.5 py-2 text-[10px] font-medium transition-colors ${
                 isSelected
-                  ? "border-zinc-800 bg-zinc-800 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900"
-                  : "border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  ? "border-line bg-ink text-white"
+                  : "border-line-strong bg-surface text-muted hover:bg-sunken"
               }`}
               title={option.label}
               aria-label={`Use ${option.label} icon`}

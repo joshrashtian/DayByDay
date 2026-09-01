@@ -31,13 +31,13 @@ type Props = {
 };
 
 const railShellClass: Record<TaskViewMode, string> = {
-  all: "bg-zinc-600 dark:bg-zinc-700",
+  all: "bg-zinc-600",
   block: "bg-sky-600 dark:bg-sky-700",
   category: "bg-violet-600 dark:bg-violet-700",
 };
 
 const viewActiveClass: Record<TaskViewMode, string> = {
-  all: "bg-zinc-800 text-white shadow-lg shadow-zinc-900/30",
+  all: "bg-ink text-white shadow-lg shadow-zinc-900/30",
   block: "bg-sky-500 text-white shadow-lg shadow-sky-500/25",
   category: "bg-violet-500 text-white shadow-lg shadow-violet-500/25",
 };
@@ -46,7 +46,7 @@ const railButtonClass = (active: boolean, activeClass: string) =>
   `inline-flex h-11 w-11 items-center justify-center rounded-full transition-colors ${
     active
       ? activeClass
-      : "bg-white/70 text-zinc-700 hover:bg-white dark:bg-zinc-900/70 dark:text-zinc-200 dark:hover:bg-zinc-900"
+      : "bg-surface/70 text-muted hover:bg-surface dark:bg-overlay"
   }`;
 
 function RailIconButton({
@@ -149,7 +149,7 @@ export function TasksSideRail({
         </RailIconButton>
 
         <div
-          className="my-2 h-0.5 w-full -skew-x-12 rounded-full bg-white/30"
+          className="my-2 h-0.5 w-full -skew-x-12 rounded-full bg-surface/30"
           aria-hidden
         />
 
@@ -198,7 +198,7 @@ export function TasksSideRail({
         </RailIconButton>
 
         <div
-          className="my-2 h-0.5 w-full -skew-x-12 rounded-full bg-white/30"
+          className="my-2 h-0.5 w-full -skew-x-12 rounded-full bg-surface/30"
           aria-hidden
         />
 
@@ -219,7 +219,7 @@ export function TasksSideRail({
             onPress={() => onSortMenuOpenChange(!sortMenuOpen)}
             className={railButtonClass(
               sortActive,
-              "bg-white text-zinc-900 shadow-lg ring-2 ring-white/80",
+              "bg-surface text-ink shadow-lg ring-2 ring-line/80",
             )}
           >
             <IoSwapVertical className={TASK_ICON_CLASS} aria-hidden />

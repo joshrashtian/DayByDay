@@ -66,7 +66,7 @@ export function WeatherBadge({
         title="Weather unavailable"
       >
         <WiCloudy
-          className={`${loadIcon} text-zinc-900 ${iconClassName}`}
+          className={`${loadIcon} text-ink ${iconClassName}`}
           aria-hidden
         />
       </div>
@@ -75,7 +75,7 @@ export function WeatherBadge({
 
   return (
     <div
-      className={`flex items-baseline gap-1.5 text-zinc-900 ${className}`}
+      className={`flex items-baseline gap-1.5 text-ink ${className}`}
       title="Current weather (Open-Meteo)"
     >
       <span className={`shrink-0 ${iconClassName}`}>

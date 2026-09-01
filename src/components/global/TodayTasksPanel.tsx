@@ -180,11 +180,11 @@ export function TodayTasksPanel({ compact = false }: TodayTasksPanelProps) {
           } ${
             focusedTaskId === task.id
               ? "border-sky-400 bg-sky-50 dark:border-sky-500 dark:bg-sky-950/25"
-              : "border-zinc-200/90 bg-white/85 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900/65 dark:hover:bg-zinc-900"
+              : "border-line/90 bg-surface/85 hover:bg-sunken dark:bg-overlay"
           } ${task.done ? "opacity-60" : ""} ${canDragTask && !isIcsTask(task) ? "cursor-grab active:cursor-grabbing" : ""}`}
         >
           {!compact ? (
-            <div className="mb-0.5 flex items-center justify-between gap-2 font-eudoxus text-[10px] font-medium uppercase tracking-[0.1em] text-zinc-400 dark:text-zinc-500">
+            <div className="mb-0.5 flex items-center justify-between gap-2 font-eudoxus text-[10px] font-medium uppercase tracking-[0.1em] text-faint">
               <span>
                 {task.critical
                   ? "Critical"
@@ -198,7 +198,7 @@ export function TodayTasksPanel({ compact = false }: TodayTasksPanelProps) {
             </div>
           ) : null}
           <p
-            className={`truncate font-ppneue font-medium text-zinc-800 dark:text-zinc-100 ${
+            className={`truncate font-ppneue font-medium text-ink ${
               compact ? "text-[12px] leading-snug" : "text-[13px]"
             }`}
           >
@@ -208,10 +208,10 @@ export function TodayTasksPanel({ compact = false }: TodayTasksPanelProps) {
       ))}
       {panelTasks.length === 0 ? (
         <div className="py-4 pl-1">
-          <p className="font-ppneue text-sm font-medium text-zinc-400 dark:text-zinc-500">
+          <p className="font-ppneue text-sm font-medium text-faint">
             Nothing here yet.
           </p>
-          <p className="mt-1 font-eudoxus text-xs text-zinc-300 dark:text-zinc-600">
+          <p className="mt-1 font-eudoxus text-xs text-faint">
             Add a task below or open the Tasks page.
           </p>
         </div>
@@ -219,7 +219,7 @@ export function TodayTasksPanel({ compact = false }: TodayTasksPanelProps) {
       <button
         type="button"
         onClick={openTaskFormPopup}
-        className={`mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-zinc-300/90 bg-white/50 font-eudoxus text-[11px] font-medium text-sky-600 transition-colors hover:border-sky-400/60 hover:bg-sky-50 dark:border-zinc-600 dark:bg-zinc-900/40 dark:text-sky-400 dark:hover:border-sky-500/50 dark:hover:bg-sky-950/30 ${
+        className={`mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-line-strong/90 bg-surface/50 font-eudoxus text-[11px] font-medium text-sky-600 transition-colors hover:border-sky-400/60 hover:bg-sky-50 dark:bg-overlay dark:text-sky-400 dark:hover:border-sky-500/50 dark:hover:bg-sky-950/30 ${
           compact ? "px-2 py-1.5" : "px-3 py-2"
         }`}
       >

@@ -37,21 +37,21 @@ export function TaskPreviewBottomSheet({
     >
       {preview ? (
         <div className="flex flex-col gap-3">
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+          <p className="text-xs text-muted">
             {preview.done ? "Completed" : "Open"} · Due{" "}
             {preview.dueDate ? formatTaskDue(preview.dueDate) : "not set"}
           </p>
           {preview.description ? (
-            <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+            <p className="text-sm leading-relaxed text-muted">
               {preview.description}
             </p>
           ) : null}
           {preview.notes ? (
-            <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+            <p className="text-sm leading-relaxed text-muted">
               {preview.notes}
             </p>
           ) : null}
-          <div className="flex flex-col gap-1 text-sm text-zinc-600 dark:text-zinc-400">
+          <div className="flex flex-col gap-1 text-sm text-muted">
             {preview.priority ? <p>Priority: {preview.priority}</p> : null}
             {preview.critical ? <p>Critical</p> : null}
             <p>Type: {getTaskKindVisual(preview.kind).label}</p>
@@ -64,7 +64,7 @@ export function TaskPreviewBottomSheet({
           <button
             type="button"
             onClick={() => onToggle(preview.id)}
-            className="mt-1 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm font-semibold text-zinc-900 hover:bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
+            className="mt-1 rounded-xl border border-line bg-sunken px-4 py-2.5 text-sm font-semibold text-ink hover:bg-sunken"
           >
             {preview.done ? "Mark as active" : "Mark complete"}
           </button>
@@ -72,7 +72,7 @@ export function TaskPreviewBottomSheet({
             <button
               type="button"
               onClick={() => onEdit(preview)}
-              className="rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
+              className="rounded-xl bg-ink px-4 py-2.5 text-sm font-semibold text-white hover:bg-ink"
             >
               Edit
             </button>

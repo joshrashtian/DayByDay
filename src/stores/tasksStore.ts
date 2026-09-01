@@ -20,6 +20,10 @@ type LegacyCategory = { id: string; name: string };
 
 type TasksState = {
   tasks: Task[];
+  /** Ids removed locally but not yet pushed as tombstones to Supabase. */
+  pendingDeletedIds: string[];
+  /** ISO timestamp of the last successful Supabase pull. */
+  lastPulledAt: string | null;
   addTask: (payload: AddTaskPayload) => void;
   updateTask: (taskId: string, payload: UpdateTaskPayload) => void;
   setTaskSchedule: (taskId: string, dueDate: Date, endDate?: Date) => void;
@@ -34,6 +38,10 @@ type TasksState = {
     payloads: ImportIcsTaskPayload[],
   ) => { imported: number; skipped: number };
   removeAllIcsTasks: () => number;
+  clearPendingDeletedIds: (ids: string[]) => void;
+  setLastPulledAt: (iso: string) => void;
+  upsertFromRemote: (task: Task) => void;
+  removeFromRemote: (id: string) => void;
 };
 
 function reviveTask(raw: Record<string, unknown>): Task {
@@ -167,6 +175,8 @@ export const useTasksStore = create<TasksState>()(
   persist(
     (set, get) => ({
       tasks: [],
+      pendingDeletedIds: [],
+      lastPulledAt: null,
 
       setTaskCategory: (taskId, category) =>
         set((s) => {
@@ -469,6 +479,9 @@ export const useTasksStore = create<TasksState>()(
       removeTask: (id) =>
         set((s) => ({
           tasks: s.tasks.filter((t) => t.id !== id),
+          pendingDeletedIds: s.pendingDeletedIds.includes(id)
+            ? s.pendingDeletedIds
+            : [...s.pendingDeletedIds, id],
         })),
 
       duplicateTask: (id) =>
@@ -555,14 +568,41 @@ export const useTasksStore = create<TasksState>()(
         if (removed > 0) set({ tasks: remaining });
         return removed;
       },
+
+      clearPendingDeletedIds: (ids) =>
+        set((s) => ({
+          pendingDeletedIds: s.pendingDeletedIds.filter(
+            (id) => !ids.includes(id),
+          ),
+        })),
+
+      setLastPulledAt: (iso) => set({ lastPulledAt: iso }),
+
+      upsertFromRemote: (task) =>
+        set((s) => {
+          const index = s.tasks.findIndex((t) => t.id === task.id);
+          if (index === -1) return { tasks: [...s.tasks, task] };
+          const tasks = [...s.tasks];
+          tasks[index] = task;
+          return { tasks };
+        }),
+
+      removeFromRemote: (id) =>
+        set((s) => ({ tasks: s.tasks.filter((t) => t.id !== id) })),
     }),
     {
       name: STORAGE_KEY,
-      partialize: (state) => ({ tasks: state.tasks }),
+      partialize: (state) => ({
+        tasks: state.tasks,
+        pendingDeletedIds: state.pendingDeletedIds,
+        lastPulledAt: state.lastPulledAt,
+      }),
       merge: (persisted, current) => {
         const p = persisted as Partial<{
           tasks: unknown[];
           categories: LegacyCategory[];
+          pendingDeletedIds: string[];
+          lastPulledAt: string | null;
         }>;
         const base = current as TasksState;
         const rawTasks = p?.tasks;
@@ -572,6 +612,10 @@ export const useTasksStore = create<TasksState>()(
           tasks: Array.isArray(rawTasks)
             ? mergePersistedTasks(rawTasks, legacyCats)
             : base.tasks,
+          pendingDeletedIds: Array.isArray(p?.pendingDeletedIds)
+            ? p.pendingDeletedIds
+            : base.pendingDeletedIds,
+          lastPulledAt: typeof p?.lastPulledAt === "string" ? p.lastPulledAt : null,
         };
       },
     },

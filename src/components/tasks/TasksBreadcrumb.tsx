@@ -24,14 +24,14 @@ export function TasksBreadcrumb({ items }: TasksBreadcrumbProps) {
           <span key={`${item.label}-${index}`} className="inline-flex items-center gap-1">
             {index > 0 ? (
               <IoChevronForward
-                className="h-3.5 w-3.5 shrink-0 text-zinc-400 dark:text-zinc-500"
+                className="h-3.5 w-3.5 shrink-0 text-faint"
                 aria-hidden
               />
             ) : null}
             {item.to && !isLast ? (
               <Link
                 to={item.to}
-                className="font-medium text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                className="font-medium text-muted transition-colors hover:text-ink"
               >
                 {item.label}
               </Link>
@@ -39,8 +39,8 @@ export function TasksBreadcrumb({ items }: TasksBreadcrumbProps) {
               <span
                 className={
                   isLast
-                    ? "font-semibold text-zinc-900 dark:text-zinc-50"
-                    : "font-medium text-zinc-600 dark:text-zinc-400"
+                    ? "font-semibold text-ink"
+                    : "font-medium text-muted"
                 }
                 aria-current={isLast ? "page" : undefined}
               >

@@ -17,7 +17,7 @@ const getNextSidebarMode = (current: SidebarMode): SidebarMode => {
 const MODES: { id: SidebarMode; icon: ReactNode }[] = [
   { id: "tasks", icon: <IoListOutline /> },
   { id: "social", icon: <IoPeople /> },
-  { id: "apps", icon: <IoApps /> },
+ // { id: "apps", icon: <IoApps /> },
 ];
 
 export function SidebarModeToggle({
@@ -30,7 +30,7 @@ export function SidebarModeToggle({
       <button
         type="button"
         onClick={() => setSidebarMode(getNextSidebarMode(sidebarMode))}
-        className="inline-flex h-9 w-full items-center justify-center rounded-lg text-base text-zinc-600 transition-colors hover:bg-zinc-500/10 dark:text-zinc-300 dark:hover:bg-white/10"
+        className="inline-flex h-9 w-full items-center justify-center rounded-lg text-base text-muted transition-colors hover:bg-zinc-500/10"
         aria-label="Toggle navigation mode"
         title="Toggle navigation mode"
       >
@@ -40,7 +40,7 @@ export function SidebarModeToggle({
   }
 
   return (
-    <div className="grid grid-cols-3 gap-1">
+    <div className="grid grid-cols-2 gap-1">
       {MODES.map(({ id, icon }) => (
         <button
           key={id}
@@ -48,8 +48,8 @@ export function SidebarModeToggle({
           onClick={() => setSidebarMode(id)}
           className={`inline-flex h-9 items-center justify-center rounded-lg text-base transition-colors ${
             sidebarMode === id
-              ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
-              : "text-zinc-500 hover:bg-zinc-500/10 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-100"
+              ? "bg-ink text-surface"
+              : "text-muted hover:bg-zinc-500/10 hover:text-ink"
           }`}
           aria-pressed={sidebarMode === id}
         >

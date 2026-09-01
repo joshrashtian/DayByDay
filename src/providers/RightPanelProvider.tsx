@@ -115,24 +115,24 @@ export function RightPanelProvider({
       <aside
         role="complementary"
         aria-label={panelConfig?.label ?? "Right panel"}
-        className={`fixed inset-y-0 right-0 z-60 flex w-[360px] rounded-l-3xl flex-col bg-linear-to-bl from-slate-100 to-blue-100 shadow-2xl transition-transform duration-200 ease-out dark:border-zinc-800 dark:bg-zinc-950 ${
+        className={`fixed inset-y-0 right-0 z-60 flex w-[360px] rounded-l-3xl flex-col bg-linear-to-bl from-slate-100 to-blue-100 shadow-2xl transition-transform duration-200 ease-out ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
         {/* Header */}
         <header className="shrink-0  px-5 py-4 ">
           <div className="pr-10">
-            <p className="font-display text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            <p className="font-display text-xs font-semibold uppercase tracking-wide text-muted">
               {panelConfig?.label ?? ""}
             </p>
-            <h2 className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
+            <h2 className="mt-1 text-2xl font-semibold text-ink">
               {panelConfig?.title ?? ""}
             </h2>
           </div>
           <button
             type="button"
             onClick={closePanel}
-            className="absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900/90 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+            className="absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full border border-line bg-surface text-muted transition-colors hover:bg-sunken hover:text-ink dark:bg-overlay"
             aria-label="Close panel"
           >
             <IoClose className="h-5 w-5" />

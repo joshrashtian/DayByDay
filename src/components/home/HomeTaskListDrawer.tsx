@@ -128,7 +128,7 @@ export function HomeTaskListDrawer({
 
   return (
     <motion.div
-      className={`${fullWidth ? "w-full" : "w-[min(100%,17.5rem)]"} relative shrink-0 self-start overflow-hidden rounded-t-2xl bg-white/30 ring-1 ring-zinc-200/80 backdrop-blur-3xl dark:border-zinc-600 dark:bg-zinc-900/95 dark:shadow-[0_8px_32px_-8px_rgba(0,0,0,0.55)] dark:ring-zinc-600/80`}
+      className={`${fullWidth ? "w-full" : "w-[min(100%,17.5rem)]"} relative shrink-0 self-start overflow-hidden rounded-t-2xl bg-surface/30 ring-1 ring-line/80 backdrop-blur-3xl dark:bg-overlay dark:shadow-[0_8px_32px_-8px_rgba(0,0,0,0.55)]`}
       style={{ height: heightPx, maxHeight }}
       transition={{ height: { duration: 0.22, ease: [0.32, 0.72, 0, 1] } }}
     >
@@ -140,7 +140,7 @@ export function HomeTaskListDrawer({
         className="absolute inset-x-0 top-0 z-10 flex h-5 cursor-ns-resize touch-none items-center justify-center"
       >
         <span
-          className="h-1 w-10 rounded-full bg-zinc-300/90 dark:bg-zinc-600"
+          className="h-1 w-10 rounded-full bg-zinc-300/90"
           aria-hidden
         />
       </div>
@@ -149,15 +149,15 @@ export function HomeTaskListDrawer({
         <button
           type="button"
           onClick={toggleSnap}
-          className="flex w-full shrink-0 items-center gap-2 border-b border-zinc-100 px-3 py-2 dark:border-zinc-800"
+          className="flex w-full shrink-0 items-center gap-2 border-b border-line px-3 py-2"
           aria-expanded={isOpen}
         >
           <span className="min-w-0 flex-1 text-left">
-            <span className="block truncate font-display text-md font-bold text-zinc-500 dark:text-zinc-400">
+            <span className="block truncate font-display text-md font-bold text-muted">
               {title}
             </span>
             {subtitle ? (
-              <span className="block truncate font-eudoxus text-[10px] text-zinc-400 dark:text-zinc-500">
+              <span className="block truncate font-eudoxus text-[10px] text-faint">
                 {subtitle}
               </span>
             ) : null}
@@ -165,7 +165,7 @@ export function HomeTaskListDrawer({
           <motion.span
             animate={{ rotate: isOpen ? 180 : 0 }}
             transition={{ duration: 0.25 }}
-            className="shrink-0 text-zinc-400 dark:text-zinc-500"
+            className="shrink-0 text-faint"
           >
             <IoChevronUp className="text-base" aria-hidden />
           </motion.span>

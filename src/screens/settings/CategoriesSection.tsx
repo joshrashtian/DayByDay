@@ -125,10 +125,10 @@ export function CategoriesSection() {
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="font-display text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
+        <h2 className="font-display text-2xl font-semibold text-ink">
           Categories
         </h2>
-        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="mt-1 text-sm text-muted">
           Give each category a color and an icon. Tasks in that category show as
           a full-color card.
         </p>
@@ -138,7 +138,7 @@ export function CategoriesSection() {
         <div className="flex flex-col gap-1">
           <label
             htmlFor={catSelectId}
-            className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+            className="text-xs font-medium uppercase tracking-wide text-muted"
           >
             Edit category
           </label>
@@ -146,7 +146,7 @@ export function CategoriesSection() {
             id={catSelectId}
             value={selectedCategory}
             onChange={(e) => onSelectCategory(e.target.value)}
-            className="min-w-[200px] rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition-shadow focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+            className="min-w-[200px] rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none transition-shadow focus:ring-2 focus:ring-blue-500"
           >
             <option value="">Select category…</option>
             {availableCategories.map((name) => (
@@ -159,7 +159,7 @@ export function CategoriesSection() {
         <button
           type="button"
           onClick={onStartNew}
-          className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+          className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium text-muted transition-colors hover:bg-sunken focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
         >
           New category
         </button>
@@ -169,7 +169,7 @@ export function CategoriesSection() {
         <div className="flex flex-col gap-1">
           <label
             htmlFor={catNameId}
-            className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+            className="text-xs font-medium uppercase tracking-wide text-muted"
           >
             Name
           </label>
@@ -182,11 +182,11 @@ export function CategoriesSection() {
               setMessage(null);
             }}
             placeholder="Work, School, Fitness…"
-            className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition-shadow focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+            className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none transition-shadow focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+          <span className="text-xs font-medium uppercase tracking-wide text-muted">
             Color
           </span>
           <ColorPicker
@@ -200,7 +200,7 @@ export function CategoriesSection() {
         </div>
         <div className="sm:col-span-2">
           <span
-            className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+            className="text-xs font-medium uppercase tracking-wide text-muted"
             id={`${uid}-icon-label`}
           >
             Icon
@@ -221,8 +221,8 @@ export function CategoriesSection() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-900">
-        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+      <div className="rounded-xl border border-line bg-sunken p-4">
+        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">
           Preview
         </p>
         <div
@@ -258,7 +258,7 @@ export function CategoriesSection() {
       <div aria-live="polite">
         {message ? (
           <p
-            className="text-sm text-zinc-700 dark:text-zinc-300"
+            className="text-sm text-muted"
             role={
               message.includes("Deleted") || message.includes("saved")
                 ? "status"
@@ -274,7 +274,7 @@ export function CategoriesSection() {
         <button
           type="button"
           onClick={onSave}
-          className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+          className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
         >
           Save category
         </button>

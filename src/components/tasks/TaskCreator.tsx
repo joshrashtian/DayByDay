@@ -124,8 +124,8 @@ export function TaskCreator({
   };
 
   const shellClass = isChatDock
-    ? "max-w-screen w-full rounded-[1.75rem] border border-zinc-200/90 bg-white/90 shadow-[0_8px_44px_rgba(15,15,15,0.12),inset_0_1px_0_rgba(255,255,255,0.9)] ring-1 ring-black/5 backdrop-blur-xl backdrop-saturate-150 dark:border-zinc-600/50 dark:bg-zinc-900/90 dark:shadow-[0_12px_48px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.06)] dark:ring-white/10"
-    : "max-w-screen w-full rounded-2xl border border-white/70 bg-white/45 shadow-[0_4px_24px_rgba(15,15,15,0.06),inset_0_1px_0_rgba(255,255,255,0.85)] ring-1 ring-white/30 backdrop-blur-xl backdrop-saturate-150 dark:border-white/15 dark:bg-zinc-900/35 dark:shadow-[0_4px_28px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)] dark:ring-white/10";
+    ? "max-w-screen w-full rounded-[1.75rem] border border-line/90 bg-surface/90 shadow-[0_8px_44px_rgba(15,15,15,0.12),inset_0_1px_0_rgba(255,255,255,0.9)] ring-1 ring-line/5 backdrop-blur-xl backdrop-saturate-150 dark:bg-overlay dark:shadow-[0_12px_48px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.06)]"
+    : "max-w-screen w-full rounded-2xl border border-line/70 bg-surface/45 shadow-[0_4px_24px_rgba(15,15,15,0.06),inset_0_1px_0_rgba(255,255,255,0.85)] ring-1 ring-line/30 backdrop-blur-xl backdrop-saturate-150 dark:bg-overlay dark:shadow-[0_4px_28px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)]";
 
   return (
     <div className={shellClass}>
@@ -145,7 +145,7 @@ export function TaskCreator({
                 placeholder="What needs to get done?"
                 autoComplete="off"
                 onInput={adjustTextareaHeight}
-                className="min-h-12 max-h-[200px] w-full resize-none bg-transparent py-2.5 text-base leading-relaxed text-zinc-900 outline-none placeholder:text-zinc-400 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                className="min-h-12 max-h-[200px] w-full resize-none bg-transparent py-2.5 text-base leading-relaxed text-ink outline-none placeholder:text-faint"
                 aria-label="New task"
               />
               {chatParse && chatParse.hints.length > 0 ? (
@@ -166,7 +166,7 @@ export function TaskCreator({
                       className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold font-display tracking-wide ${
                         h.partial
                           ? "border-dashed text-amber-900 "
-                          : "text-zinc-800 dark:text-zinc-100"
+                          : "text-ink"
                       }`}
                     >
                       {h.label.split("").map((char, j) => (
@@ -195,7 +195,7 @@ export function TaskCreator({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="What needs doing?"
               autoComplete="off"
-              className="min-w-0 flex-1 bg-transparent py-2 text-lg text-zinc-900 outline-none placeholder:text-zinc-400 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+              className="min-w-0 flex-1 bg-transparent py-2 text-lg text-ink outline-none placeholder:text-faint"
               aria-label="New task title"
             />
           )}
@@ -209,7 +209,7 @@ export function TaskCreator({
                   chatParse.hints.some((h) => h.partial)
                 }
                 aria-label="Add task"
-                className="mb-1.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-white transition-opacity enabled:hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-30 dark:bg-white dark:text-zinc-900 dark:enabled:hover:bg-zinc-100"
+                className="mb-1.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ink text-white transition-opacity enabled:hover:bg-ink disabled:cursor-not-allowed disabled:opacity-30"
               >
                 <IoArrowUp className="h-5 w-5" aria-hidden />
               </button>
@@ -218,7 +218,7 @@ export function TaskCreator({
                   type="button"
                   onClick={onOpenFullForm}
                   aria-label="Open full task form"
-                  className="mb-1.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-zinc-300/90 bg-white/80 text-zinc-800 transition-colors hover:bg-white dark:border-zinc-600 dark:bg-zinc-800/80 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                  className="mb-1.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-line-strong/90 bg-surface/80 text-ink transition-colors hover:bg-surface"
                 >
                   <IoPencil className="h-5 w-5" aria-hidden />
                 </button>
@@ -230,7 +230,7 @@ export function TaskCreator({
                 <button
                   type="button"
                   onClick={onOpenFullForm}
-                  className="rounded-xl border border-zinc-300/80 bg-white/50 px-3 py-2 text-sm font-medium text-zinc-800 transition-colors hover:bg-white dark:border-zinc-600 dark:bg-zinc-800/60 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                  className="rounded-xl border border-line-strong/80 bg-surface/50 px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-surface"
                 >
                   Full form
                 </button>
@@ -238,7 +238,7 @@ export function TaskCreator({
               <button
                 type="submit"
                 disabled={!title.trim()}
-                className="rounded-xl bg-zinc-900/90 px-4 py-2 text-sm font-semibold text-white transition-opacity enabled:hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-35 dark:bg-white/90 dark:text-zinc-900 dark:enabled:hover:bg-white"
+                className="rounded-xl bg-overlay px-4 py-2 text-sm font-semibold text-white transition-opacity enabled:hover:bg-ink disabled:cursor-not-allowed disabled:opacity-35"
               >
                 Add
               </button>
@@ -261,7 +261,7 @@ export function TaskCreator({
                   onChange={(e) => setBlock(e.target.value)}
                   placeholder="Block (optional — e.g. Morning, Work, Home)"
                   autoComplete="off"
-                  className="w-full rounded-xl border border-zinc-300/50 bg-white/40 px-3 py-2 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400/40 dark:border-zinc-600/60 dark:bg-zinc-950/30 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-500"
+                  className="w-full rounded-xl border border-line-strong/50 bg-surface/40 px-3 py-2 text-sm text-ink outline-none placeholder:text-faint focus:border-zinc-500 focus:ring-1 focus:ring-line-strong/40 dark:bg-overlay"
                 />
                 <datalist id="task-block-suggestions">
                   {blockSuggestions.map((option) => (
@@ -280,7 +280,7 @@ export function TaskCreator({
                   onChange={(e) => setCategory(e.target.value)}
                   placeholder="Category (optional — matched by task search)"
                   autoComplete="off"
-                  className="w-full rounded-xl border border-zinc-300/50 bg-white/40 px-3 py-2 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400/40 dark:border-zinc-600/60 dark:bg-zinc-950/30 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-500"
+                  className="w-full rounded-xl border border-line-strong/50 bg-surface/40 px-3 py-2 text-sm text-ink outline-none placeholder:text-faint focus:border-zinc-500 focus:ring-1 focus:ring-line-strong/40 dark:bg-overlay"
                 />
               </div>
               <div>
@@ -294,7 +294,7 @@ export function TaskCreator({
                   onChange={(e) => setTagsInput(e.target.value)}
                   placeholder="Tags (optional — e.g. school, urgent)"
                   autoComplete="off"
-                  className="w-full rounded-xl border border-zinc-300/50 bg-white/40 px-3 py-2 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400/40 dark:border-zinc-600/60 dark:bg-zinc-950/30 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-500"
+                  className="w-full rounded-xl border border-line-strong/50 bg-surface/40 px-3 py-2 text-sm text-ink outline-none placeholder:text-faint focus:border-zinc-500 focus:ring-1 focus:ring-line-strong/40 dark:bg-overlay"
                 />
               </div>
             </div>
@@ -303,7 +303,7 @@ export function TaskCreator({
               type="button"
               onClick={() => setExpanded((v) => !v)}
               aria-expanded={expanded}
-              className="mt-1 flex w-full items-center justify-center gap-1 rounded-lg py-1.5 text-sm font-medium text-zinc-600 transition-colors hover:bg-white/40 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-200"
+              className="mt-1 flex w-full items-center justify-center gap-1 rounded-lg py-1.5 text-sm font-medium text-muted transition-colors hover:bg-surface/40 hover:text-ink"
             >
               <IoChevronDown
                 className={`h-4 w-4 shrink-0 transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}
@@ -316,11 +316,11 @@ export function TaskCreator({
               className={`grid transition-[grid-template-rows] duration-300 ease-out ${expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
             >
               <div className="min-h-0 overflow-hidden">
-                <div className="space-y-3 border-t border-white/50 pt-3 dark:border-white/10">
+                <div className="space-y-3 border-t border-line/50 pt-3">
                   <div className="flex flex-col gap-1">
                     <label
                       htmlFor="task-due"
-                      className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+                      className="text-xs font-semibold uppercase tracking-wide text-muted"
                     >
                       Due
                     </label>
@@ -329,11 +329,11 @@ export function TaskCreator({
                       type="datetime-local"
                       value={dueLocal}
                       onChange={(e) => setDueLocal(e.target.value)}
-                      className="rounded-xl border border-zinc-300/80 bg-white/60 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400/50 dark:border-zinc-600 dark:bg-zinc-950/50 dark:text-zinc-100 dark:focus:border-zinc-500"
+                      className="rounded-xl border border-line-strong/80 bg-surface/60 px-3 py-2 text-sm text-ink outline-none focus:border-zinc-500 focus:ring-1 focus:ring-line-strong/50 dark:bg-overlay"
                     />
                   </div>
                   <div className="flex flex-col gap-2">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-muted">
                       Priority
                     </span>
                     <div className="flex flex-wrap gap-2">
@@ -342,8 +342,8 @@ export function TaskCreator({
                         onClick={() => setPriority("")}
                         className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
                           priority === ""
-                            ? "border-zinc-800 bg-zinc-800 text-white dark:border-white dark:bg-white dark:text-zinc-900"
-                            : "border-zinc-300/80 bg-white/50 text-zinc-700 hover:border-zinc-400 dark:border-zinc-600 dark:bg-zinc-950/40 dark:text-zinc-300 dark:hover:border-zinc-500"
+                            ? "border-line bg-ink text-white"
+                            : "border-line-strong/80 bg-surface/50 text-muted hover:border-line-strong dark:bg-overlay"
                         }`}
                       >
                         None
@@ -359,8 +359,8 @@ export function TaskCreator({
                                 ? "border-rose-500/60 bg-rose-500/20 text-rose-900 dark:text-rose-100"
                                 : value === "medium"
                                   ? "border-amber-500/60 bg-amber-500/20 text-amber-900 dark:text-amber-100"
-                                  : "border-slate-500/50 bg-slate-500/15 text-slate-800 dark:text-slate-200"
-                              : "border-zinc-300/80 bg-white/50 text-zinc-700 hover:border-zinc-400 dark:border-zinc-600 dark:bg-zinc-950/40 dark:text-zinc-300 dark:hover:border-zinc-500"
+                                  : "border-slate-500/50 bg-slate-500/15 text-slate-800"
+                              : "border-line-strong/80 bg-surface/50 text-muted hover:border-line-strong dark:bg-overlay"
                           }`}
                         >
                           {label}
@@ -372,7 +372,7 @@ export function TaskCreator({
                         className="flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors"
                       >
                         <IoWarning
-                          className={`h-4 w-4 ${critical ? "text-red-500" : "text-zinc-500"}`}
+                          className={`h-4 w-4 ${critical ? "text-red-500" : "text-muted"}`}
                         />{" "}
                         {critical ? "Critical Event" : "Not Critical"}
                       </button>

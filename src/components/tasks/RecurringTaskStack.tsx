@@ -43,13 +43,13 @@ export function RecurringTaskStack({
             {hiddenCount >= 2 ? (
               <motion.div
                 aria-hidden
-                className="pointer-events-none absolute inset-x-3 top-2 bottom-0 rounded-2xl border border-white/50 bg-white/30 shadow-sm transition-transform duration-300 ease-out group-hover/stack:-translate-y-1 dark:border-white/10 dark:bg-zinc-800/40"
+                className="pointer-events-none absolute inset-x-3 top-2 bottom-0 rounded-2xl border border-line/50 bg-surface/30 shadow-sm transition-transform duration-300 ease-out group-hover/stack:-translate-y-1"
                 style={{ transform: "translateY(8px) scale(0.97)" }}
               />
             ) : null}
             <motion.div
               aria-hidden
-              className="pointer-events-none absolute inset-x-1.5 top-1 bottom-0 rounded-2xl border border-white/60 bg-white/40 shadow-md transition-transform duration-300 ease-out group-hover/stack:-translate-y-0.5 dark:border-white/12 dark:bg-zinc-800/55"
+              className="pointer-events-none absolute inset-x-1.5 top-1 bottom-0 rounded-2xl border border-line/60 bg-surface/40 shadow-md transition-transform duration-300 ease-out group-hover/stack:-translate-y-0.5"
               style={{ transform: "translateY(4px) scale(0.985)" }}
             />
           </>
@@ -80,7 +80,7 @@ export function RecurringTaskStack({
             >
               Repeating · {upcomingCount} upcoming
               {doneCount > 0 ? ` · ${doneCount} done` : ""}
-              <span className="text-zinc-500 dark:text-zinc-400">
+              <span className="text-muted">
                 {" "}
                 · show all
               </span>
@@ -102,7 +102,7 @@ export function RecurringTaskStack({
               <button
                 type="button"
                 onClick={() => setExpanded(false)}
-                className="mb-1 inline-flex w-fit items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium text-zinc-600 transition-colors hover:bg-zinc-200/60 dark:text-zinc-400 dark:hover:bg-white/10"
+                className="mb-1 inline-flex w-fit items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium text-muted transition-colors hover:bg-sunken/60"
               >
                 <IoChevronDown className="h-3.5 w-3.5 rotate-180" aria-hidden />
                 Collapse series

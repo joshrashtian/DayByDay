@@ -47,7 +47,7 @@ export function TaskDueList({
 
   if (items.length === 0) {
     return (
-      <p className="text-xs text-zinc-400 dark:text-zinc-500">
+      <p className="text-xs text-faint">
         {compact ? "—" : "Nothing due"}
       </p>
     );
@@ -214,7 +214,7 @@ export function TaskDueList({
                       <IoEllipseOutline className="h-7 w-7" />
                     )}
                     {task.done ? (
-                      <span className="absolute inset-0 grid place-items-center rounded-full bg-black/30">
+                      <span className="absolute inset-0 grid place-items-center rounded-full bg-overlay">
                         <IoCheckmarkDone className="h-7 w-7 text-white" />
                       </span>
                     ) : null}
@@ -288,7 +288,7 @@ export function TaskDueList({
       >
         {selectedTask ? (
           <div className="flex flex-col gap-3">
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            <p className="text-xs text-muted">
               {selectedTask.done ? "Completed" : "Open"} · Due{" "}
               {selectedTask.dueDate
                 ? formatTaskDue(selectedTask.dueDate)
@@ -299,7 +299,7 @@ export function TaskDueList({
                 {selectedTask.description}
               </p>
             ) : null}
-            <div className="flex flex-col gap-1 text-sm text-zinc-600 dark:text-zinc-400">
+            <div className="flex flex-col gap-1 text-sm text-muted">
               {selectedTask.priority ? (
                 <p>Priority: {selectedTask.priority}</p>
               ) : null}
@@ -318,7 +318,7 @@ export function TaskDueList({
                 onToggle(selectedTask.id);
                 closeSheet();
               }}
-              className="mt-1 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm font-semibold text-zinc-900 hover:bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
+              className="mt-1 rounded-xl border border-line bg-sunken px-4 py-2.5 text-sm font-semibold text-ink hover:bg-sunken"
             >
               Toggle done
             </button>
@@ -329,7 +329,7 @@ export function TaskDueList({
                   onEditTask(selectedTask);
                   closeSheet();
                 }}
-                className="rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
+                className="rounded-xl bg-ink px-4 py-2.5 text-sm font-semibold text-white hover:bg-ink"
               >
                 Edit
               </button>

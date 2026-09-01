@@ -74,15 +74,15 @@ export function GlobalPomodoroDock() {
             initial={{ opacity: 0, scale: 0.96, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 8 }}
-            className="w-[min(100vw-2rem,17rem)] overflow-hidden rounded-2xl border border-zinc-200/90 bg-white/95 shadow-[0_12px_40px_-12px_rgba(15,23,42,0.25)] backdrop-blur-md dark:border-zinc-700/90 dark:bg-zinc-900/95"
+            className="w-[min(100vw-2rem,17rem)] overflow-hidden rounded-2xl border border-line/90 bg-surface/95 shadow-[0_12px_40px_-12px_rgba(15,23,42,0.25)] backdrop-blur-md dark:bg-overlay"
           >
-            <div className="flex items-center justify-between gap-2 border-b border-zinc-100 px-3 py-2 dark:border-zinc-800">
+            <div className="flex items-center justify-between gap-2 border-b border-line px-3 py-2">
               <motion.div layout className="flex items-center gap-2">
                 <span
                   className={`h-2 w-2 rounded-full ${PHASE_DOT[phase]}`}
                   aria-hidden
                 />
-                <span className="font-display text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+                <span className="font-display text-[10px] font-bold uppercase tracking-[0.16em] text-muted">
                   {PHASE_LABELS[phase]}
                 </span>
               </motion.div>
@@ -90,26 +90,26 @@ export function GlobalPomodoroDock() {
                 type="button"
                 onClick={toggleDockExpanded}
                 aria-label="Collapse timer"
-                className="rounded-full p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                className="rounded-full p-1 text-faint hover:bg-sunken"
               >
                 <IoChevronDown className="text-base" aria-hidden />
               </button>
             </div>
             <div className="space-y-2 px-3 py-3">
-              <p className="font-display text-3xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
+              <p className="font-display text-3xl font-semibold tabular-nums text-ink">
                 {formatPomodoroTime(secondsLeft)}
               </p>
               {linkedTaskTitle ? (
-                <p className="truncate font-ppneue text-xs font-medium text-zinc-600 dark:text-zinc-300">
+                <p className="truncate font-ppneue text-xs font-medium text-muted">
                   {linkedTaskTitle}
                 </p>
               ) : null}
-              <p className="text-[10px] text-zinc-400">
+              <p className="text-[10px] text-faint">
                 {completedFocusSessions} focus session
                 {completedFocusSessions === 1 ? "" : "s"} today
               </p>
               <div
-                className="h-1 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700"
+                className="h-1 overflow-hidden rounded-full bg-sunken"
                 role="progressbar"
                 aria-valuenow={Math.round(progress * 100)}
                 aria-valuemin={0}
@@ -124,7 +124,7 @@ export function GlobalPomodoroDock() {
                 <button
                   type="button"
                   onClick={isRunning ? pause : start}
-                  className="inline-flex flex-1 items-center justify-center gap-1 rounded-full bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
+                  className="inline-flex flex-1 items-center justify-center gap-1 rounded-full bg-ink px-3 py-1.5 text-xs font-medium text-white"
                 >
                   {isRunning ? <IoPause aria-hidden /> : <IoPlay aria-hidden />}
                   {isRunning ? "Pause" : "Start"}
@@ -133,7 +133,7 @@ export function GlobalPomodoroDock() {
                   type="button"
                   onClick={reset}
                   aria-label="Reset"
-                  className="rounded-full border border-zinc-200 p-2 text-zinc-500 dark:border-zinc-600"
+                  className="rounded-full border border-line p-2 text-muted"
                 >
                   <IoRefresh className="text-sm" aria-hidden />
                 </button>
@@ -141,7 +141,7 @@ export function GlobalPomodoroDock() {
                   type="button"
                   onClick={skipToNextPhase}
                   aria-label="Skip"
-                  className="rounded-full border border-zinc-200 p-2 text-zinc-500 dark:border-zinc-600"
+                  className="rounded-full border border-line p-2 text-muted"
                 >
                   <IoPlaySkipForward className="text-sm" aria-hidden />
                 </button>
@@ -158,8 +158,8 @@ export function GlobalPomodoroDock() {
             onClick={toggleDockExpanded}
             className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-medium shadow-lg backdrop-blur-md transition-colors ${
               isActive
-                ? "border-rose-200/90 bg-white text-rose-600 dark:border-rose-900/50 dark:bg-zinc-900 dark:text-rose-400"
-                : "border-zinc-200/90 bg-white/95 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900/95 dark:text-zinc-300"
+                ? "border-rose-200/90 bg-surface text-rose-600 dark:border-rose-900/50 dark:text-rose-400"
+                : "border-line/90 bg-surface/95 text-muted dark:bg-overlay"
             }`}
           >
             <span

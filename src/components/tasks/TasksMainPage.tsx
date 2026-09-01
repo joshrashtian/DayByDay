@@ -10,7 +10,7 @@ export function TasksMainPage() {
       <TasksBreadcrumb items={[{ label: "Your Tasks" }]} />
       <header className="shrink-0 px-5 pb-2 pt-2 sm:px-8">
         <div className="mx-auto flex w-full max-w-3xl items-end justify-between gap-3 xl:max-w-4xl">
-          <motion.h1 className="font-display flex flex-row text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+          <motion.h1 className="font-display flex flex-row text-4xl font-bold tracking-tight text-ink">
             {"Your  Tasks".split("").map((char, i) => (
               <motion.span
                 key={`${char}-${i}`}
@@ -25,7 +25,7 @@ export function TasksMainPage() {
           </motion.h1>
           <Link
             to="/tasks/categories"
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/50 px-3 py-1.5 text-xs font-semibold text-zinc-700 ring-1 ring-white/30 backdrop-blur-xl transition-colors hover:bg-white/80 dark:border-white/15 dark:bg-zinc-900/45 dark:text-zinc-200 dark:hover:bg-zinc-800/80"
+            className="inline-flex items-center gap-1.5 rounded-full border border-line/70 bg-surface/50 px-3 py-1.5 text-xs font-semibold text-muted ring-1 ring-line/30 backdrop-blur-xl transition-colors hover:bg-surface/80 dark:bg-overlay"
           >
             <IoPricetagsOutline className="h-3.5 w-3.5" aria-hidden />
             Categories

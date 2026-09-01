@@ -77,7 +77,7 @@ export const CalendarCell = ({ date, isHighlighted, showOutOfRangeDates = false,
                     <div
                         className={cx(
                             "relative flex size-full items-center justify-center rounded-full text-sm text-secondary hover:text-secondary_hover",
-                            isDisabled && "text-zinc-400 dark:text-zinc-600",
+                            isDisabled && "text-faint",
                             // Focus ring, visible while the cell has keyboard focus.
                             isFocusVisible ? "outline-2 outline-offset-2 outline-blue-400/80" : "",
                             // Hover state for cells in the middle of the range.
@@ -86,7 +86,7 @@ export const CalendarCell = ({ date, isHighlighted, showOutOfRangeDates = false,
                                 "bg-blue-500 font-semibold text-white hover:bg-blue-600 hover:text-white",
                             // Hover state for non-selected cells.
                             !isSelected && !isDisabled
-                                ? "text-zinc-700 hover:bg-zinc-100 hover:font-semibold dark:text-zinc-200 dark:hover:bg-zinc-800"
+                                ? "text-muted hover:bg-sunken hover:font-semibold"
                                 : "",
                             !isSelected && isTodayDate
                                 ? "bg-sky-100 font-semibold text-sky-700 hover:bg-sky-200 dark:bg-sky-900/40 dark:text-sky-300 dark:hover:bg-sky-900/60"

@@ -147,7 +147,7 @@ export default function ContextMenuProvider({
           ref={menuPanelRef}
           role="menu"
           aria-label="Context menu"
-          className="fixed z-60 min-w-44 overflow-hidden rounded-xl border border-white/70 bg-white/30 py-1 shadow-[0_12px_40px_rgba(15,15,15,0.15),inset_0_1px_0_rgba(255,255,255,0.9)] ring-1 ring-black/5 backdrop-blur-xl dark:border-white/15 dark:bg-zinc-900/95 dark:shadow-[0_16px_48px_rgba(0,0,0,0.5)] dark:ring-white/10"
+          className="fixed z-60 min-w-44 overflow-hidden rounded-xl border border-line/70 bg-surface/30 py-1 shadow-[0_12px_40px_rgba(15,15,15,0.15),inset_0_1px_0_rgba(255,255,255,0.9)] ring-1 ring-line/5 backdrop-blur-xl dark:bg-overlay dark:shadow-[0_16px_48px_rgba(0,0,0,0.5)]"
           style={{ left: placed.x, top: placed.y }}
           onMouseDown={(e) => e.stopPropagation()}
         >
@@ -156,7 +156,7 @@ export default function ContextMenuProvider({
               return (
                 <div
                   key={item.id}
-                  className="h-px w-3/5 mx-auto bg-zinc-200 my-2"
+                  className="h-px w-3/5 mx-auto bg-sunken my-2"
                 />
               );
             }
@@ -179,7 +179,7 @@ export default function ContextMenuProvider({
                 className={`flex w-full items-center flex-row gap-2 px-3 py-2 text-left text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                   item.destructive
                     ? "text-rose-600 hover:bg-rose-500/10 dark:text-rose-400 dark:hover:bg-rose-500/15"
-                    : "text-zinc-800 hover:bg-zinc-500/10 dark:text-zinc-100 dark:hover:bg-white/10"
+                    : "text-ink hover:bg-zinc-500/10"
                 }`}
                 onClick={() => {
                   if (item.disabled) return;

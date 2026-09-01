@@ -70,16 +70,16 @@ export function AudioSection() {
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="font-display text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
+        <h2 className="font-display text-2xl font-semibold text-ink">
           Audio
         </h2>
-        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="mt-1 text-sm text-muted">
           Pick a click sound for tasks, or import your own.
         </p>
       </div>
 
-      <section className="overflow-hidden rounded-2xl border border-zinc-200/80 bg-white/70 dark:border-zinc-700 dark:bg-zinc-900/60">
-        <div className="flex items-start gap-3 border-b border-zinc-100 px-4 py-4 dark:border-zinc-800">
+      <section className="overflow-hidden rounded-2xl border border-line/80 bg-surface/70 dark:bg-overlay">
+        <div className="flex items-start gap-3 border-b border-line px-4 py-4">
           <span className="inline-flex size-10 items-center justify-center rounded-xl bg-violet-500/10 text-violet-700 dark:bg-violet-500/15 dark:text-violet-200">
             {audioPrefs.soundEnabled ? (
               <IoVolumeHighOutline className="size-5" aria-hidden />
@@ -88,10 +88,10 @@ export function AudioSection() {
             )}
           </span>
           <div>
-            <h3 className="font-display text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+            <h3 className="font-display text-lg font-semibold text-ink">
               Task click sound
             </h3>
-            <p className="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">
+            <p className="mt-0.5 text-sm text-muted">
               {audioPrefs.soundEnabled
                 ? `${selectedLabel} · ${audioPrefs.volume}% volume`
                 : "Muted"}
@@ -100,12 +100,12 @@ export function AudioSection() {
         </div>
 
         <div className="space-y-4 px-4 py-4">
-          <div className="flex items-start justify-between gap-4 rounded-xl border border-zinc-100 bg-zinc-50/80 px-3 py-3 dark:border-zinc-800 dark:bg-zinc-950/40">
+          <div className="flex items-start justify-between gap-4 rounded-xl border border-line bg-sunken/80 px-3 py-3 dark:bg-overlay">
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+              <p className="text-sm font-medium text-ink">
                 Enable sound
               </p>
-              <p className="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">
+              <p className="mt-0.5 text-sm text-muted">
                 Turn off to silence task clicks.
               </p>
             </div>
@@ -122,7 +122,7 @@ export function AudioSection() {
           <div className="flex flex-col gap-2">
             <label
               htmlFor={soundId}
-              className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+              className="text-sm font-medium text-muted"
             >
               Sound
             </label>
@@ -137,7 +137,7 @@ export function AudioSection() {
                     taskClickSoundId: event.target.value,
                   }))
                 }
-                className="min-w-0 flex-1 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition-shadow focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+                className="min-w-0 flex-1 rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none transition-shadow focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <optgroup label="Built-in">
                   {BUILTIN_TASK_CLICK_SOUNDS.map((sound) => (
@@ -166,7 +166,7 @@ export function AudioSection() {
                 type="button"
                 onClick={() => previewTaskClickSound()}
                 disabled={soundsDisabled}
-                className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                className="rounded-lg border border-line bg-surface px-4 py-2 text-sm font-medium text-muted transition-colors hover:bg-sunken focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Preview
               </button>
@@ -177,11 +177,11 @@ export function AudioSection() {
             <div className="flex items-center justify-between gap-3">
               <label
                 htmlFor={volumeId}
-                className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                className="text-sm font-medium text-muted"
               >
                 Volume
               </label>
-              <span className="text-sm tabular-nums text-zinc-500 dark:text-zinc-400">
+              <span className="text-sm tabular-nums text-muted">
                 {audioPrefs.volume}%
               </span>
             </div>
@@ -199,22 +199,22 @@ export function AudioSection() {
                   volume: Number(event.target.value),
                 }))
               }
-              className="h-2 w-full cursor-pointer appearance-none rounded-full bg-zinc-200 accent-violet-600 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-700 dark:accent-violet-400"
+              className="h-2 w-full cursor-pointer appearance-none rounded-full bg-sunken accent-violet-600 disabled:cursor-not-allowed disabled:opacity-50 dark:accent-violet-400"
             />
           </div>
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-2xl border border-zinc-200/80 bg-white/70 dark:border-zinc-700 dark:bg-zinc-900/60">
-        <div className="flex items-start gap-3 border-b border-zinc-100 px-4 py-4 dark:border-zinc-800">
+      <section className="overflow-hidden rounded-2xl border border-line/80 bg-surface/70 dark:bg-overlay">
+        <div className="flex items-start gap-3 border-b border-line px-4 py-4">
           <span className="inline-flex size-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200">
             <IoMusicalNoteOutline className="size-5" aria-hidden />
           </span>
           <div>
-            <h3 className="font-display text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+            <h3 className="font-display text-lg font-semibold text-ink">
               Import your own
             </h3>
-            <p className="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">
+            <p className="mt-0.5 text-sm text-muted">
               Upload a short audio clip from your device. Saved locally.
             </p>
           </div>
@@ -241,7 +241,7 @@ export function AudioSection() {
             type="button"
             onClick={onChooseSoundFile}
             disabled={isImporting}
-            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:opacity-60"
           >
             {isImporting ? "Importing…" : "Choose audio file"}
           </button>
@@ -254,13 +254,13 @@ export function AudioSection() {
                 return (
                   <li
                     key={sound.id}
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-zinc-100 bg-zinc-50/80 px-3 py-2.5 dark:border-zinc-800 dark:bg-zinc-950/40"
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-sunken/80 px-3 py-2.5 dark:bg-overlay"
                   >
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                      <p className="truncate text-sm font-medium text-ink">
                         {sound.name}
                       </p>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                      <p className="text-xs text-muted">
                         {isSelected ? "Selected for task clicks" : "Imported sound"}
                       </p>
                     </div>
@@ -269,7 +269,7 @@ export function AudioSection() {
                         type="button"
                         onClick={() => previewTaskClickSound(id)}
                         disabled={soundsDisabled}
-                        className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                        className="rounded-lg border border-line bg-surface px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:bg-sunken disabled:opacity-50"
                       >
                         Preview
                       </button>
@@ -282,7 +282,7 @@ export function AudioSection() {
                               taskClickSoundId: id,
                             }))
                           }
-                          className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                          className="rounded-lg border border-line bg-surface px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:bg-sunken"
                         >
                           Use
                         </button>
@@ -290,7 +290,7 @@ export function AudioSection() {
                       <button
                         type="button"
                         onClick={() => removeCustomSound(sound.id)}
-                        className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-700 transition-colors hover:bg-red-50 dark:border-red-900/40 dark:bg-zinc-900 dark:text-red-300 dark:hover:bg-red-950/30"
+                        className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-surface px-3 py-1.5 text-xs font-medium text-red-700 transition-colors hover:bg-red-50 dark:border-red-900/40 dark:text-red-300 dark:hover:bg-red-950/30"
                       >
                         <IoTrashOutline className="size-3.5" aria-hidden />
                         Remove
@@ -301,7 +301,7 @@ export function AudioSection() {
               })}
             </ul>
           ) : (
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            <p className="text-sm text-muted">
               No imported sounds yet.
             </p>
           )}

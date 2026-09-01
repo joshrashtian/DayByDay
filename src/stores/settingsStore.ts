@@ -7,7 +7,6 @@ import type {
   BlockConfig,
   CategoryConfig,
   CustomSound,
-  HomeVisualPrefs,
   ManualWeatherCoords,
 } from "@/types";
 import {
@@ -16,7 +15,11 @@ import {
   evictTaskClickSoundFromCache,
   normalizeAudioPrefs,
 } from "@/lib/taskClickSounds";
-import { DEFAULT_SIDEBAR_STYLE_ID } from "@/themes/sidebarStyles";
+import {
+  applyTheme,
+  normalizeThemePreference,
+  type ThemePreference,
+} from "@/lib/appTheme";
 
 type SidebarMode = "tasks" | "social" | "apps";
 
@@ -24,14 +27,13 @@ type SidebarState = {
   open: boolean;
   width: number;
   mode: SidebarMode;
-  style: string;
   taskOrder: string[];
   socialOrder: string[];
   appOrder: string[];
 };
 
 type SettingsState = {
-  homeVisualPrefs: HomeVisualPrefs;
+  theme: ThemePreference;
   dayTransitionEnabled: boolean;
   zoomLevel: number;
   sidebar: SidebarState;
@@ -39,13 +41,10 @@ type SettingsState = {
   weatherCoords: ManualWeatherCoords | null;
   audioPrefs: AudioPrefs;
   customSounds: CustomSound[];
-  blocksUserCss: string;
   blockConfigs: BlockConfig[];
   categoryConfigs: CategoryConfig[];
 
-  setHomeVisualPrefs: (
-    prefs: HomeVisualPrefs | ((prev: HomeVisualPrefs) => HomeVisualPrefs),
-  ) => void;
+  setTheme: (theme: ThemePreference) => void;
   setDayTransitionEnabled: (enabled: boolean) => void;
   setZoomLevel: (level: number) => void;
   setSidebar: (state: Partial<SidebarState>) => void;
@@ -56,27 +55,14 @@ type SettingsState = {
   ) => void;
   addCustomSound: (sound: CustomSound) => void;
   removeCustomSound: (id: string) => void;
-  setBlocksUserCss: (css: string) => void;
   setBlockConfigs: (configs: BlockConfig[]) => void;
   setCategoryConfigs: (configs: CategoryConfig[]) => void;
-};
-
-const DEFAULT_HOME_VISUAL_PREFS: HomeVisualPrefs = {
-  blockStyle: "punchy",
-  blockScale: 1,
-  ribbonStyle: "default",
-  ribbonScale: 1,
-  tasksStyle: "default",
-  tasksScale: 1,
-  clockStyle: "p5",
-  clockScale: 1,
 };
 
 const DEFAULT_SIDEBAR: SidebarState = {
   open: true,
   width: 220,
   mode: "tasks",
-  style: DEFAULT_SIDEBAR_STYLE_ID,
   taskOrder: [],
   socialOrder: [],
   appOrder: [],
@@ -124,16 +110,6 @@ function readLegacySettingsState(): Partial<SettingsState> | null {
 
 function migrateLegacyKeys(): Partial<SettingsState> {
   const migrated: Partial<SettingsState> = {};
-
-  try {
-    const homeVisual =
-      localStorage.getItem("risebyday.home.visual-prefs.v1") ??
-      localStorage.getItem("daybyday.home.visual-prefs.v1");
-    if (homeVisual) {
-      const parsed = JSON.parse(homeVisual);
-      migrated.homeVisualPrefs = { ...DEFAULT_HOME_VISUAL_PREFS, ...parsed };
-    }
-  } catch {}
 
   try {
     const dt =
@@ -191,13 +167,6 @@ function migrateLegacyKeys(): Partial<SettingsState> {
   } catch {}
 
   try {
-    const css =
-      localStorage.getItem("rbd.blocks.userCss") ??
-      localStorage.getItem("dbd.blocks.userCss");
-    if (css) migrated.blocksUserCss = css;
-  } catch {}
-
-  try {
     const blocks =
       localStorage.getItem("risebyday-block-configs") ??
       localStorage.getItem("daybyday-block-configs");
@@ -243,7 +212,7 @@ function cleanupLegacyKeys(): void {
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
-      homeVisualPrefs: DEFAULT_HOME_VISUAL_PREFS,
+      theme: "system",
       dayTransitionEnabled:
         typeof window !== "undefined"
           ? !window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -254,15 +223,13 @@ export const useSettingsStore = create<SettingsState>()(
       weatherCoords: null,
       audioPrefs: DEFAULT_AUDIO_PREFS,
       customSounds: [],
-      blocksUserCss: "",
       blockConfigs: [],
       categoryConfigs: [],
 
-      setHomeVisualPrefs: (prefs) =>
-        set((s) => ({
-          homeVisualPrefs:
-            typeof prefs === "function" ? prefs(s.homeVisualPrefs) : prefs,
-        })),
+      setTheme: (theme) => {
+        applyTheme(theme);
+        set({ theme });
+      },
       setDayTransitionEnabled: (enabled) =>
         set({ dayTransitionEnabled: enabled }),
       setZoomLevel: (level) => set({ zoomLevel: clampAppZoom(level) }),
@@ -299,14 +266,13 @@ export const useSettingsStore = create<SettingsState>()(
             audioPrefs: normalizeSettingsAudio(s.audioPrefs, customSounds),
           };
         }),
-      setBlocksUserCss: (css) => set({ blocksUserCss: css }),
       setBlockConfigs: (configs) => set({ blockConfigs: configs }),
       setCategoryConfigs: (configs) => set({ categoryConfigs: configs }),
     }),
     {
       name: SETTINGS_STORAGE_KEY,
       partialize: (state) => ({
-        homeVisualPrefs: state.homeVisualPrefs,
+        theme: state.theme,
         dayTransitionEnabled: state.dayTransitionEnabled,
         zoomLevel: state.zoomLevel,
         sidebar: state.sidebar,
@@ -314,7 +280,6 @@ export const useSettingsStore = create<SettingsState>()(
         weatherCoords: state.weatherCoords,
         audioPrefs: state.audioPrefs,
         customSounds: state.customSounds,
-        blocksUserCss: state.blocksUserCss,
         blockConfigs: state.blockConfigs,
         categoryConfigs: state.categoryConfigs,
       }),
@@ -325,6 +290,7 @@ export const useSettingsStore = create<SettingsState>()(
           return {
             ...current,
             ...p,
+            theme: normalizeThemePreference(p.theme),
             audioPrefs: normalizeSettingsAudio(p.audioPrefs, customSounds),
           } as SettingsState;
         }

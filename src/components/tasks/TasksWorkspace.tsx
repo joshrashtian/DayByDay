@@ -319,14 +319,14 @@ export function TasksWorkspace({
               <div className="flex flex-col gap-6 pb-8">
                 {viewMode === "all" ? (
                   <section
-                    className="rounded-2xl border border-white/50 bg-white/25 p-3 shadow-[0_6px_24px_rgba(15,15,15,0.05)] backdrop-blur-sm dark:border-white/10 dark:bg-zinc-900/20"
+                    className="rounded-2xl border border-line/50 bg-surface/25 p-3 shadow-[0_6px_24px_rgba(15,15,15,0.05)] backdrop-blur-sm dark:bg-overlay"
                     aria-label="All tasks"
                   >
                     <header className="mb-3 flex items-center justify-between px-1">
-                      <h3 className="text-sm font-semibold tracking-wide text-zinc-800 dark:text-zinc-100">
+                      <h3 className="text-sm font-semibold tracking-wide text-ink">
                         All tasks
                       </h3>
-                      <span className="rounded-full bg-zinc-500/15 px-2 py-0.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                      <span className="rounded-full bg-zinc-500/15 px-2 py-0.5 text-xs font-semibold text-muted">
                         {(() => {
                           const rowCount =
                             countTaskListEntries(flatListEntries);
@@ -346,7 +346,7 @@ export function TasksWorkspace({
                         onSetTags={setTaskTags}
                       />
                     ) : (
-                      <p className="px-1 py-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
+                      <p className="px-1 py-6 text-center text-sm text-muted">
                         No tasks match your filters.
                       </p>
                     )}
@@ -355,18 +355,18 @@ export function TasksWorkspace({
                   groupedVisibleTasks.map((group) => (
                     <section
                       key={group.label}
-                      className="rounded-2xl border border-white/50 bg-white/25 p-3 shadow-[0_6px_24px_rgba(15,15,15,0.05)] backdrop-blur-sm dark:border-white/10 dark:bg-zinc-900/20"
+                      className="rounded-2xl border border-line/50 bg-surface/25 p-3 shadow-[0_6px_24px_rgba(15,15,15,0.05)] backdrop-blur-sm dark:bg-overlay"
                       aria-label={`${group.label} task container`}
                     >
                       <header className="mb-3 flex items-center justify-between px-1">
-                        <h3 className="text-sm font-semibold tracking-wide text-zinc-800 dark:text-zinc-100">
+                        <h3 className="text-sm font-semibold tracking-wide text-ink">
                           {group.label}
                         </h3>
                         {(() => {
                           const rowCount = countTaskListEntries(group.entries);
                           const total = group.tasks.length;
                           return (
-                            <span className="rounded-full bg-zinc-500/15 px-2 py-0.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                            <span className="rounded-full bg-zinc-500/15 px-2 py-0.5 text-xs font-semibold text-muted">
                               {rowCount === total
                                 ? `${total} ${total === 1 ? "task" : "tasks"}`
                                 : `${rowCount} series · ${total} occurrences`}
@@ -390,7 +390,7 @@ export function TasksWorkspace({
         </div>
 
         {composerLayout === "bottomChat" ? (
-          <div className="sticky bottom-0 z-20 shrink-0 border-t border-white/40 bg-linear-to-t from-zinc-100/95 via-zinc-50/90 to-transparent pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md dark:border-white/10 dark:from-zinc-950/95 dark:via-zinc-900/85 dark:to-transparent">
+          <div className="sticky bottom-0 z-20 shrink-0 border-t border-line/40 bg-linear-to-t from-zinc-100/95 via-zinc-50/90 to-transparent pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md dark:from-zinc-950/95 dark:via-zinc-900/85 dark:to-transparent">
             <div className={`mx-auto w-full px-5 sm:px-8 ${maxW}`}>
               <TaskCreator
                 onAdd={addTask}

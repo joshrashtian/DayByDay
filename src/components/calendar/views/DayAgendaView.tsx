@@ -40,7 +40,7 @@ export function DayAgendaView({
       transition={{ duration: 0.28, ease: [0.25, 0.1, 0.25, 1] }}
     >
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="text-sm text-muted">
           {dayTasks.length} due {dayTasks.length === 1 ? "item" : "items"}
         </p>
         {onAddTaskForDay ? (

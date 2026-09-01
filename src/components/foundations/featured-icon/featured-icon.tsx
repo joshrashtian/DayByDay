@@ -46,7 +46,7 @@ const styles = sortCx({
     },
 
     dark: {
-        base: "text-fg-white shadow-xs-skeuomorphic before:absolute before:inset-px before:border before:border-white/12 before:mask-b-from-0%",
+        base: "text-fg-white shadow-xs-skeuomorphic before:absolute before:inset-px before:border before:border-line/12 before:mask-b-from-0%",
         sizes: {
             sm: "size-8 rounded-md before:rounded-[5px]",
             md: "size-10 rounded-lg before:rounded-[7px]",

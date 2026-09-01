@@ -52,7 +52,7 @@ export function TasksCategoryDetailPage() {
               {categoryName}
             </span>
             {!hasStyle ? (
-              <span className="text-xs text-zinc-500 dark:text-zinc-400">
+              <span className="text-xs text-muted">
                 Using default colors
               </span>
             ) : null}
@@ -62,7 +62,7 @@ export function TasksCategoryDetailPage() {
             onClick={() =>
               window.dispatchEvent(new Event("rbd:open-settings"))
             }
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/50 px-3 py-1.5 text-xs font-semibold text-zinc-700 ring-1 ring-white/30 backdrop-blur-xl transition-colors hover:bg-white/80 dark:border-white/15 dark:bg-zinc-900/45 dark:text-zinc-200 dark:hover:bg-zinc-800/80"
+            className="inline-flex items-center gap-1.5 rounded-full border border-line/70 bg-surface/50 px-3 py-1.5 text-xs font-semibold text-muted ring-1 ring-line/30 backdrop-blur-xl transition-colors hover:bg-surface/80 dark:bg-overlay"
           >
             <IoSettingsOutline className="h-3.5 w-3.5" aria-hidden />
             Edit style

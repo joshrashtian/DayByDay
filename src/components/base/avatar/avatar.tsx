@@ -148,7 +148,7 @@ export const Avatar = ({
                     rounded && "rounded-full",
                     canShowImage &&
                         size !== "xs" &&
-                        "before:absolute before:inset-0 before:rounded-[inherit] before:border before:border-white/32 before:mask-[linear-gradient(to_bottom,black_0%,transparent_25%,transparent_75%,black_100%)]",
+                        "before:absolute before:inset-0 before:rounded-[inherit] before:border before:border-line/32 before:mask-[linear-gradient(to_bottom,black_0%,transparent_25%,transparent_75%,black_100%)]",
                     contentClassName,
                 )}
             >

@@ -56,7 +56,7 @@ export const styles = sortCx({
             root: [
                 "bg-brand-solid text-white shadow-xs-skeuomorphic ring-1 ring-transparent ring-inset hover:bg-brand-solid_hover data-loading:bg-brand-solid_hover",
                 // Inner border gradient
-                "before:absolute before:inset-px before:border before:border-white/12 before:mask-b-from-0%",
+                "before:absolute before:inset-px before:border before:border-line/12 before:mask-b-from-0%",
                 // Icon styles
                 "*:data-icon:text-white/60 hover:*:data-icon:text-white/70",
             ].join(" "),
@@ -97,7 +97,7 @@ export const styles = sortCx({
             root: [
                 "bg-error-solid text-white shadow-xs-skeuomorphic ring-1 ring-transparent outline-error ring-inset hover:bg-error-solid_hover data-loading:bg-error-solid_hover",
                 // Inner border gradient
-                "before:absolute before:inset-px before:border before:border-white/12 before:mask-b-from-0%",
+                "before:absolute before:inset-px before:border before:border-line/12 before:mask-b-from-0%",
                 // Icon styles
                 "*:data-icon:text-white/60 hover:*:data-icon:text-white/70",
             ].join(" "),

@@ -13,7 +13,7 @@ import { taskCreatorPopupContent } from "../../tasks/taskCreatorPopupContent";
 import { taskEditorPopupContent } from "../../tasks/taskEditorPopupContent";
 import { isIcsTask } from "../../../lib/icsTasks";
 import { useDisplayedBlockName } from "../../../hooks/useDisplayedBlockName";
-import { useSidebarStyle } from "./SidebarStyleContext";
+import { sidebarTokens as tokens } from "./sidebarTokens";
 
 function formatTaskDuration(task: Task): string | null {
   if (!task.dueDate || !task.endDate) return null;
@@ -50,7 +50,6 @@ export function SidebarInlineTaskList({ showLabel }: Props) {
   );
   const { open: openPopup, close: closePopup } = usePopup();
   const contextMenu = useContextMenu();
-  const tokens = useSidebarStyle();
 
   const editTask = useCallback(
     (taskId: string) => {

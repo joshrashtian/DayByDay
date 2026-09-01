@@ -29,9 +29,9 @@ const TASK_KIND_VISUALS: Record<TaskKind, TaskKindStyle> = {
     label: "Task",
     Icon: IoCheckmarkCircleOutline,
     badgeClass:
-      "border-zinc-300/80 bg-zinc-500/10 text-zinc-700 dark:border-zinc-600 dark:bg-zinc-500/20 dark:text-zinc-200",
+      "border-line-strong/80 bg-zinc-500/10 text-muted",
     subtleBadgeClass:
-      "border-zinc-300/80 bg-zinc-100/80 text-zinc-700 dark:border-zinc-600 dark:bg-zinc-800/80 dark:text-zinc-200",
+      "border-line-strong/80 bg-sunken/80 text-muted",
   },
   event: {
     label: "Event",

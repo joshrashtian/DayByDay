@@ -54,7 +54,7 @@ export function MonthGridView({
         {labels.map((label) => (
           <div
             key={label}
-            className="pb-1 text-center text-[11px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400"
+            className="pb-1 text-center text-[11px] font-semibold uppercase tracking-wider text-muted"
           >
             {label}
           </div>
@@ -80,22 +80,22 @@ export function MonthGridView({
                 data-calendar-drop="all-day"
                 data-calendar-day={key}
                 onClick={() => onPickDay(day.startOf("day"))}
-                className={`flex min-h-[92px] flex-col gap-1 rounded-xl border p-2 text-left ring-1 transition-colors hover:bg-white/50 dark:hover:bg-white/5 ${
+                className={`flex min-h-[92px] flex-col gap-1 rounded-xl border p-2 text-left ring-1 transition-colors hover:bg-surface/50 ${
                   inMonth
-                    ? "border-white/60 bg-white/35 dark:border-white/10 dark:bg-zinc-900/30"
-                    : "border-transparent bg-white/15 opacity-60 dark:bg-zinc-900/15 dark:opacity-50"
+                    ? "border-line/60 bg-surface/35 dark:bg-overlay"
+                    : "border-transparent bg-surface/15 opacity-60 dark:bg-overlay dark:opacity-50"
                 } ${
                   isToday
                     ? "ring-2 ring-sky-400/70 dark:ring-sky-500/50"
-                    : "ring-white/20 dark:ring-white/5"
+                    : "ring-line/20"
                 }`}
               >
                 <span
                   className={`text-sm font-semibold tabular-nums ${
                     isToday
                       ? "text-sky-600 dark:text-sky-400"
-                      : "text-zinc-800 dark:text-zinc-200"
-                  } ${!inMonth ? "text-zinc-400 dark:text-zinc-500" : ""}`}
+                      : "text-ink"
+                  } ${!inMonth ? "text-faint" : ""}`}
                 >
                   {day.day}
                 </span>
@@ -109,7 +109,7 @@ export function MonthGridView({
                     compact
                   />
                   {dayTasks.length > 3 ? (
-                    <p className="mt-0.5 text-[10px] font-medium text-zinc-500">
+                    <p className="mt-0.5 text-[10px] font-medium text-muted">
                       +{dayTasks.length - 3} more
                     </p>
                   ) : null}

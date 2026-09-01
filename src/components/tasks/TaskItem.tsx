@@ -30,7 +30,7 @@ function priorityChipClass(p: TaskPriority) {
     return "bg-rose-500/15 text-rose-800 ring-rose-500/25 dark:text-rose-200";
   if (p === "medium")
     return "bg-amber-500/15 text-amber-900 ring-amber-500/25 dark:text-amber-100";
-  return "bg-slate-500/12 text-slate-800 ring-slate-500/20 dark:text-slate-200";
+  return "bg-slate-500/12 text-slate-800 ring-slate-500/20";
 }
 
 function recurrenceLabel(task: Task): string | undefined {
@@ -134,7 +134,7 @@ export function TaskItem({
             onToggle();
           }
         }}
-        className="group relative cursor-pointer overflow-hidden rounded-2xl border border-white/70 bg-white/45 px-4 py-3.5 shadow-[0_4px_24px_rgba(15,15,15,0.06),inset_0_1px_0_rgba(255,255,255,0.85)] outline-none backdrop-blur-xl backdrop-saturate-150 ring-1 ring-white/30 transition-shadow hover:shadow-[0_14px_40px_rgba(15,15,15,0.1)] focus-visible:ring-2 focus-visible:ring-zinc-400/50 active:scale-[0.99] dark:border-white/15 dark:bg-zinc-900/35 dark:shadow-[0_4px_28px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)] dark:ring-white/10 dark:hover:shadow-[0_14px_40px_rgba(0,0,0,0.45)]"
+        className="group relative cursor-pointer overflow-hidden rounded-2xl border border-line/70 bg-surface/45 px-4 py-3.5 shadow-[0_4px_24px_rgba(15,15,15,0.06),inset_0_1px_0_rgba(255,255,255,0.85)] outline-none backdrop-blur-xl backdrop-saturate-150 ring-1 ring-line/30 transition-shadow hover:shadow-[0_14px_40px_rgba(15,15,15,0.1)] focus-visible:ring-2 focus-visible:ring-line-strong/50 active:scale-[0.99] dark:bg-overlay dark:shadow-[0_4px_28px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)] dark:hover:shadow-[0_14px_40px_rgba(0,0,0,0.45)]"
       >
         <div
           className="pointer-events-none absolute inset-0 rounded-2xl bg-linear-to-br from-white/70 via-white/15 to-transparent opacity-80"
@@ -154,7 +154,7 @@ export function TaskItem({
               className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors ${
                 isDone
                   ? "border-emerald-500/60 bg-emerald-500/25 text-emerald-800"
-                  : "border-zinc-400/45 bg-white/50 group-hover:border-zinc-500/55 dark:border-zinc-500/40 dark:bg-white/10"
+                  : "border-line-strong/45 bg-surface/50 group-hover:border-zinc-500/55"
               }`}
               aria-hidden
             >
@@ -176,9 +176,9 @@ export function TaskItem({
               ) : null}
             </span>
             <span
-              className={`min-w-0 flex-1 wrap-break-word text-lg font-medium tracking-tight text-zinc-900 transition-[color,opacity] dark:text-zinc-100 ${
+              className={`min-w-0 flex-1 wrap-break-word text-lg font-medium tracking-tight text-ink transition-[color,opacity] ${
                 isDone
-                  ? "text-zinc-500 line-through opacity-70 dark:text-zinc-400"
+                  ? "text-muted line-through opacity-70"
                   : ""
               }`}
             >
@@ -191,7 +191,7 @@ export function TaskItem({
                   e.stopPropagation();
                   onEditTask();
                 }}
-                className="shrink-0 rounded-md p-1.5 text-zinc-500 transition-colors hover:bg-zinc-200/50 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-100"
+                className="shrink-0 rounded-md p-1.5 text-muted transition-colors hover:bg-sunken/50 hover:text-ink"
                 aria-label="Edit task"
                 title="Edit task"
               >
@@ -200,7 +200,7 @@ export function TaskItem({
             ) : null}
           </div>
           <div
-            className="flex min-w-0 flex-wrap items-center gap-2 pl-8 text-xs font-medium text-zinc-600 dark:text-zinc-400"
+            className="flex min-w-0 flex-wrap items-center gap-2 pl-8 text-xs font-medium text-muted"
             onClick={(e) => e.stopPropagation()}
           >
             {task.block ? (
@@ -226,7 +226,7 @@ export function TaskItem({
             {task.dueDate ? (
               <time
                 dateTime={taskDueToIso(task.dueDate)}
-                className="rounded-md bg-white/50 px-2 py-0.5 ring-1 ring-zinc-200/80 dark:bg-zinc-950/40 dark:ring-zinc-600/50"
+                className="rounded-md bg-surface/50 px-2 py-0.5 ring-1 ring-line/80 dark:bg-overlay"
               >
                 {formatTaskDue(task.dueDate)}
               </time>
@@ -240,7 +240,7 @@ export function TaskItem({
             ) : null}
             {task.recurrence ? (
               <span
-                className="inline-flex items-center gap-0.5 rounded-md bg-white/50 px-2 py-0.5 ring-1 ring-zinc-200/80 dark:bg-zinc-950/40 dark:ring-zinc-600/50"
+                className="inline-flex items-center gap-0.5 rounded-md bg-surface/50 px-2 py-0.5 ring-1 ring-line/80 dark:bg-overlay"
                 title={recurrenceLabel(task)}
               >
                 <IoRepeatOutline
@@ -259,7 +259,7 @@ export function TaskItem({
                 {onSetTags ? (
                   <button
                     type="button"
-                    className="shrink-0 rounded p-0.5 text-violet-700/80 transition-colors hover:bg-violet-500/20 hover:text-violet-950 dark:text-violet-300 dark:hover:text-white"
+                    className="shrink-0 rounded p-0.5 text-violet-700/80 transition-colors hover:bg-violet-500/20 hover:text-violet-950 dark:text-violet-300"
                     aria-label={`Remove tag ${tag}`}
                     onClick={() => removeTag(tag)}
                   >

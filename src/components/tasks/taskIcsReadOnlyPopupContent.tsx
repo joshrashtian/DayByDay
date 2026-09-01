@@ -40,10 +40,10 @@ export function taskIcsReadOnlyPopupContent({
           <KindIcon className="size-5" aria-hidden />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted">
             Imported calendar event
           </p>
-          <h2 className="mt-1 font-display text-xl font-semibold text-zinc-900 dark:text-zinc-100">
+          <h2 className="mt-1 font-display text-xl font-semibold text-ink">
             {task.title}
           </h2>
         </div>
@@ -61,50 +61,50 @@ export function taskIcsReadOnlyPopupContent({
       <dl className="mt-5 space-y-4">
         {when ? (
           <div>
-            <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            <dt className="text-xs font-semibold uppercase tracking-wide text-muted">
               When
             </dt>
-            <dd className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">
+            <dd className="mt-1 text-sm text-ink">
               {when}
             </dd>
           </div>
         ) : null}
         {task.category ? (
           <div>
-            <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            <dt className="text-xs font-semibold uppercase tracking-wide text-muted">
               Category
             </dt>
-            <dd className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">
+            <dd className="mt-1 text-sm text-ink">
               {task.category}
             </dd>
           </div>
         ) : null}
         {task.classLocation ? (
           <div>
-            <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            <dt className="text-xs font-semibold uppercase tracking-wide text-muted">
               Location
             </dt>
-            <dd className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">
+            <dd className="mt-1 text-sm text-ink">
               {task.classLocation}
             </dd>
           </div>
         ) : null}
         {task.description ? (
           <div>
-            <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            <dt className="text-xs font-semibold uppercase tracking-wide text-muted">
               Description
             </dt>
-            <dd className="mt-1 whitespace-pre-wrap text-sm text-zinc-700 dark:text-zinc-300">
+            <dd className="mt-1 whitespace-pre-wrap text-sm text-muted">
               {task.description}
             </dd>
           </div>
         ) : null}
         {importedAt ? (
           <div>
-            <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            <dt className="text-xs font-semibold uppercase tracking-wide text-muted">
               Imported
             </dt>
-            <dd className="mt-1 text-sm text-zinc-700 dark:text-zinc-300">
+            <dd className="mt-1 text-sm text-muted">
               {importedAt}
             </dd>
           </div>
@@ -115,7 +115,7 @@ export function taskIcsReadOnlyPopupContent({
         <button
           type="button"
           onClick={closePopup}
-          className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+          className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
         >
           Close
         </button>
@@ -126,14 +126,14 @@ export function taskIcsReadOnlyPopupContent({
               onRemove();
               closePopup();
             }}
-            className="rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 dark:border-red-900/50 dark:bg-zinc-900 dark:text-red-300 dark:hover:bg-red-950/40"
+            className="rounded-lg border border-red-200 bg-surface px-4 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 dark:border-red-900/50 dark:text-red-300 dark:hover:bg-red-950/40"
           >
             Remove import
           </button>
         ) : null}
       </div>
 
-      <p className="mt-4 inline-flex items-center gap-1.5 text-xs text-zinc-400 dark:text-zinc-500">
+      <p className="mt-4 inline-flex items-center gap-1.5 text-xs text-faint">
         <IoDocumentTextOutline className="size-3.5" aria-hidden />
         Type: {kindVisual.label}
       </p>

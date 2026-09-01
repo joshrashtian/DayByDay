@@ -202,16 +202,16 @@ function ClassesView() {
 
   return (
     <>
-      <h1 className="font-quantify text-3xl text-zinc-900 dark:text-zinc-100 sm:text-4xl">
+      <h1 className="font-quantify text-3xl text-ink sm:text-4xl">
         Classes
       </h1>
 
-      <section className="mt-6 w-full rounded-2xl border border-zinc-200/80 bg-white/80 p-5 shadow-[0_8px_30px_rgba(15,23,42,0.05)] dark:border-zinc-700 dark:bg-zinc-900/60">
+      <section className="mt-6 w-full rounded-2xl border border-line/80 bg-surface/80 p-5 shadow-[0_8px_30px_rgba(15,23,42,0.05)] dark:bg-overlay">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+          <h2 className="text-lg font-semibold text-ink">
             Your School Schedule
           </h2>
-          <span className="rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-xs font-semibold text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
+          <span className="rounded-full border border-line bg-sunken px-2.5 py-1 text-xs font-semibold text-muted">
             {weeklyScheduledCount} scheduled
           </span>
         </div>
@@ -225,7 +225,7 @@ function ClassesView() {
                   key={day.label}
                   className="-skew-x-12 rounded-xl border border-sky-100 bg-sky-50/60 p-3 dark:border-sky-900/30 dark:bg-sky-950/20"
                 >
-                  <p className="skew-x-12 text-[11px] font-quantify font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
+                  <p className="skew-x-12 text-[11px] font-quantify font-semibold uppercase tracking-[0.14em] text-muted">
                     {day.label}
                   </p>
                   {dayTasks.length ? (
@@ -234,14 +234,14 @@ function ClassesView() {
                         return (
                           <li
                             key={task.id}
-                            className="-skew-x-12 rounded-lg border border-zinc-200/80 bg-white/95 p-2.5 shadow-[0_2px_8px_rgba(15,23,42,0.04)] dark:border-zinc-700 dark:bg-zinc-950/90"
+                            className="-skew-x-12 rounded-lg border border-line/80 bg-surface/95 p-2.5 shadow-[0_2px_8px_rgba(15,23,42,0.04)] dark:bg-overlay"
                           >
-                            <p className="skew-x-12 truncate text-xs font-semibold text-zinc-800 dark:text-zinc-100">
+                            <p className="skew-x-12 truncate text-xs font-semibold text-ink">
                               {task.title}
                             </p>
                             {task.metadata?.class?.location ||
                             task.classLocation ? (
-                              <p className="mt-0.5 skew-x-12 truncate text-[10px] text-zinc-500 dark:text-zinc-400">
+                              <p className="mt-0.5 skew-x-12 truncate text-[10px] text-muted">
                                 {task.metadata?.class?.location ??
                                   task.classLocation}
                               </p>
@@ -262,13 +262,13 @@ function ClassesView() {
                         );
                       })}
                       {dayTasks.length > 4 ? (
-                        <li className="skew-x-12 text-[10px] font-medium text-zinc-500 dark:text-zinc-400">
+                        <li className="skew-x-12 text-[10px] font-medium text-muted">
                           +{dayTasks.length - 4} more
                         </li>
                       ) : null}
                     </ul>
                   ) : (
-                    <p className="mt-3 skew-x-12 text-[11px] italic text-zinc-400 dark:text-zinc-500">
+                    <p className="mt-3 skew-x-12 text-[11px] italic text-faint">
                       No classes
                     </p>
                   )}
@@ -277,15 +277,15 @@ function ClassesView() {
             })}
           </div>
         ) : (
-          <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="mt-4 text-sm text-muted">
             No scheduled class tasks yet. Assign due dates to your class tasks
             to place them in the weekly calendar.
           </p>
         )}
       </section>
 
-      <section className="mt-5 w-full rounded-2xl border border-zinc-200/80 bg-white/70 p-5 dark:border-zinc-700 dark:bg-zinc-900/60">
-        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+      <section className="mt-5 w-full rounded-2xl border border-line/80 bg-surface/70 p-5 dark:bg-overlay">
+        <h2 className="text-lg font-semibold text-ink">
           Edit Class Tasks
         </h2>
 
@@ -296,26 +296,26 @@ function ClassesView() {
                 <form
                   key={task.id}
                   onSubmit={(event) => onSaveClassTask(task, event)}
-                  className="rounded-xl border border-zinc-200/80 bg-white/80 p-3 dark:border-zinc-700 dark:bg-zinc-950/70"
+                  className="rounded-xl border border-line/80 bg-surface/80 p-3 dark:bg-overlay"
                 >
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
                     <input
                       name="title"
                       defaultValue={task.title}
                       placeholder="Class task title"
-                      className="rounded-lg border border-zinc-300/80 bg-white px-2.5 py-1.5 text-xs text-zinc-900 outline-none transition focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-zinc-500"
+                      className="rounded-lg border border-line-strong/80 bg-surface px-2.5 py-1.5 text-xs text-ink outline-none transition focus:border-zinc-500"
                     />
                     <input
                       name="course"
                       defaultValue={task.category ?? ""}
                       placeholder="Course / class name"
-                      className="rounded-lg border border-zinc-300/80 bg-white px-2.5 py-1.5 text-xs text-zinc-900 outline-none transition focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-zinc-500"
+                      className="rounded-lg border border-line-strong/80 bg-surface px-2.5 py-1.5 text-xs text-ink outline-none transition focus:border-zinc-500"
                     />
                     <input
                       name="dueDate"
                       type="datetime-local"
                       defaultValue={formatDateTimeLocalInput(task.dueDate)}
-                      className="rounded-lg border border-zinc-300/80 bg-white px-2.5 py-1.5 text-xs text-zinc-900 outline-none transition focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-zinc-500"
+                      className="rounded-lg border border-line-strong/80 bg-surface px-2.5 py-1.5 text-xs text-ink outline-none transition focus:border-zinc-500"
                     />
                     <input
                       name="location"
@@ -323,7 +323,7 @@ function ClassesView() {
                         task.metadata?.class?.location ?? task.classLocation ?? ""
                       }
                       placeholder="Location"
-                      className="rounded-lg border border-zinc-300/80 bg-white px-2.5 py-1.5 text-xs text-zinc-900 outline-none transition focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-zinc-500"
+                      className="rounded-lg border border-line-strong/80 bg-surface px-2.5 py-1.5 text-xs text-ink outline-none transition focus:border-zinc-500"
                     />
                     <input
                       name="grade"
@@ -331,11 +331,11 @@ function ClassesView() {
                         task.metadata?.class?.grade ?? task.classGrade ?? ""
                       }
                       placeholder="Grade"
-                      className="rounded-lg border border-zinc-300/80 bg-white px-2.5 py-1.5 text-xs text-zinc-900 outline-none transition focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-zinc-500"
+                      className="rounded-lg border border-line-strong/80 bg-surface px-2.5 py-1.5 text-xs text-ink outline-none transition focus:border-zinc-500"
                     />
                   </div>
                   <div className="mt-2 flex items-center justify-between">
-                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                    <p className="text-[11px] text-muted">
                       {task.done ? "Completed" : "Open"} •{" "}
                       {task.dueDate
                         ? `${task.dueDate.toLocaleDateString()} ${formatClock(task.dueDate)}`
@@ -345,13 +345,13 @@ function ClassesView() {
                       <button
                         type="button"
                         onClick={() => toggleTask(task.id)}
-                        className="rounded-md border border-zinc-300 px-2 py-1 text-[11px] font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                        className="rounded-md border border-line-strong px-2 py-1 text-[11px] font-semibold text-muted transition hover:bg-sunken"
                       >
                         {task.done ? "Mark Open" : "Mark Done"}
                       </button>
                       <button
                         type="submit"
-                        className="rounded-md bg-zinc-900 px-2.5 py-1 text-[11px] font-semibold text-white transition hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
+                        className="rounded-md bg-ink px-2.5 py-1 text-[11px] font-semibold text-white transition hover:bg-ink"
                       >
                         Save
                       </button>
@@ -362,7 +362,7 @@ function ClassesView() {
             })}
           </div>
         ) : (
-          <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="mt-4 text-sm text-muted">
             No class tasks yet. Create a task with type `class` and it will
             appear here and on the calendar.
           </p>
@@ -379,10 +379,10 @@ export default function ToolkitWindowScreen() {
   if (!selectedPanel) {
     return (
       <main className="mx-auto flex min-h-[calc(100dvh-7rem)] w-full max-w-5xl flex-col px-3 pb-24 pt-20 sm:px-6 sm:pt-24 lg:px-8">
-        <h1 className="font-quantify text-3xl text-zinc-900 dark:text-zinc-100 sm:text-4xl">
+        <h1 className="font-quantify text-3xl text-ink sm:text-4xl">
           Panel Not Found
         </h1>
-        <p className="mt-3 text-base text-zinc-600 dark:text-zinc-300">
+        <p className="mt-3 text-base text-muted">
           This panel is not currently part of Toolkit.
         </p>
       </main>
@@ -394,17 +394,17 @@ export default function ToolkitWindowScreen() {
       {selectedPanel.id === "classes" ? <ClassesView /> : null}
       {selectedPanel.id !== "classes" ? (
         <>
-          <h1 className="font-quantify text-3xl text-zinc-900 dark:text-zinc-100 sm:text-4xl">
+          <h1 className="font-quantify text-3xl text-ink sm:text-4xl">
             {selectedPanel.label}
           </h1>
-          <p className="mt-3 max-w-2xl text-base text-zinc-600 dark:text-zinc-300">
+          <p className="mt-3 max-w-2xl text-base text-muted">
             {selectedPanel.description}
           </p>
-          <div className="mt-6 w-full rounded-2xl border border-dashed border-zinc-300/80 bg-zinc-50/80 p-5 dark:border-zinc-700 dark:bg-zinc-900/30">
-            <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+          <div className="mt-6 w-full rounded-2xl border border-dashed border-line-strong/80 bg-sunken/80 p-5 dark:bg-overlay">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted">
               Coming Soon
             </p>
-            <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-200">
+            <p className="mt-2 text-sm text-muted">
               This dedicated panel is reserved for first-party features we add
               in the app.
             </p>

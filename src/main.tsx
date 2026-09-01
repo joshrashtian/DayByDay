@@ -7,30 +7,28 @@ import PopupProvider from "./providers/PopupProvider";
 import { DayTransitionProvider } from "./providers/DayTransitionProvider";
 import { ProfileProvider } from "./providers/ProfileProvider";
 import { RightPanelProvider } from "./providers/RightPanelProvider";
-import { StyleProvider } from "./providers/StyleProvider";
-import { ThemeRegistryProvider } from "./themes/ThemeRegistryProvider";
 import GuideProvider from "./providers/GlobalHelpProvider";
+import { applyTheme, readPersistedThemePreference } from "./lib/appTheme";
+
+// Before first paint, so the app never flashes light on a dark-mode launch.
+applyTheme(readPersistedThemePreference());
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <HashRouter>
-      <StyleProvider>
-        <ThemeRegistryProvider>
-        <GuideProvider>
-          <ContextMenuProvider>
-            <PopupProvider>
-              <DayTransitionProvider>
-                <ProfileProvider>
-                  <RightPanelProvider>
-                    <App />
-                  </RightPanelProvider>
-                </ProfileProvider>
-              </DayTransitionProvider>
-            </PopupProvider>
-          </ContextMenuProvider>
-        </GuideProvider>
-        </ThemeRegistryProvider>
-      </StyleProvider>
+      <GuideProvider>
+        <ContextMenuProvider>
+          <PopupProvider>
+            <DayTransitionProvider>
+              <ProfileProvider>
+                <RightPanelProvider>
+                  <App />
+                </RightPanelProvider>
+              </ProfileProvider>
+            </DayTransitionProvider>
+          </PopupProvider>
+        </ContextMenuProvider>
+      </GuideProvider>
     </HashRouter>
   </React.StrictMode>,
 );

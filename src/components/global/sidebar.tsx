@@ -24,8 +24,7 @@ import {
 } from "./sidebar/SidebarNavItem";
 import { SidebarModeToggle } from "./sidebar/SidebarModeToggle";
 import { SidebarInlineTaskList } from "./sidebar/SidebarInlineTaskList";
-import { SidebarStyleProvider } from "./sidebar/SidebarStyleContext";
-import { getSidebarStyle } from "@/themes/sidebarStyles";
+import { sidebarTokens } from "./sidebar/sidebarTokens";
 import { listen } from "@tauri-apps/api/event";
 
 const taskDefaultNavItems: SidebarNavItem[] = [
@@ -214,7 +213,6 @@ const SideBar = ({
 
   const resolvedWidth = previewWidth ?? sidebarWidth;
   const showLabel = sidebarOpen && resolvedWidth >= LABEL_REVEAL_WIDTH;
-  const styleTokens = getSidebarStyle(sidebarState.style).tokens;
   const activeItems =
     sidebarMode === "tasks"
       ? taskItems
@@ -229,7 +227,7 @@ const SideBar = ({
           <motion.nav
             key="sidebar-nav"
             aria-label="Primary navigation"
-            className={`relative flex h-full justify-between flex-col overflow-hidden rounded-r-3xl px-3 py-3 shadow-lg backdrop-blur-sm ${styleTokens.surface}`}
+            className={`relative flex h-full justify-between flex-col overflow-hidden rounded-r-3xl px-3 py-3 shadow-lg backdrop-blur-sm ${sidebarTokens.surface} border-r border-line`}
             style={{ width: resolvedWidth }}
             initial={{ x: -24 }}
             animate={{ x: 0 }}
@@ -257,7 +255,6 @@ const SideBar = ({
             }}
             onPointerCancel={() => setSwipeStartX(null)}
           >
-            <SidebarStyleProvider value={styleTokens}>
               {/* Nav items — compact, non-scrolling */}
               <div className="flex shrink-0 flex-col gap-2">
                 <SidebarModeToggle
@@ -298,7 +295,7 @@ const SideBar = ({
               {/* Divider */}
               {sidebarMode === "tasks" && (
                 <div
-                  className={`my-0.5 mx-1 shrink-0 border-t ${styleTokens.divider}`}
+                  className={`my-0.5 mx-1 shrink-0 border-t ${sidebarTokens.divider}`}
                 />
               )}
 
@@ -311,14 +308,14 @@ const SideBar = ({
 
               {/* Utility icon bar */}
               <div
-                className={`flex shrink-0 items-center justify-around border-t pt-2 ${styleTokens.divider}`}
+                className={`flex shrink-0 items-center justify-around border-t pt-2 ${sidebarTokens.divider}`}
               >
                 <button
                   type="button"
                   onClick={onOpenProfile}
                   aria-label="Profile"
                   title="Profile"
-                  className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${styleTokens.utilityButton}`}
+                  className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${sidebarTokens.utilityButton}`}
                 >
                   <IoPersonOutline className="text-base" />
                 </button>
@@ -327,7 +324,7 @@ const SideBar = ({
                   onClick={onOpenSettings}
                   aria-label="Settings"
                   title="Settings"
-                  className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${styleTokens.utilityButton}`}
+                  className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${sidebarTokens.utilityButton}`}
                 >
                   <IoSettingsOutline className="text-base" />
                 </button>
@@ -335,7 +332,7 @@ const SideBar = ({
                   to="/help"
                   aria-label="Help"
                   title="Help"
-                  className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${styleTokens.utilityButton}`}
+                  className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${sidebarTokens.utilityButton}`}
                 >
                   <IoHelpCircleOutline className="text-base" />
                 </NavLink>
@@ -348,7 +345,6 @@ const SideBar = ({
                 }}
                 className="absolute right-0 top-0 h-full w-3 translate-x-1/2 cursor-e-resize bg-transparent"
               />
-            </SidebarStyleProvider>
           </motion.nav>
         ) : (
           <motion.div
@@ -383,7 +379,7 @@ const SideBar = ({
             <button
               type="button"
               onClick={() => setSidebarOpen(true)}
-              className="ml-1 inline-flex h-14 w-5 items-center justify-center rounded-r-full border border-zinc-300/80 bg-white/90 text-zinc-500 shadow-sm backdrop-blur transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900/90 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+              className="ml-1 inline-flex h-14 w-5 items-center justify-center rounded-r-full border border-line bg-surface text-muted shadow-sm backdrop-blur transition-colors hover:bg-sunken hover:text-ink"
               aria-label="Open sidebar"
               title="Open sidebar"
             >

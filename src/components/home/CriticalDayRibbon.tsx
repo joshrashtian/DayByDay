@@ -1,15 +1,30 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { animate, motion, useMotionValue, useMotionValueEvent } from "motion/react";
+import { useMemo } from "react";
+import { motion } from "motion/react";
 import { DateTime } from "luxon";
 import { twMerge } from "tailwind-merge";
 import { useShallow } from "zustand/react/shallow";
-import type { RibbonVisualStyle, Task } from "@/types";
+import type { Task } from "@/types";
 import { useTasksStore } from "../../stores/tasksStore";
-import {
-  getCriticalRibbonStyle,
-  type RibbonTone,
-} from "../../providers/homeCriticalRibbonStyles";
 import { IoHourglass, IoTimeOutline, IoWarning } from "react-icons/io5";
+
+/**
+ * The critical reminder has one look: a danger-tinted card that reads as a
+ * single object. Colors come from the semantic `danger` tokens, so the card
+ * follows light/dark without a second definition.
+ */
+const RIBBON_WRAPPER =
+  "rounded-2xl border border-danger/30 bg-danger-soft px-3.5 py-3 shadow-[0_14px_34px_-26px_rgb(0_0_0/0.5)] backdrop-blur-sm";
+
+const tone = {
+  eyebrow:
+    "text-[10px] font-black uppercase italic leading-none tracking-[0.28em] text-danger",
+  badge: "bg-danger text-white shadow-sm",
+  badgeIcon: "text-white",
+  badgeStatus: "text-white/90",
+  title: "text-ink",
+  tag: "border-danger/30 bg-danger-soft text-danger",
+  more: "text-danger/80",
+};
 
 function sortCriticalTasks(a: Task, b: Task): number {
   const da = a.dueDate ? DateTime.fromJSDate(a.dueDate).toMillis() : Infinity;
@@ -134,19 +149,8 @@ function JitterText({ text, className }: { text: string; className: string }) {
   );
 }
 
-type CriticalHeaderRibbonProps = {
-  /** Selected ribbon style id. */
-  style?: RibbonVisualStyle;
-  /** Outer card frame (wrapper preset already merged with the theme overlay). */
-  ribbonContainerClassName?: string;
-};
-
-export function CriticalHeaderRibbon({
-  style = "default",
-  ribbonContainerClassName = "",
-}: CriticalHeaderRibbonProps) {
+export function CriticalHeaderRibbon() {
   const critical = useCriticalForDay();
-  const preset = getCriticalRibbonStyle(style);
 
   const label = useMemo(() => {
     if (critical.length === 0) return "";
@@ -155,25 +159,7 @@ export function CriticalHeaderRibbon({
 
   if (critical.length === 0) return null;
 
-  if (preset.animated) {
-    return (
-      <ClassicRibbon
-        critical={critical}
-        label={label}
-        eyebrowClassName={preset.tone.eyebrow}
-        ribbonContainerClassName={ribbonContainerClassName}
-      />
-    );
-  }
-
-  return (
-    <CardRibbon
-      critical={critical}
-      label={label}
-      tone={preset.tone}
-      ribbonContainerClassName={ribbonContainerClassName}
-    />
-  );
+  return <CardRibbon critical={critical} label={label} />;
 }
 
 /* ── Cohesive card renderer ────────────────────────────────────────────── */
@@ -184,17 +170,7 @@ function StatusIcon({ label, className }: { label: string; className: string }) 
   return <IoHourglass className={className} />;
 }
 
-function CardRibbon({
-  critical,
-  label,
-  tone,
-  ribbonContainerClassName,
-}: {
-  critical: Task[];
-  label: string;
-  tone: RibbonTone;
-  ribbonContainerClassName: string;
-}) {
+function CardRibbon({ critical, label }: { critical: Task[]; label: string }) {
   const { title, tags } = getPrimary(critical);
 
   return (
@@ -215,7 +191,7 @@ function CardRibbon({
         style={{ maxWidth: "min(24rem, 100%)" }}
         className={twMerge(
           "flex items-center gap-3 transition-colors",
-          ribbonContainerClassName,
+          RIBBON_WRAPPER,
         )}
       >
         <motion.div
@@ -297,173 +273,3 @@ function CardRibbon({
 }
 
 /* ── Classic animated ribbon (preserved original look) ─────────────────── */
-
-const ribbonSkewTransition = {
-  duration: 1,
-  repeat: Infinity,
-  repeatType: "reverse" as const,
-  ease: "easeInOut" as const,
-};
-
-function randomNegativeSkewRange(): [number, number] {
-  const shallow = -(3 + Math.random() * 12);
-  const deep = -(9 + Math.random() * 24);
-  return deep < shallow ? [deep, shallow] : [shallow, deep];
-}
-
-function ClassicRibbon({
-  critical,
-  label,
-  eyebrowClassName,
-  ribbonContainerClassName,
-}: {
-  critical: Task[];
-  label: string;
-  eyebrowClassName: string;
-  ribbonContainerClassName: string;
-}) {
-  const [skewRange, setSkewRange] = useState<[number, number]>(() =>
-    randomNegativeSkewRange(),
-  );
-  const ribbonSkewDeg = useMotionValue(skewRange[0]);
-  const ribbonLeftBgRef = useRef<HTMLDivElement>(null);
-  const ribbonRightBgRef = useRef<HTMLDivElement>(null);
-
-  const applyRibbonSkewToDom = useCallback((deg: number) => {
-    const transform = `skewX(${deg}deg)`;
-    ribbonLeftBgRef.current?.style.setProperty("transform", transform);
-    ribbonRightBgRef.current?.style.setProperty("transform", transform);
-  }, []);
-
-  useMotionValueEvent(ribbonSkewDeg, "change", applyRibbonSkewToDom);
-
-  useLayoutEffect(() => {
-    applyRibbonSkewToDom(ribbonSkewDeg.get());
-  }, [applyRibbonSkewToDom, ribbonSkewDeg]);
-
-  useEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout>;
-    const scheduleNext = () => {
-      timeoutId = setTimeout(
-        () => {
-          setSkewRange(randomNegativeSkewRange());
-          scheduleNext();
-        },
-        1800 + Math.random() * 2200,
-      );
-    };
-    scheduleNext();
-    return () => clearTimeout(timeoutId);
-  }, []);
-
-  useEffect(() => {
-    const [a, b] = skewRange;
-    ribbonSkewDeg.set(a);
-    const controls = animate(ribbonSkewDeg, [a, b], { ...ribbonSkewTransition });
-    return () => controls.stop();
-  }, [skewRange, ribbonSkewDeg]);
-
-  const labelLetterMotion = useMemo(() => makeLetterMotion(label.length), [label]);
-
-  const { title, tags } = getPrimary(critical);
-
-  return (
-    <div className="flex w-full max-w-full flex-col items-end">
-      <motion.p
-        initial={{ opacity: 0, x: -8 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ type: "spring", stiffness: 400, damping: 30, delay: 0.06 }}
-        className={twMerge("mb-1.5 pr-0.5 text-right", eyebrowClassName)}
-      >
-        CRITICAL REMINDER
-      </motion.p>
-
-      <div className={ribbonContainerClassName}>
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ type: "spring", stiffness: 420, damping: 26 }}
-          style={{ maxWidth: "min(22rem, 100%)" }}
-          className="flex items-stretch overflow-hidden"
-        >
-          <div className="relative flex shrink-0 flex-col justify-center overflow-hidden px-4 py-2.5">
-            <div
-              ref={ribbonLeftBgRef}
-              aria-hidden
-              className="pointer-events-none absolute inset-y-0 left-[-40px] right-[-40px] origin-center bg-red-800 will-change-transform"
-            />
-            <div
-              aria-hidden
-              className="pointer-events-none absolute right-0 top-0 z-0 h-full w-5 bg-red-600"
-              style={{ clipPath: "polygon(100% 0%, 100% 100%, 0% 100%)" }}
-            />
-            <div className="relative z-10 flex flex-col justify-center">
-              <span className="text-[8px] font-black font-display italic tracking-[0.22em] text-red-300">
-                {label.split("").map((char, i) => {
-                  const lm = labelLetterMotion[i]!;
-                  return (
-                    <motion.span
-                      key={`${label}-${i}`}
-                      className="inline-block"
-                      initial={{ opacity: 0, y: 6, rotate: 0 }}
-                      animate={{
-                        opacity: 1,
-                        rotate: [0, lm.midRotate, 0],
-                        y: [0, lm.midY, 0],
-                      }}
-                      transition={{
-                        opacity: { duration: 0.22, delay: lm.opacityDelay },
-                        rotate: lm.rotate,
-                        y: lm.y,
-                      }}
-                    >
-                      {char === " " ? " " : char}
-                    </motion.span>
-                  );
-                })}
-              </span>
-              <span className="font-display text-[22px] font-black italic leading-tight tracking-tight text-white">
-                {label === "OVERDUE" ? "⚠" : <IoHourglass />}
-              </span>
-            </div>
-          </div>
-
-          <div className="relative flex min-w-0 flex-1 items-center overflow-hidden py-2.5 pl-6 pr-8">
-            <div
-              ref={ribbonRightBgRef}
-              aria-hidden
-              className="pointer-events-none absolute inset-y-0 left-[-48px] right-[-48px] origin-center bg-red-600 will-change-transform"
-            />
-            <div
-              aria-hidden
-              className="pointer-events-none absolute right-0 top-0 z-0 h-full w-8 bg-red-800/50"
-              style={{ clipPath: "polygon(60% 0%, 100% 0%, 100% 100%, 0% 100%)" }}
-            />
-            <div className="relative z-10 min-w-0">
-              <p className="truncate text-[13px] font-black italic uppercase leading-tight tracking-widest text-white">
-                {title}
-              </p>
-              {tags.length > 0 && (
-                <div className="mt-1.5 flex flex-wrap gap-1">
-                  {tags.map((tag, i) => (
-                    <span
-                      key={`${i}-${tag}`}
-                      className="inline-flex max-w-full shrink-0 rounded border border-red-200/35 bg-red-950/40 px-1.5 py-0.5 text-[8px] font-bold uppercase leading-none tracking-wider text-red-100"
-                    >
-                      <span className="truncate">{tag}</span>
-                    </span>
-                  ))}
-                </div>
-              )}
-              {critical.length > 1 && (
-                <p className="mt-0.5 text-[9px] font-bold italic tracking-[0.2em] text-red-200">
-                  +{critical.length - 1} MORE
-                </p>
-              )}
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    </div>
-  );
-}

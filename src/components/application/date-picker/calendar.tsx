@@ -54,14 +54,14 @@ export const Calendar = ({ highlightedDates, className, children, ...props }: Ca
                         <header className="flex items-center justify-between px-1 pb-1">
                             <AriaButton
                                 slot="previous"
-                                className="inline-flex size-7 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                                className="inline-flex size-7 items-center justify-center rounded-lg text-faint transition-colors hover:bg-sunken hover:text-muted"
                             >
                                 <ChevronLeft className="size-3.5" />
                             </AriaButton>
-                            <AriaHeading className="text-xs font-semibold tracking-wide text-zinc-700 dark:text-zinc-200" />
+                            <AriaHeading className="text-xs font-semibold tracking-wide text-muted" />
                             <AriaButton
                                 slot="next"
-                                className="inline-flex size-7 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                                className="inline-flex size-7 items-center justify-center rounded-lg text-faint transition-colors hover:bg-sunken hover:text-muted"
                             >
                                 <ChevronRight className="size-3.5" />
                             </AriaButton>
@@ -73,7 +73,7 @@ export const Calendar = ({ highlightedDates, className, children, ...props }: Ca
                             <AriaCalendarGridHeader>
                                 {(day) => (
                                     <AriaCalendarHeaderCell className="p-0">
-                                        <div className="flex size-8 items-center justify-center text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+                                        <div className="flex size-8 items-center justify-center text-[10px] font-semibold uppercase tracking-wider text-faint">
                                             {day.slice(0, 2)}
                                         </div>
                                     </AriaCalendarHeaderCell>

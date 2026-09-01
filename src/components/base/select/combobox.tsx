@@ -56,7 +56,7 @@ const ComboBoxValue = ({ size, shortcut, placeholder, shortcutClassName, trigger
                     isFocusWithin &&
                         cx(
                             "ring-2",
-                            triggerClassName ? "ring-zinc-300/50 dark:ring-zinc-500/50" : "ring-brand",
+                            triggerClassName ? "ring-line/50" : "ring-brand",
                         ),
 
                     // Icon styles

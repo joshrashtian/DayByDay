@@ -1,7 +1,6 @@
 import {
   IoCloudOutline,
   IoColorPaletteOutline,
-  IoBrushOutline,
   IoHomeOutline,
   IoPersonOutline,
   IoCalendarOutline,
@@ -14,7 +13,6 @@ export type SettingsSection =
   | "appearance"
   | "weather"
   | "categories"
-  | "blocks-css"
   | "profile"
   | "connected-calendars"
   | "audio";
@@ -38,7 +36,7 @@ export const SECTIONS: SectionMeta[] = [
   {
     id: "appearance",
     label: "Appearance",
-    description: "Sidebar style and theme",
+    description: "Light, dark, or system",
     icon: <IoLayersOutline />,
   },
   {
@@ -54,15 +52,9 @@ export const SECTIONS: SectionMeta[] = [
     icon: <IoColorPaletteOutline />,
   },
   {
-    id: "blocks-css",
-    label: "Blocks CSS",
-    description: "Customize time-of-day blocks",
-    icon: <IoBrushOutline />,
-  },
-  {
     id: "profile",
     label: "Profile",
-    description: "Your local RiseByDay profile",
+    description: "Your profile and Supabase sync",
     icon: <IoPersonOutline />,
   },
   {

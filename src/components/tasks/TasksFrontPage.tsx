@@ -26,21 +26,9 @@ import { Tooltip, TooltipTrigger } from "../base/tooltip/tooltip";
 
 type Props = {
   activeBlockName?: string;
-  themeInnerClass?: string;
-  themeDropZoneClass?: string;
-  themeDropZoneActiveClass?: string;
-  themeAware?: boolean;
-  themePomodoroToggleClass?: string;
 };
 
-export const TasksFrontPage = ({
-  activeBlockName,
-  themeInnerClass = "font-eudoxus",
-  themeDropZoneClass = "rounded-2xl",
-  themeDropZoneActiveClass = "border border-sky-400 bg-sky-50/60 dark:border-sky-400 dark:bg-sky-950/30",
-  themeAware = false,
-  themePomodoroToggleClass,
-}: Props) => {
+export const TasksFrontPage = ({ activeBlockName }: Props) => {
   const { tasks } = useTasksStore(useShallow((s) => ({ tasks: s.tasks })));
   const { toggleTask, updateTask, removeTask } = useTasksStore(
     useShallow((s) => ({
@@ -159,7 +147,7 @@ export const TasksFrontPage = ({
   const activeCount = sortedTasks.filter((task) => !task.done).length;
 
   return (
-    <div className={themeInnerClass}>
+    <div className="font-eudoxus text-ink">
       <motion.div
         layout
         className="flex min-h-100 flex-col gap-4 sm:min-h-112 sm:gap-5"
@@ -174,12 +162,7 @@ export const TasksFrontPage = ({
             </p>
           </div>
           <div
-            className={`inline-flex shrink-0 items-center gap-0.5 rounded-full p-0.5 ${
-              themePomodoroToggleClass ??
-              (themeAware
-                ? "bg-black/20 ring-1 ring-white/10"
-                : "bg-zinc-200/60 dark:bg-zinc-800/60")
-            }`}
+            className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-sunken p-0.5"
           >
             <HomePomodoroToggle />
           </div>
@@ -188,9 +171,9 @@ export const TasksFrontPage = ({
         <motion.div
           layout
           ref={dropZoneRef}
-          className={`relative min-h-44 w-full px-2 py-4 transition-colors duration-300 sm:min-h-40 sm:px-4 ${themeDropZoneClass} ${
-            isDropActive ? themeDropZoneActiveClass : ""
-          } ${pomodoroPanelOpen && !themeAware ? "bg-zinc-50/50 dark:bg-zinc-900/30" : ""}`}
+          className={`relative min-h-44 w-full rounded-2xl px-2 py-4 transition-colors duration-300 sm:min-h-40 sm:px-4 ${
+            isDropActive ? "border border-accent bg-accent-soft" : ""
+          } ${pomodoroPanelOpen ? "bg-sunken" : ""}`}
         >
           <HomePomodoroPanel
             linkedTaskTitle={
@@ -236,11 +219,7 @@ export const TasksFrontPage = ({
                 ) : null}
                 <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs font-medium">
                   <span
-                    className={`rounded-md px-2 py-0.5 font-quantify ${
-                      themeAware
-                        ? "border border-current/20 bg-black/20"
-                        : "border-b border-blue-500 bg-zinc-100 text-zinc-700 dark:border-zinc-600 dark:bg-zinc-700/70 dark:text-zinc-200"
-                    }`}
+                    className="rounded-md border-b border-accent bg-sunken px-2 py-0.5 font-quantify text-muted"
                   >
                     {visibleFocusedTask.critical
                       ? "Critical"
@@ -250,11 +229,7 @@ export const TasksFrontPage = ({
                         : "No priority"}
                   </span>
                   <span
-                    className={`rounded-md px-2 py-0.5 font-quantify ${
-                      themeAware
-                        ? "border border-current/20 bg-black/20"
-                        : "border-b bg-zinc-100 text-zinc-700 dark:border-zinc-600 dark:bg-zinc-700/70 dark:text-zinc-200"
-                    }`}
+                    className="rounded-md border-b border-line bg-sunken px-2 py-0.5 font-quantify text-muted"
                   >
                     {visibleFocusedTask.dueDate
                       ? formatTaskDue(visibleFocusedTask.dueDate)
@@ -266,7 +241,7 @@ export const TasksFrontPage = ({
                 {isTaskOverdue(visibleFocusedTask.dueDate) ||
                 isTaskDueToday(visibleFocusedTask.dueDate) ? (
                   <h3
-                    className={`text-center font-baron text-2xl tracking-[0.08em] sm:text-3xl ${isTaskOverdue(visibleFocusedTask.dueDate) ? "text-red-500" : "text-zinc-500"}`}
+                    className={`text-center font-baron text-2xl tracking-[0.08em] sm:text-3xl ${isTaskOverdue(visibleFocusedTask.dueDate) ? "text-red-500" : "text-muted"}`}
                   >
                     {isTaskOverdue(visibleFocusedTask.dueDate)
                       ? "OVERDUE"
@@ -283,7 +258,7 @@ export const TasksFrontPage = ({
                     <TooltipTrigger
                       aria-label="Edit task"
                       onPress={() => openTaskEditor(visibleFocusedTask.id)}
-                      className="inline-flex items-center justify-center rounded-full bg-white p-3 text-zinc-500 transition-colors hover:bg-amber-500 hover:text-white dark:bg-zinc-700/70 dark:text-zinc-300 dark:hover:bg-amber-600"
+                      className="inline-flex items-center justify-center rounded-full bg-surface p-3 text-muted transition-colors hover:bg-amber-500 hover:text-white dark:hover:bg-amber-600"
                     >
                       <IoCreateOutline
                         className={TASK_ICON_LG_CLASS}
@@ -312,7 +287,7 @@ export const TasksFrontPage = ({
                           : "Mark as complete"
                       }
                       onPress={() => toggleTask(visibleFocusedTask.id)}
-                      className="inline-flex items-center justify-center rounded-full bg-white p-3 text-zinc-500 transition-colors hover:bg-emerald-600 hover:text-white dark:bg-zinc-700/70 dark:text-zinc-300 dark:hover:bg-emerald-600"
+                      className="inline-flex items-center justify-center rounded-full bg-surface p-3 text-muted transition-colors hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-600"
                     >
                       {visibleFocusedTask.done ? (
                         <IoCheckmarkCircle

@@ -1,5 +1,111 @@
 @import "tailwindcss";
 
+/*
+ * Dark mode is driven by a `dark` class on <html>, not by the OS directly.
+ * `src/lib/appTheme.ts` owns that class and resolves the "system" preference,
+ * so the user can override their OS setting from Settings → Appearance.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Semantic color tokens. Every surface/text/border color in the app comes from
+ * this list — components write `bg-surface text-muted border-line` and never
+ * pair a light color with a `dark:` counterpart, so a new component cannot
+ * forget its dark half.
+ *
+ *   canvas  page background      ink     primary text
+ *   surface cards, panels        muted   secondary text
+ *   raised  popups, menus        faint   placeholder / tertiary text
+ *   sunken  inputs, wells        line    borders and dividers
+ */
+:root {
+  --canvas: #f4f4f5;
+  --surface: #ffffff;
+  --raised: #ffffff;
+  --sunken: #f4f4f5;
+
+  --ink: #18181b;
+  --muted: #71717a;
+  --faint: #a1a1aa;
+
+  --line: #e4e4e7;
+  --line-strong: #d4d4d8;
+
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-soft: rgb(37 99 235 / 0.1);
+  --accent-ink: #ffffff;
+
+  --danger: #dc2626;
+  --danger-soft: rgb(220 38 38 / 0.1);
+  --success: #059669;
+  --success-soft: rgb(5 150 105 / 0.1);
+  --warn: #d97706;
+  --warn-soft: rgb(217 119 6 / 0.1);
+
+  --overlay: rgb(9 9 11 / 0.4);
+}
+
+.dark {
+  --canvas: #09090b;
+  --surface: #18181b;
+  --raised: #27272a;
+  --sunken: #131316;
+
+  --ink: #fafafa;
+  --muted: #a1a1aa;
+  --faint: #71717a;
+
+  --line: #27272a;
+  --line-strong: #3f3f46;
+
+  --accent: #3b82f6;
+  --accent-hover: #60a5fa;
+  --accent-soft: rgb(59 130 246 / 0.16);
+  --accent-ink: #ffffff;
+
+  --danger: #f87171;
+  --danger-soft: rgb(248 113 113 / 0.16);
+  --success: #34d399;
+  --success-soft: rgb(52 211 153 / 0.16);
+  --warn: #fbbf24;
+  --warn-soft: rgb(251 191 36 / 0.16);
+
+  --overlay: rgb(0 0 0 / 0.6);
+}
+
+/*
+ * `inline` keeps the var reference in the generated utility instead of
+ * resolving it at build time — that is what lets `.dark` re-point a token.
+ */
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-sunken: var(--sunken);
+
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+
+  --color-overlay: var(--overlay);
+}
+
 @layer utilities {
   .no-scrollbar {
     -ms-overflow-style: none;
@@ -406,14 +512,20 @@
   line-height: 24px;
   font-weight: 400;
 
-  color: #0f0f0f;
-  background-color: #f6f6f6;
+  color: var(--ink);
+  background-color: var(--canvas);
+  /* Native scrollbars, form controls and the Tauri window chrome follow this. */
+  color-scheme: light;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+}
+
+html.dark {
+  color-scheme: dark;
 }
 
 html,
@@ -424,6 +536,8 @@ body,
   width: 100%;
   height: 100%;
   overflow: hidden;
+  color: var(--ink);
+  background-color: var(--canvas);
 }
 
 #app-zoom-root {

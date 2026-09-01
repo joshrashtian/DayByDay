@@ -112,23 +112,6 @@ export type BlockConfig = {
   color?: string;
   /** Icon id from CATEGORY_ICON_OPTIONS. */
   icon?: string;
-  customCss?: string;
-};
-
-export type BlockVisualStyle =
-  | "punchy"
-  | "clean"
-  | "outline"
-  | "capsule"
-  | "stacked"
-  | "terminal"
-  | "neon"
-  | "sticker";
-
-export type BlockBannerResolvedClasses = {
-  containerClassName: string;
-  titleClassName: string;
-  timeClassName: string;
 };
 
 // ── Categories ────────────────────────────────────────────────────────────
@@ -165,52 +148,6 @@ export type WeatherState =
   | { status: "ok"; tempF: number; code: number }
   | { status: "error" };
 
-// ── Clock / Date Corner ───────────────────────────────────────────────────
-
-export type ClockTemplate =
-  | "minimal"
-  | "p5"
-  | "basic"
-  | "terminal"
-  | "orbit"
-  | "neon"
-  | "editorial"
-  | "pinkBiology";
-
-export type ClockStyleSource = "core" | "user" | "marketplace";
-
-export type ClockStylePrototype = {
-  id: string;
-  template: ClockTemplate;
-  source: ClockStyleSource;
-  pageClassName: string;
-  pageContentClassName?: string;
-  rootClassName: string;
-  wrapperClassName: string;
-  wrapperIdleClassName: string;
-  transformOrigin: string;
-  dateRowClassName: string;
-  dateRowOverlayClassName?: string;
-  dateRowCardClassName?: string;
-  dateRowCardInnerClassName?: string;
-  dateTextClassName: string;
-  monthClassName: string;
-  dayClassName: string;
-  weekdayRowClassName: string;
-  weekdayClassName: string;
-  weatherClassName: string;
-  weatherIconClassName: string;
-  weatherTemperatureClassName: string;
-  resizeHandleClassName: string;
-};
-
-export type ClockStylePrototypeInput = {
-  template?: ClockTemplate;
-  source?: ClockStyleSource;
-} & Partial<Omit<ClockStylePrototype, "id" | "template" | "source">>;
-
-export type ClockStylePack = Record<string, ClockStylePrototypeInput>;
-
 // ── Calendar integrations ─────────────────────────────────────────────────
 
 export type CalendarProvider = "google";
@@ -223,78 +160,9 @@ export type ConnectedCalendar = {
   enabled: boolean;
 };
 
-// ── Home Visual Styles ────────────────────────────────────────────────────
-
-export type RibbonVisualStyle =
-  | "default"
-  | "muted"
-  | "high-contrast"
-  | "solid"
-  | "glass"
-  | "outline"
-  | "classic";
-
-export type TasksVisualStyle =
-  | "default"
-  | "card"
-  | "minimal"
-  | "terminal"
-  | "neon"
-  | "editorial"
-  | "outline"
-  | "glass";
+// ── Home ─────────────────────────────────────────────────────────────────
 
 export type DayFocusMode = "current-block" | "all-day";
-
-export type HomeVisualPrefs = {
-  blockStyle: BlockVisualStyle;
-  blockScale: number;
-  ribbonStyle: RibbonVisualStyle;
-  ribbonScale: number;
-  tasksStyle: TasksVisualStyle;
-  tasksScale: number;
-  /** Theme id from the home theme registry (core ids match clock templates). */
-  clockStyle: string;
-  clockScale: number;
-};
-
-/** Tailwind class tokens that paint one sidebar style. */
-export type SidebarStyleTokens = {
-  /** Outer nav container surface — replaces the default gradient. */
-  surface: string;
-  /** Active nav item background + text. */
-  navItemActive: string;
-  /** Idle nav item text + hover treatment. */
-  navItemIdle: string;
-  /** Active-item accent bar color. */
-  navAccent: string;
-  /** Divider / section border color. */
-  divider: string;
-  /** Utility icon button (profile / settings / help) treatment. */
-  utilityButton: string;
-  /** Primary text on the surface (task titles, etc). */
-  primaryText: string;
-  /** Muted/secondary text (labels, counts, metadata). */
-  mutedText: string;
-  /** Subtle chip / pill background + text. */
-  softChip: string;
-  /** Focused task row background + ring. */
-  focusedItem: string;
-  /** Hover state for an idle task row. */
-  rowHover: string;
-  /** Dashed "add task" button treatment. */
-  addButton: string;
-};
-
-/** One selectable sidebar style — mirrors the home theme registry. */
-export type SidebarStyleDefinition = {
-  id: string;
-  label: string;
-  description: string;
-  /** Tailwind gradient classes for the picker swatch. */
-  swatch: string;
-  tokens: SidebarStyleTokens;
-};
 
 export type AudioPrefs = {
   soundEnabled: boolean;

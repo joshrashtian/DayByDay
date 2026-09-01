@@ -55,10 +55,10 @@ export function WeatherSection() {
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="font-display text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
+        <h2 className="font-display text-2xl font-semibold text-ink">
           Weather
         </h2>
-        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="mt-1 text-sm text-muted">
           Use a fixed location for consistent forecast data across sessions.
         </p>
       </div>
@@ -80,7 +80,7 @@ export function WeatherSection() {
         <div className="flex flex-col gap-1">
           <label
             htmlFor={latId}
-            className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+            className="text-xs font-medium uppercase tracking-wide text-muted"
           >
             Latitude
           </label>
@@ -95,13 +95,13 @@ export function WeatherSection() {
             aria-invalid={
               saveError?.toLowerCase().includes("latitude") || undefined
             }
-            className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition-shadow focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+            className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none transition-shadow focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div className="flex flex-col gap-1">
           <label
             htmlFor={lonId}
-            className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+            className="text-xs font-medium uppercase tracking-wide text-muted"
           >
             Longitude
           </label>
@@ -116,7 +116,7 @@ export function WeatherSection() {
             aria-invalid={
               saveError?.toLowerCase().includes("longitude") || undefined
             }
-            className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition-shadow focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+            className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none transition-shadow focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </fieldset>
@@ -141,14 +141,14 @@ export function WeatherSection() {
         <button
           type="button"
           onClick={onSaveWeatherLocation}
-          className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+          className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
         >
           Save Coordinates
         </button>
         <button
           type="button"
           onClick={onUseDeviceLocation}
-          className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+          className="rounded-lg border border-line bg-surface px-4 py-2 text-sm font-medium text-muted transition-colors hover:bg-sunken focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
         >
           Use device location
         </button>

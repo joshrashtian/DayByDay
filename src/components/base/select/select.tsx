@@ -44,7 +44,7 @@ const SelectValue = ({ isOpen, isFocused, isDisabled, size, placeholder, icon, t
                 (isFocused || isOpen) &&
                     cx(
                         "ring-2",
-                        triggerClassName ? "ring-zinc-300/50 dark:ring-zinc-500/50" : "ring-brand",
+                        triggerClassName ? "ring-line/50" : "ring-brand",
                     ),
                 isDisabled && "cursor-not-allowed opacity-50",
                 triggerClassName,

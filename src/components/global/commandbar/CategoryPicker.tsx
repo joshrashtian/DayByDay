@@ -67,9 +67,9 @@ export function CategoryPicker({
   };
 
   return (
-    <div className="absolute left-3 right-3 top-0 -translate-y-full rounded-xl border border-zinc-200/80 bg-white/95 skew-x-12 shadow-lg dark:border-zinc-700 dark:bg-zinc-900/95">
+    <div className="absolute left-3 right-3 top-0 -translate-y-full rounded-xl border border-line/80 bg-surface/95 skew-x-12 shadow-lg dark:bg-overlay">
       <div className="mb-2 flex items-center gap-2 p-2">
-        <span className="shrink-0 text-[11px] font-semibold font-quantify -skew-x-12 uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+        <span className="shrink-0 text-[11px] font-semibold font-quantify -skew-x-12 uppercase tracking-wide text-muted">
           Category
         </span>
         <input
@@ -78,11 +78,11 @@ export function CategoryPicker({
           onChange={(e) => setCategoryDraft(e.target.value)}
           onKeyDown={onCategoryDraftKeyDown}
           placeholder="Type category..."
-          className="min-w-0 flex-1 rounded-md border -skew-x-12 border-zinc-300/70 bg-white px-2 py-1 text-xs text-zinc-900 outline-none focus:border-zinc-400 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+          className="min-w-0 flex-1 rounded-md border -skew-x-12 border-line-strong/70 bg-surface px-2 py-1 text-xs text-ink outline-none focus:border-line-strong"
         />
       </div>
       {categoryOptionRows.length ? (
-        <ul className="max-h-36 overflow-y-auto rounded-md border border-zinc-200/80 bg-white/80 dark:border-zinc-700 dark:bg-zinc-900/70">
+        <ul className="max-h-36 overflow-y-auto rounded-md border border-line/80 bg-surface/80 dark:bg-overlay">
           {categoryOptionRows.map((row, index) => (
             <li key={`${row.value}-${index}`}>
               <button
@@ -92,12 +92,12 @@ export function CategoryPicker({
                 className={`flex w-full items-center justify-between px-2 py-1.5 text-left text-xs ${
                   highlightedCategoryIndex === index
                     ? "bg-sky-100 text-sky-900 dark:bg-sky-900/40 dark:text-sky-200"
-                    : "text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                    : "text-muted hover:bg-sunken"
                 }`}
               >
                 <span className="truncate">{row.label}</span>
                 {row.isCreate ? (
-                  <span className="ml-2 shrink-0 text-[10px] uppercase font-display tracking-wide text-zinc-500 dark:text-zinc-400">
+                  <span className="ml-2 shrink-0 text-[10px] uppercase font-display tracking-wide text-muted">
                     New Category
                   </span>
                 ) : null}
@@ -106,11 +106,11 @@ export function CategoryPicker({
           ))}
         </ul>
       ) : (
-        <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+        <p className="text-[11px] text-muted">
           Start typing a category value.
         </p>
       )}
-      <p className="mt-1 text-[10px] text-zinc-500 dark:text-zinc-400">
+      <p className="mt-1 text-[10px] text-muted">
         Arrow keys to navigate, Tab to autocomplete, Enter to apply.
       </p>
     </div>

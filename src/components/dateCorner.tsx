@@ -1,241 +1,51 @@
-import { type ReactNode } from "react";
 import { WeatherBadge } from "./WeatherBadge";
 import { useWeather } from "../hooks/useWeather";
-import { useStyle } from "../providers/StyleProvider";
-import type { ClockStylePrototype } from "@/types";
 
 type Props = {
-  variant?: string;
+  /** Override the outer positioning wrapper (the home page renders it inline). */
   rootClassName?: string;
-  scale?: number;
 };
 
-export const DateCorner = ({
-  variant: variantOverride,
-  rootClassName,
-  scale: scaleOverride,
-}: Props) => {
+/**
+ * The date/weather corner. One look: a skewed accent block holding the date,
+ * with the weekday and weather sitting under it.
+ */
+export const DateCorner = ({ rootClassName }: Props) => {
   const today = new Date();
-  const { style, getClockStyle } = useStyle();
-  const resolvedVariant = variantOverride ?? style ?? "minimal";
-  const stylePrototype = getClockStyle(resolvedVariant);
   const weather = useWeather();
-  const resolvedScale = scaleOverride ?? 1;
 
   const weekday = today
     .toLocaleDateString("en-US", { weekday: "long" })
     .toUpperCase();
-  const monthShort = today
-    .toLocaleDateString("en-US", { month: "short" })
-    .toUpperCase();
-  const monthLong = today.toLocaleDateString("en-US", { month: "long" });
   const month = today.getMonth() + 1;
   const day = today.getDate().toString().padStart(2, "0");
 
-  const root = rootClassName ?? stylePrototype.rootClassName;
-  const wrapperClassName = `${stylePrototype.wrapperClassName} ${stylePrototype.wrapperIdleClassName}`;
-
-  const weatherBadge = (
-    <WeatherBadge
-      weather={weather}
-      compact
-      className={stylePrototype.weatherClassName}
-      iconClassName={stylePrototype.weatherIconClassName}
-      temperatureClassName={stylePrototype.weatherTemperatureClassName}
-    />
-  );
-
-  const shell = (content: ReactNode) => (
-    <div
-      className={wrapperClassName}
-      style={{
-        transform: `scale(${resolvedScale})`,
-        transformOrigin: stylePrototype.transformOrigin,
-      }}
-    >
-      {content}
-    </div>
-  );
-
   return (
-    <div className={root}>
-      {renderClockBody(stylePrototype, {
-        month,
-        monthShort,
-        monthLong,
-        day,
-        weekday,
-        weatherBadge,
-        shell,
-      })}
+    <div className={rootClassName ?? "select-none"}>
+      <div className="group relative inline-flex flex-col items-end gap-0.5">
+        <div className="relative inline-flex items-baseline gap-1 px-6 py-3">
+          <span
+            className="pointer-events-none absolute inset-0 -z-10 -skew-x-12 rounded-sm bg-accent shadow-md"
+            aria-hidden
+          />
+          <span className="flex font-baron font-light tracking-wide text-accent-ink">
+            <span className="rotate-15 text-3xl">{month}/</span>
+            <span className="font-display text-6xl font-bold">{day}</span>
+          </span>
+        </div>
+        <div className="flex w-full flex-nowrap items-baseline justify-end gap-3 pr-0.5">
+          <h3 className="shrink-0 text-right font-quantify text-2xl font-black leading-none tracking-wide text-ink sm:text-3xl">
+            {weekday}
+          </h3>
+          <WeatherBadge
+            weather={weather}
+            compact
+            className="shrink-0 -skew-x-12 items-baseline bg-sunken p-1 px-3 text-ink"
+            iconClassName="text-ink"
+            temperatureClassName="font-quantify skew-x-12 text-2xl font-black tabular-nums tracking-wide text-ink sm:text-3xl"
+          />
+        </div>
+      </div>
     </div>
   );
 };
-
-type ClockBodyProps = {
-  month: number;
-  monthShort: string;
-  monthLong: string;
-  day: string;
-  weekday: string;
-  weatherBadge: ReactNode;
-  shell: (content: ReactNode) => ReactNode;
-};
-
-function renderClockBody(
-  style: ClockStylePrototype,
-  props: ClockBodyProps,
-): ReactNode {
-  const { month, monthShort, monthLong, day, weekday, weatherBadge, shell } =
-    props;
-
-  switch (style.template) {
-    case "p5":
-      return shell(
-        <>
-          <div className={style.dateRowClassName}>
-            <div className={style.dateRowCardClassName}>
-              <div className={style.dateRowCardInnerClassName}>
-                <span className={style.dateTextClassName}>
-                  <span className={style.monthClassName}>{month}/</span>
-                  <span className={style.dayClassName}>{day}</span>
-                </span>
-              </div>
-            </div>
-          </div>
-          <div className={style.weekdayRowClassName}>
-            <span className={style.weekdayClassName}>{weekday}</span>
-            {weatherBadge}
-          </div>
-        </>,
-      );
-
-    case "basic":
-      return shell(
-        <>
-          <div className={style.dateRowClassName}>
-            <div className={style.dateRowCardClassName}>
-              <span className={style.dateTextClassName}>
-                <span className={style.monthClassName}>{month}/</span>
-                <span className={style.dayClassName}>{day}</span>
-              </span>
-            </div>
-          </div>
-          <div className={style.weekdayRowClassName}>
-            <span className={style.weekdayClassName}>{weekday}</span>
-            {weatherBadge}
-          </div>
-        </>,
-      );
-
-    case "terminal":
-      return shell(
-        <>
-          <div className={style.dateRowClassName}>
-            <span className="font-quantify text-[10px] font-bold uppercase tracking-widest text-emerald-600/70">
-              SYS://
-            </span>
-            <span className={style.dateTextClassName}>
-              <span className={style.monthClassName}>
-                {month.toString().padStart(2, "0")}.
-              </span>
-              <span className={style.dayClassName}>{day}</span>
-            </span>
-            <span
-              className="ml-0.5 inline-block h-[1.1em] w-[0.55em] animate-pulse bg-emerald-400/90"
-              aria-hidden
-            />
-          </div>
-          <div className={style.weekdayRowClassName}>
-            <span className={style.weekdayClassName}>{weekday}</span>
-            {weatherBadge}
-          </div>
-        </>,
-      );
-
-    case "orbit":
-      return shell(
-        <>
-          <div className={style.dateRowClassName}>
-            <span
-              className="pointer-events-none absolute inset-1 rounded-full border border-dashed border-amber-700/25 dark:border-amber-200/20"
-              aria-hidden
-            />
-            <span className={style.dateTextClassName}>
-              <span className={style.monthClassName}>{monthShort}</span>
-              <span className={style.dayClassName}>{day}</span>
-            </span>
-          </div>
-          <div className={style.weekdayRowClassName}>
-            <span className={style.weekdayClassName}>{weekday}</span>
-            {weatherBadge}
-          </div>
-        </>,
-      );
-
-    case "neon":
-      return shell(
-        <>
-          <div className={style.dateRowClassName}>
-            <span
-              className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-fuchsia-500/20 blur-2xl"
-              aria-hidden
-            />
-            <span
-              className="pointer-events-none absolute -bottom-4 -left-4 h-16 w-16 rounded-full bg-cyan-400/15 blur-xl"
-              aria-hidden
-            />
-            <span className={style.dateTextClassName}>
-              <span className={style.monthClassName}>{monthShort}</span>
-              <span className={style.dayClassName}>{day}</span>
-            </span>
-          </div>
-          <div className={style.weekdayRowClassName}>
-            <span className={style.weekdayClassName}>{weekday}</span>
-            {weatherBadge}
-          </div>
-        </>,
-      );
-
-    case "editorial":
-      return shell(
-        <>
-          <div className={style.dateRowClassName}>
-            <span className={style.dateTextClassName}>
-              <span className={style.monthClassName}>{monthLong}</span>
-              <span className={style.dayClassName}>{day}</span>
-            </span>
-            <span
-              className="mt-2 h-px w-full bg-zinc-300 dark:bg-zinc-600"
-              aria-hidden
-            />
-          </div>
-          <div className={style.weekdayRowClassName}>
-            <span className={style.weekdayClassName}>{weekday}</span>
-            {weatherBadge}
-          </div>
-        </>,
-      );
-
-    case "minimal":
-    default:
-      return shell(
-        <>
-          <div className={style.dateRowClassName}>
-            <span
-              className={style.dateRowOverlayClassName}
-              aria-hidden
-            />
-            <span className={style.dateTextClassName}>
-              <span className={style.monthClassName}>{month}/</span>
-              <span className={style.dayClassName}>{day}</span>
-            </span>
-          </div>
-          <div className={style.weekdayRowClassName}>
-            <h3 className={style.weekdayClassName}>{weekday}</h3>
-            {weatherBadge}
-          </div>
-        </>,
-      );
-  }
-}

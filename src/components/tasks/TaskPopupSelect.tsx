@@ -94,7 +94,7 @@ export function TaskPopupSelect({
     if (!icon) return null;
     if (isReactComponent(icon)) {
       const Icon = icon;
-      return <Icon className="h-4 w-4 shrink-0 text-zinc-500 dark:text-zinc-400" />;
+      return <Icon className="h-4 w-4 shrink-0 text-muted" />;
     }
     if (isValidElement(icon)) return icon;
     return null;
@@ -130,15 +130,15 @@ export function TaskPopupSelect({
                     }}
                     className={`flex w-full items-start gap-2 px-3 py-2 text-left text-sm transition-colors ${
                       isSelected
-                        ? "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-50"
-                        : "text-zinc-800 hover:bg-zinc-50 dark:text-zinc-200 dark:hover:bg-zinc-800/80"
+                        ? "bg-sunken text-ink"
+                        : "text-ink hover:bg-sunken"
                     }`}
                   >
                     {renderIcon(opt.icon)}
                     <span className="min-w-0 flex-1">
                       <span className="block font-medium">{opt.label}</span>
                       {opt.description ? (
-                        <span className="block text-xs text-zinc-500 dark:text-zinc-400">
+                        <span className="block text-xs text-muted">
                           {opt.description}
                         </span>
                       ) : null}
@@ -165,11 +165,11 @@ export function TaskPopupSelect({
         className={`flex w-full items-center gap-2 px-3.5 py-2.5 text-left text-sm ${taskPopupField.selectTrigger}`}
       >
         {renderIcon(selected?.icon)}
-        <span className="min-w-0 flex-1 truncate font-medium text-zinc-900 dark:text-zinc-100">
+        <span className="min-w-0 flex-1 truncate font-medium text-ink">
           {selected?.label ?? placeholder}
         </span>
         <IoChevronDown
-          className={`h-4 w-4 shrink-0 text-zinc-500 transition-transform dark:text-zinc-400 ${open ? "rotate-180" : ""}`}
+          className={`h-4 w-4 shrink-0 text-muted transition-transform ${open ? "rotate-180" : ""}`}
           aria-hidden
         />
       </button>

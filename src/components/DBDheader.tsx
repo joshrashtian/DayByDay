@@ -18,8 +18,8 @@ export const Header = () => {
                   type="button"
                   className={`rounded-full px-4 py-1 text-xs font-medium tracking-wide transition ${
                     item.active
-                      ? "bg-white text-slate-900 shadow-[0_0_0_1px_rgba(255,255,255,0.6)]"
-                      : "text-slate-100/80 hover:bg-white/10 hover:text-white"
+                      ? "bg-surface text-slate-900 shadow-[0_0_0_1px_rgba(255,255,255,0.6)]"
+                      : "text-slate-100/80 hover:bg-surface/10 hover:text-white"
                   }`}
                 >
                   {item.label}

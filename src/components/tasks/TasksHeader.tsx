@@ -29,7 +29,7 @@ export type TasksHeaderProps = {
 };
 
 const shellInputClass =
-  "rounded-2xl border border-white/70 bg-white/50 text-sm text-zinc-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] ring-1 ring-white/30 backdrop-blur-xl outline-none focus:border-zinc-400/80 focus:ring-2 focus:ring-zinc-400/30 dark:border-white/15 dark:bg-zinc-900/40 dark:text-zinc-100 dark:focus:border-zinc-500 dark:focus:ring-zinc-500/25";
+  "rounded-2xl border border-line/70 bg-surface/50 text-sm text-ink shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] ring-1 ring-line/30 backdrop-blur-xl outline-none focus:border-line-strong/80 focus:ring-2 focus:ring-line-strong/30 dark:bg-overlay";
 
 export function TasksHeader({
   taskSearch,
@@ -71,12 +71,12 @@ export function TasksHeader({
   };
 
   return (
-    <header className="shrink-0 border-b border-white/40 bg-linear-to-b from-zinc-100/90 to-zinc-50/40 px-5 pb-4 pt-6 backdrop-blur-md dark:border-white/10 dark:from-zinc-950/90 dark:to-zinc-900/35 sm:px-8 sm:pb-5 sm:pt-8">
+    <header className="shrink-0 border-b border-line/40 bg-linear-to-b from-zinc-100/90 to-zinc-50/40 px-5 pb-4 pt-6 backdrop-blur-md dark:from-zinc-950/90 dark:to-zinc-900/35 sm:px-8 sm:pb-5 sm:pt-8">
       <div className="mx-auto flex w-full max-w-3xl min-w-0 flex-col gap-5 xl:max-w-4xl">
         <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
           <label className="relative block min-w-0 flex-1 sm:min-w-[200px]">
             <IoSearch
-              className={`pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 ${TASK_ICON_CLASS}`}
+              className={`pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint ${TASK_ICON_CLASS}`}
               aria-hidden
             />
             <input
@@ -85,7 +85,7 @@ export function TasksHeader({
               onChange={(e) => onTaskSearchChange(e.target.value)}
               placeholder="Search tasks, category, or tags…"
               autoComplete="off"
-              className={`w-full py-2.5 pl-10 pr-3 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 ${shellInputClass}`}
+              className={`w-full py-2.5 pl-10 pr-3 placeholder:text-faint ${shellInputClass}`}
               aria-label="Search tasks by title, category, or tags"
             />
           </label>
@@ -132,7 +132,7 @@ export function TasksHeader({
               className={`inline-flex shrink-0 items-center gap-1.5 rounded-2xl border px-3 py-2.5 text-sm font-medium transition-colors ${
                 dueTodayOnly
                   ? "border-sky-500/50 bg-sky-500/15 text-sky-950 ring-2 ring-sky-400/35 dark:text-sky-100"
-                  : "border-white/70 bg-white/50 text-zinc-800 ring-1 ring-white/30 backdrop-blur-xl hover:bg-white/70 dark:border-white/15 dark:bg-zinc-900/40 dark:text-zinc-100 dark:hover:bg-zinc-900/60"
+                  : "border-line/70 bg-surface/50 text-ink ring-1 ring-line/30 backdrop-blur-xl hover:bg-surface/70 dark:bg-overlay dark:hover:bg-overlay"
               }`}
             >
               <IoCalendarOutline className={`${TASK_ICON_CLASS} opacity-90`} aria-hidden />
@@ -146,8 +146,8 @@ export function TasksHeader({
               aria-expanded={sortMenuOpen}
               className={`inline-flex shrink-0 items-center gap-1.5 rounded-2xl border px-3 py-2.5 text-sm font-medium transition-colors sm:hidden ${
                 sortMenuOpen
-                  ? "border-zinc-500/50 bg-zinc-500/15 text-zinc-950 ring-2 ring-zinc-400/35 dark:text-zinc-100"
-                  : "border-white/70 bg-white/50 text-zinc-800 ring-1 ring-white/30 backdrop-blur-xl hover:bg-white/70 dark:border-white/15 dark:bg-zinc-900/40 dark:text-zinc-100 dark:hover:bg-zinc-900/60"
+                  ? "border-zinc-500/50 bg-zinc-500/15 text-ink ring-2 ring-line-strong/35"
+                  : "border-line/70 bg-surface/50 text-ink ring-1 ring-line/30 backdrop-blur-xl hover:bg-surface/70 dark:bg-overlay dark:hover:bg-overlay"
               }`}
             >
               <IoSwapVertical className={`${TASK_ICON_CLASS} opacity-90`} aria-hidden />
@@ -168,7 +168,7 @@ export function TasksHeader({
               hideSectionOrder={viewMode === "all"}
               className="w-full"
             />
-            <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+            <p className="mt-2 text-xs text-muted">
               {sortLabel(taskSort)}
             </p>
           </div>

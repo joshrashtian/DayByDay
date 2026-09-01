@@ -4,7 +4,6 @@ import { getVersion } from "@tauri-apps/api/app";
 import { IoSettings, IoChevronBackOutline } from "react-icons/io5";
 import { WeatherSection } from "./settings/WeatherSection";
 import { CategoriesSection } from "./settings/CategoriesSection";
-import { BlocksCssSection } from "./settings/BlocksCssSection";
 import { ConnectedCalendarsSection } from "./settings/ConnectedCalendarsSection";
 import { ProfileSection } from "./settings/ProfileSection";
 import { AudioSection } from "./settings/AudioSection";
@@ -38,7 +37,6 @@ const SettingsScreenContent = ({ modal = false }: { modal?: boolean }) => {
     appearance: () => <AppearanceSection />,
     weather: () => <WeatherSection />,
     categories: () => <CategoriesSection />,
-    "blocks-css": () => <BlocksCssSection />,
     profile: () => <ProfileSection />,
     "connected-calendars": () => <ConnectedCalendarsSection />,
     audio: () => <AudioSection />,
@@ -51,7 +49,7 @@ const SettingsScreenContent = ({ modal = false }: { modal?: boolean }) => {
         modal ? "min-h-0" : "min-h-screen"
       }`}
     >
-      <div className="shrink-0 border-b border-zinc-100 px-6 py-5 dark:border-zinc-800/60">
+      <div className="shrink-0 border-b border-line px-6 py-5">
         <div className="flex items-center gap-3">
           <motion.div
             className="inline-block origin-center"
@@ -67,10 +65,10 @@ const SettingsScreenContent = ({ modal = false }: { modal?: boolean }) => {
             }}
             aria-hidden="true"
           >
-            <IoSettings className="text-3xl hover:animate-spin text-zinc-900 dark:text-zinc-100" />
+            <IoSettings className="text-3xl hover:animate-spin text-ink" />
           </motion.div>
 
-          <h1 className="flex flex-row text-3xl font-bold font-display text-zinc-900 dark:text-zinc-100">
+          <h1 className="flex flex-row text-3xl font-bold font-display text-ink">
             {"Settings".split("").map((char, i) => (
               <motion.span
                 key={`settings-char-${i}`}
@@ -90,7 +88,7 @@ const SettingsScreenContent = ({ modal = false }: { modal?: boolean }) => {
             ))}
           </h1>
           {appVersion && (
-            <p className="mt-1 text-xs font-medium text-zinc-400 dark:text-zinc-500">
+            <p className="mt-1 text-xs font-medium text-faint">
               {`v${appVersion}`}
             </p>
           )}
@@ -99,7 +97,7 @@ const SettingsScreenContent = ({ modal = false }: { modal?: boolean }) => {
 
       <nav
         aria-label="Settings sections"
-        className="shrink-0 overflow-x-auto border-b border-zinc-100 px-4 py-2 md:hidden dark:border-zinc-800/60"
+        className="shrink-0 overflow-x-auto border-b border-line px-4 py-2 md:hidden"
       >
         <div className="flex min-w-max gap-1.5">
           {SECTIONS.map((section) => {
@@ -113,7 +111,7 @@ const SettingsScreenContent = ({ modal = false }: { modal?: boolean }) => {
                 className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 ${
                   isActive
                     ? "bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300"
-                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                    : "text-muted hover:bg-sunken hover:text-ink"
                 }`}
               >
                 <span className="text-base">{section.icon}</span>
@@ -127,7 +125,7 @@ const SettingsScreenContent = ({ modal = false }: { modal?: boolean }) => {
       <div className="flex min-h-0 flex-1">
         {/*  <nav
           aria-label="Settings sections"
-          className="hidden w-52 shrink-0 flex-col border-r border-zinc-100 bg-zinc-50/50 p-3 md:flex dark:border-zinc-800/60 dark:bg-zinc-900/30"
+          className="hidden w-52 shrink-0 flex-col border-r border-line bg-sunken/50 p-3 md:flex dark:bg-overlay"
         >
           <div className="flex flex-col gap-0.5">
             {SECTIONS.map((section) => {
@@ -140,8 +138,8 @@ const SettingsScreenContent = ({ modal = false }: { modal?: boolean }) => {
                   aria-current={isActive ? "true" : undefined}
                   className={`group relative flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 ${
                     isActive
-                      ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-800 dark:text-zinc-100"
-                      : "text-zinc-500 hover:bg-white/60 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-200"
+                      ? "bg-surface text-ink shadow-sm"
+                      : "text-muted hover:bg-surface/60 hover:text-ink"
                   }`}
                 >
                   <span
@@ -153,8 +151,8 @@ const SettingsScreenContent = ({ modal = false }: { modal?: boolean }) => {
                   <span
                     className={`text-lg transition-colors ${
                       isActive
-                        ? "text-blue-600 dark:text-blue-400"
-                        : "text-zinc-400 group-hover:text-zinc-600 dark:text-zinc-500 dark:group-hover:text-zinc-300"
+                        ? "text-accent"
+                        : "text-faint group-hover:text-muted"
                     }`}
                   >
                     {section.icon}
@@ -172,7 +170,7 @@ const SettingsScreenContent = ({ modal = false }: { modal?: boolean }) => {
               <button
                 type="button"
                 onClick={() => navigate("home")}
-                className="mb-4 inline-flex items-center gap-1 rounded-lg px-2 py-1 -ml-2 text-sm font-medium text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                className="mb-4 inline-flex items-center gap-1 rounded-lg px-2 py-1 -ml-2 text-sm font-medium text-muted transition-colors hover:bg-sunken hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
               >
                 <IoChevronBackOutline aria-hidden="true" />
                 Back to Settings
