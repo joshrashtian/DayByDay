@@ -19,7 +19,7 @@
  *   sunken  inputs, wells        line    borders and dividers
  */
 :root {
-  --canvas: #f4f4f5;
+  --canvas: #fafafa;
   --surface: #ffffff;
   --raised: #ffffff;
   --sunken: #f4f4f5;
@@ -44,6 +44,10 @@
   --warn-soft: rgb(217 119 6 / 0.1);
 
   --overlay: rgb(9 9 11 / 0.4);
+
+  /* Time-of-day tints for the Blocks screen rows. */
+  --block-tint-morning: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 45%, #ede9fe 100%);
+  --block-tint-afternoon: linear-gradient(135deg, #fef3c7 0%, #fed7aa 52%, #fdba74 100%);
 }
 
 .dark {
@@ -72,6 +76,19 @@
   --warn-soft: rgb(251 191 36 / 0.16);
 
   --overlay: rgb(0 0 0 / 0.6);
+
+  --block-tint-morning: linear-gradient(
+    135deg,
+    rgb(12 74 110 / 0.4) 0%,
+    rgb(30 58 138 / 0.35) 45%,
+    rgb(76 29 149 / 0.35) 100%
+  );
+  --block-tint-afternoon: linear-gradient(
+    135deg,
+    rgb(120 53 15 / 0.4) 0%,
+    rgb(154 52 18 / 0.35) 52%,
+    rgb(180 83 9 / 0.35) 100%
+  );
 }
 
 /*

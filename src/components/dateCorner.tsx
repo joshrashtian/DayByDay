@@ -21,7 +21,7 @@ export const DateCorner = ({ rootClassName }: Props) => {
   const day = today.getDate().toString().padStart(2, "0");
 
   return (
-    <div className={rootClassName ?? "select-none"}>
+    <div className={rootClassName ?? "isolate select-none"}>
       <div className="group relative inline-flex flex-col items-end gap-0.5">
         <div className="relative inline-flex items-baseline gap-1 px-6 py-3">
           <span
