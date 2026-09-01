@@ -39,9 +39,9 @@ const PHASE_BTN: Record<PomodoroPhase, string> = {
 };
 
 const PHASE_BG: Record<PomodoroPhase, string> = {
-  focus: "from-rose-100/80 via-rose-50/40 to-white/80",
-  shortBreak: "from-emerald-100/80 via-emerald-50/40 to-white/80",
-  longBreak: "from-sky-100/80 via-sky-50/40 to-white/80",
+  focus: "from-danger-soft via-danger-soft/50 to-transparent",
+  shortBreak: "from-success-soft via-success-soft/50 to-transparent",
+  longBreak: "from-accent-soft via-accent-soft/50 to-transparent",
 };
 
 function TimerDigit({ value }: { value: string }) {
@@ -105,7 +105,7 @@ export default function PomodoroScreen() {
 
   return (
     <main
-      className={`relative flex min-h-[calc(100dvh-7rem)] w-full flex-col items-center justify-center rounded-3xl bg-linear-to-b ${PHASE_BG[phase]}`}
+      className={`relative flex min-h-[calc(100dvh-7rem)] w-full flex-col items-center justify-center rounded-3xl bg-surface bg-linear-to-b ${PHASE_BG[phase]}`}
     >
       {/* Header */}
       <motion.div

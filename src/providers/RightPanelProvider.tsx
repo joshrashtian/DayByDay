@@ -115,7 +115,7 @@ export function RightPanelProvider({
       <aside
         role="complementary"
         aria-label={panelConfig?.label ?? "Right panel"}
-        className={`fixed inset-y-0 right-0 z-60 flex w-[360px] rounded-l-3xl flex-col bg-linear-to-bl from-slate-100 to-blue-100 shadow-2xl transition-transform duration-200 ease-out ${
+        className={`fixed inset-y-0 right-0 z-60 flex w-[360px] rounded-l-3xl flex-col bg-surface bg-linear-to-bl from-accent-soft to-transparent shadow-2xl transition-transform duration-200 ease-out ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >

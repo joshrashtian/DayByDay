@@ -26,6 +26,7 @@ import { PomodoroTicker } from "./components/global/PomodoroTicker";
 import { PomodoroLinkedTaskSync } from "./components/global/PomodoroLinkedTaskSync";
 import { TasksSyncEngine } from "./components/global/TasksSyncEngine";
 import { useAppZoom } from "./hooks/useAppZoom";
+import { useAppTheme } from "./hooks/useAppTheme";
 import { useMenuNavigation } from "./hooks/useMenuNavigation";
 import { useCreateTaskAction } from "./hooks/useCreateTaskAction";
 import { useRightPanel } from "./providers/RightPanelProvider";
@@ -41,6 +42,7 @@ export default function App() {
   const { togglePanel } = useRightPanel();
   useMenuNavigation();
   useAppZoom();
+  useAppTheme();
   useCreateTaskAction();
   const [sidebarOffset, setSidebarOffset] = useState(220);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
