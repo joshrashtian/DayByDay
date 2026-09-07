@@ -10,7 +10,6 @@ export type SidebarNavItem = {
 type Props = {
   item: SidebarNavItem;
   showLabel: boolean;
-  sidebarOpen: boolean;
   onOpenProfile?: () => void;
   onOpenSettings?: () => void;
 };
@@ -18,7 +17,6 @@ type Props = {
 export function SidebarNavItemView({
   item,
   showLabel,
-  sidebarOpen,
   onOpenProfile,
   onOpenSettings,
 }: Props) {
@@ -31,7 +29,7 @@ export function SidebarNavItemView({
         onClick={onOpenProfile}
         draggable={false}
         aria-label={item.label}
-        title={!sidebarOpen ? item.label : undefined}
+        title={!showLabel ? item.label : undefined}
         className={`group relative flex h-10 w-full items-center rounded-xl px-2 text-base transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line/50 focus-visible:ring-offset-2 ${tokens.navItemIdle}`}
       >
         <span
@@ -59,7 +57,7 @@ export function SidebarNavItemView({
         onClick={onOpenSettings}
         draggable={false}
         aria-label={item.label}
-        title={!sidebarOpen ? item.label : undefined}
+        title={!showLabel ? item.label : undefined}
         className={`group relative flex h-10 w-full items-center rounded-xl px-2 text-base transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line/50 focus-visible:ring-offset-2 ${tokens.navItemIdle}`}
       >
         <span
@@ -90,7 +88,7 @@ export function SidebarNavItemView({
       to={item.link}
       draggable={false}
       aria-label={item.label}
-      title={!sidebarOpen ? item.label : undefined}
+      title={!showLabel ? item.label : undefined}
       className={`group relative flex h-10 items-center rounded-xl px-2 text-base transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line/50 focus-visible:ring-offset-2 ${
         isActive ? tokens.navItemActive : tokens.navItemIdle
       }`}

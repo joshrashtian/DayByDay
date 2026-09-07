@@ -71,13 +71,13 @@ export function TasksHeader({
   };
 
   return (
-    <header className="shrink-0 border-b border-line/40 bg-linear-to-b from-canvas/90 to-canvas/40 px-5 pb-4 pt-6 backdrop-blur-md sm:px-8 sm:pb-5 sm:pt-8">
+    <header className="shrink-0   px-5 pb-4 pt-6 sm:px-8 sm:pb-5 sm:pt-8">
       <div className="mx-auto flex w-full max-w-3xl min-w-0 flex-col gap-5 xl:max-w-4xl">
         <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-          <label className="relative block min-w-0 flex-1 sm:min-w-[200px]">
+          <label className={` pl-4 pr-3 gap-4 ${shellInputClass} relative flex flex-row justify-start items-center min-w-0 flex-1  sm:min-w-[200px]`}>
             <IoSearch
-              className={`pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint ${TASK_ICON_CLASS}`}
-              aria-hidden
+              className={` hover:text-zinc-500 duration-1000  text-slate-400`}
+
             />
             <input
               type="search"
@@ -85,7 +85,7 @@ export function TasksHeader({
               onChange={(e) => onTaskSearchChange(e.target.value)}
               placeholder="Search tasks, category, or tags…"
               autoComplete="off"
-              className={`w-full py-2.5 pl-10 pr-3 placeholder:text-faint ${shellInputClass}`}
+              className={`w-full py-2.5  placeholder:text-faint `}
               aria-label="Search tasks by title, category, or tags"
             />
           </label>

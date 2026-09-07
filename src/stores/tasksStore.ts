@@ -115,6 +115,11 @@ function reviveTask(raw: Record<string, unknown>): Task {
         }
       : undefined;
 
+  const childrenTasksRaw = (raw as Record<string, unknown>).children_tasks;
+  const children_tasks = Array.isArray(childrenTasksRaw)
+    ? childrenTasksRaw.filter((id): id is string => typeof id === "string")
+    : [];
+
   const task: Task = {
     ...(rest as Omit<
       Task,
@@ -148,6 +153,7 @@ function reviveTask(raw: Record<string, unknown>): Task {
     ...(tags ? { tags } : {}),
     ...(recurrence ? { recurrence } : {}),
     ...(icsUid ? { icsUid } : {}),
+    children_tasks,
   };
   return task;
 }
@@ -294,6 +300,7 @@ export const useTasksStore = create<TasksState>()(
               done: false,
               createdAt: now,
               updatedAt: now,
+              children_tasks: [],
               ...(payload.dueDate ? { dueDate: payload.dueDate } : {}),
               ...(payload.endDate ? { endDate: payload.endDate } : {}),
               ...(payload.priority ? { priority: payload.priority } : {}),
@@ -540,6 +547,7 @@ export const useTasksStore = create<TasksState>()(
             done: false,
             createdAt: now,
             updatedAt: now,
+            children_tasks: [],
             dueDate: payload.dueDate,
             ...(payload.endDate ? { endDate: payload.endDate } : {}),
             ...(category ? { category } : {}),
@@ -565,7 +573,16 @@ export const useTasksStore = create<TasksState>()(
         const s = get();
         const remaining = s.tasks.filter((task) => !isIcsTask(task));
         const removed = s.tasks.length - remaining.length;
-        if (removed > 0) set({ tasks: remaining });
+        if (removed === 0) return 0;
+
+        // Bulk removals need tombstones too, or sync leaves the rows live in
+        // Postgres and a fresh sign-in pulls every one of them back.
+        const pendingDeletedIds = new Set(s.pendingDeletedIds);
+        for (const task of s.tasks) {
+          if (isIcsTask(task)) pendingDeletedIds.add(task.id);
+        }
+
+        set({ tasks: remaining, pendingDeletedIds: [...pendingDeletedIds] });
         return removed;
       },
 

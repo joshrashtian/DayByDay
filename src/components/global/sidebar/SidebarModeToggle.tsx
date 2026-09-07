@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { IoApps, IoListOutline, IoPeople } from "react-icons/io5";
+import { IoListOutline, IoPeople } from "react-icons/io5";
 import type { SidebarMode } from "../../../stores/settingsStore";
 
 type Props = {

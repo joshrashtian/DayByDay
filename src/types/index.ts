@@ -176,3 +176,46 @@ export type CustomSound = {
   dataUrl: string;
   mimeType: string;
 };
+
+// ── Spotify ───────────────────────────────────────────────────────────────
+
+/**
+ * One finished listen. `playedAt` is Spotify's own `played_at` timestamp and is
+ * the dedupe key for the local history log — Spotify has no API for querying
+ * history by date, so the log is accumulated by polling rather than fetched.
+ */
+export type SpotifyPlay = {
+  playedAt: string;
+  trackId: string;
+  title: string;
+  artists: string;
+  album: string;
+  albumArtUrl?: string;
+  durationMs: number;
+  trackUrl?: string;
+};
+
+export type SpotifyNowPlaying = {
+  trackId: string;
+  title: string;
+  artists: string;
+  album: string;
+  albumArtUrl?: string;
+  durationMs: number;
+  progressMs: number;
+  isPlaying: boolean;
+  trackUrl?: string;
+};
+
+export type SpotifyAccount = {
+  id: string;
+  displayName?: string;
+};
+
+export type SpotifyTokens = {
+  accessToken: string;
+  refreshToken: string;
+  /** Epoch ms. */
+  expiresAt: number;
+  scope: string;
+};

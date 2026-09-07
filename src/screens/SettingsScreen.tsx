@@ -7,6 +7,7 @@ import { CategoriesSection } from "./settings/CategoriesSection";
 import { ConnectedCalendarsSection } from "./settings/ConnectedCalendarsSection";
 import { ProfileSection } from "./settings/ProfileSection";
 import { AudioSection } from "./settings/AudioSection";
+import { SpotifySection } from "./settings/SpotifySection";
 import { AppearanceSection } from "./settings/AppearanceSection";
 import HomeSection from "./settings/HomeSection";
 import { SettingsProvider, useSettings } from "@/providers/SettingsProvider";
@@ -39,6 +40,7 @@ const SettingsScreenContent = ({ modal = false }: { modal?: boolean }) => {
     categories: () => <CategoriesSection />,
     profile: () => <ProfileSection />,
     "connected-calendars": () => <ConnectedCalendarsSection />,
+    spotify: () => <SpotifySection />,
     audio: () => <AudioSection />,
   };
 

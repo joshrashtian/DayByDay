@@ -1,6 +1,5 @@
 import { useId, useRef, useState } from "react";
-import { IoCalendarOutline, IoDocumentTextOutline, IoLogoGoogle } from "react-icons/io5";
-import { Checkbox } from "@/components/base/checkbox/checkbox";
+import { IoDocumentTextOutline } from "react-icons/io5";
 import { parseIcsFile } from "@/lib/integrations/ics/parseIcsFile";
 import {
   formatLastImport,
@@ -8,37 +7,45 @@ import {
 } from "@/stores/calendarIntegrationsStore";
 import { useTasksStore } from "@/stores/tasksStore";
 
-function CalendarColorDot({ color }: { color?: string }) {
-  return (
-    <span
-      className="inline-block size-2.5 shrink-0 rounded-full ring-1 ring-line"
-      style={{ backgroundColor: color ?? "#6366f1" }}
-      aria-hidden="true"
-    />
-  );
-}
+/*
+ * The Google Calendar half of this screen is disabled until OAuth is wired up.
+ * Its JSX is commented out at the bottom of the file; the helper, store
+ * selectors and handlers it needs are commented out alongside it so the file
+ * type-checks. Restoring the section means restoring all of these together,
+ * plus the `IoCalendarOutline` / `IoLogoGoogle` / `Checkbox` imports.
+ *
+ * function CalendarColorDot({ color }: { color?: string }) {
+ *   return (
+ *     <span
+ *       className="inline-block size-2.5 shrink-0 rounded-full ring-1 ring-line"
+ *       style={{ backgroundColor: color ?? "#6366f1" }}
+ *       aria-hidden="true"
+ *     />
+ *   );
+ * }
+ */
 
 export function ConnectedCalendarsSection() {
   const uid = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const google = useCalendarIntegrationsStore((s) => s.google);
-  const importPastMonths = useCalendarIntegrationsStore((s) => s.importPastMonths);
-  const importFutureMonths = useCalendarIntegrationsStore(
-    (s) => s.importFutureMonths,
-  );
+  // const google = useCalendarIntegrationsStore((s) => s.google);
+  // const importPastMonths = useCalendarIntegrationsStore((s) => s.importPastMonths);
+  // const importFutureMonths = useCalendarIntegrationsStore(
+  //   (s) => s.importFutureMonths,
+  // );
   const lastIcsImportAt = useCalendarIntegrationsStore((s) => s.lastIcsImportAt);
   const lastIcsImportCount = useCalendarIntegrationsStore(
     (s) => s.lastIcsImportCount,
   );
-  const connectGoogle = useCalendarIntegrationsStore((s) => s.connectGoogle);
-  const disconnectGoogle = useCalendarIntegrationsStore((s) => s.disconnectGoogle);
-  const setCalendarEnabled = useCalendarIntegrationsStore(
-    (s) => s.setCalendarEnabled,
-  );
-  const setImportRange = useCalendarIntegrationsStore((s) => s.setImportRange);
-  const markImportComplete = useCalendarIntegrationsStore(
-    (s) => s.markImportComplete,
-  );
+  // const connectGoogle = useCalendarIntegrationsStore((s) => s.connectGoogle);
+  // const disconnectGoogle = useCalendarIntegrationsStore((s) => s.disconnectGoogle);
+  // const setCalendarEnabled = useCalendarIntegrationsStore(
+  //   (s) => s.setCalendarEnabled,
+  // );
+  // const setImportRange = useCalendarIntegrationsStore((s) => s.setImportRange);
+  // const markImportComplete = useCalendarIntegrationsStore(
+  //   (s) => s.markImportComplete,
+  // );
   const markIcsImportComplete = useCalendarIntegrationsStore(
     (s) => s.markIcsImportComplete,
   );
@@ -54,8 +61,8 @@ export function ConnectedCalendarsSection() {
   );
   const [isImportingIcs, setIsImportingIcs] = useState(false);
 
-  const enabledCount = google.calendars.filter((c) => c.enabled).length;
-  const lastImportLabel = formatLastImport(google.lastImportAt);
+  // const enabledCount = google.calendars.filter((c) => c.enabled).length;
+  // const lastImportLabel = formatLastImport(google.lastImportAt);
   const lastIcsImportLabel = formatLastImport(lastIcsImportAt);
 
   const showStatus = (
@@ -66,34 +73,34 @@ export function ConnectedCalendarsSection() {
     setStatusMessage(message);
   };
 
-  const onConnectGoogle = () => {
-    connectGoogle();
-    showStatus(
-      "Google Calendar connected (preview). OAuth will replace this mock connection.",
-      "success",
-    );
-  };
+  // const onConnectGoogle = () => {
+  //   connectGoogle();
+  //   showStatus(
+  //     "Google Calendar connected (preview). OAuth will replace this mock connection.",
+  //     "success",
+  //   );
+  // };
 
-  const onDisconnectGoogle = () => {
-    disconnectGoogle();
-    showStatus("Google Calendar disconnected.");
-  };
+  // const onDisconnectGoogle = () => {
+  //   disconnectGoogle();
+  //   showStatus("Google Calendar disconnected.");
+  // };
 
-  const onImport = () => {
-    if (!google.connected) {
-      showStatus("Connect Google Calendar before importing.");
-      return;
-    }
-    if (enabledCount === 0) {
-      showStatus("Select at least one calendar to import.");
-      return;
-    }
-    markImportComplete();
-    showStatus(
-      `Import queued for ${enabledCount} calendar${enabledCount === 1 ? "" : "s"}. Event fetching will run once Google OAuth is wired up.`,
-      "success",
-    );
-  };
+  // const onImport = () => {
+  //   if (!google.connected) {
+  //     showStatus("Connect Google Calendar before importing.");
+  //     return;
+  //   }
+  //   if (enabledCount === 0) {
+  //     showStatus("Select at least one calendar to import.");
+  //     return;
+  //   }
+  //   markImportComplete();
+  //   showStatus(
+  //     `Import queued for ${enabledCount} calendar${enabledCount === 1 ? "" : "s"}. Event fetching will run once Google OAuth is wired up.`,
+  //     "success",
+  //   );
+  // };
 
   const onChooseIcsFile = () => {
     fileInputRef.current?.click();
@@ -152,8 +159,8 @@ export function ConnectedCalendarsSection() {
     );
   };
 
-  const pastId = `${uid}-import-past`;
-  const futureId = `${uid}-import-future`;
+  // const pastId = `${uid}-import-past`;
+  // const futureId = `${uid}-import-future`;
   const icsInputId = `${uid}-ics-file`;
 
   return (
@@ -250,7 +257,7 @@ export function ConnectedCalendarsSection() {
           </div>
         </div>
       </section>
-
+{/*
       <section
         aria-labelledby={`${uid}-google-heading`}
         className="overflow-hidden rounded-2xl border border-line/80 bg-surface/70"
@@ -386,7 +393,7 @@ export function ConnectedCalendarsSection() {
             </div>
           </div>
         ) : null}
-      </section>
+      </section>*/}
 
       <div aria-live="polite">
         {statusMessage ? (

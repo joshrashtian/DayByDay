@@ -17,8 +17,14 @@ import { cx } from "@/utils/cx";
 import { CalendarCell } from "./cell";
 
 export const CalendarContextProvider = ({ children }: PropsWithChildren) => {
-    const [value, onChange] = useState<DateValue | null>(null);
+    const [value, setValue] = useState<DateValue | null>(null);
     const [focusedValue, onFocusChange] = useState<DateValue | undefined>();
+
+    // The shared calendar context is typed for both single and range calendars,
+    // so it hands back either one date or a list. This provider only tracks one.
+    const onChange = (next: DateValue | readonly DateValue[]) => {
+        setValue(Array.isArray(next) ? ((next[0] as DateValue | undefined) ?? null) : (next as DateValue));
+    };
 
     return <AriaCalendarContext.Provider value={{ value, onChange, focusedValue, onFocusChange }}>{children}</AriaCalendarContext.Provider>;
 };

@@ -69,10 +69,7 @@ export function ProfilePanel() {
         <p className="mt-1 text-2xl font-semibold text-ink">
           {stats.categoriesCount}
         </p>
-        <p className="mt-2 text-sm text-muted">
-          Stats are local for now and ready to be replaced with Supabase-backed
-          values.
-        </p>
+
       </div>
     </div>
   );

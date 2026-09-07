@@ -53,8 +53,60 @@ All stores use Zustand `persist` to localStorage:
 | `pomodoroStore` | *(pomodoro)* | Timer state, dock visibility |
 | `homeFocusStore` | *(inline)* | Focused task ID, drag state |
 | `calendarIntegrationsStore` | *(calendars)* | Connected calendar configs |
+| `spotifyStore` | `risebyday-spotify` | Spotify tokens + accumulated play log |
 
 `settingsStore` is the configuration hub — it holds `blockConfigs` (time-of-day blocks), `categoryConfigs`, `homeVisualPrefs`, `sidebar` state (mode, width, nav order), `audioPrefs`, and `customSounds`.
+
+### Cloud (Supabase)
+
+Postgres schema lives in `supabase/migrations/` as six idempotent SQL files
+(apply in filename order via the dashboard SQL editor or `supabase db push`);
+`supabase/seed.sql` fills a dev account, `supabase/reset_dev.sql` wipes a dev
+project. `supabase/README.md` covers the dev/prod split and the sync contract.
+
+| Layer | File |
+|---|---|
+| Typed client | `src/utils/supabase.ts` (`createClient<Database>`) |
+| Auth | `src/stores/authStore.ts` |
+| Task sync | `src/lib/tasksSync.ts` — `syncNow()` pushes dirty rows, then pulls a delta |
+| Row types | `src/types/database.ts` — hand-maintained mirror of the SQL |
+| Row ⇄ domain | `src/lib/cloud/mappers.ts` — pure, no React |
+
+`src/types/index.ts`, `src/types/database.ts` and `src/lib/cloud/mappers.ts` are
+the portable set: copy them into a CLI or React Native client and the only
+change needed is the `@/` path alias.
+
+Two rules the schema depends on: `tasks.updated_at` is **client-owned** (it is
+the delta cursor and the last-write-wins token, so there is no server trigger on
+it), and deletes are **soft** — `deleted_at` is set so other devices observe the
+delete on their next pull.
+
+### Spotify
+
+Read-only listening history, surfaced as a rail beside the calendar.
+
+| Layer | File |
+|---|---|
+| OAuth loopback listener | `src-tauri/src/spotify_oauth.rs` (`spotify_oauth_listen`) |
+| Flow config | `src/lib/integrations/spotify/config.ts` |
+| PKCE helpers | `src/lib/integrations/spotify/pkce.ts` |
+| Web API client | `src/lib/integrations/spotify/api.ts` |
+| Log merge / day grouping | `src/lib/integrations/spotify/history.ts` |
+| Store | `src/stores/spotifyStore.ts` |
+| Calendar rail | `src/components/calendar/SpotifyListeningRail.tsx` |
+
+Auth is **Authorization Code + PKCE** — a desktop app cannot hold a client
+secret. Rust binds a one-shot `TcpListener` on `127.0.0.1:14565` to catch the
+redirect; that URI is matched by Spotify as an exact string, so the port here
+and the one registered in the dashboard must agree.
+
+The constraint that shapes everything: `/me/player/recently-played` returns only
+the **last 50 plays** and cannot be queried by date. So the day-by-day timeline
+is not fetched but **accumulated** — `useSpotifyHistorySync` polls every 3
+minutes while the window is visible, and `mergePlays` dedupes on Spotify's
+`played_at`. History cannot be backfilled before the day the account was
+connected, and the log is capped at `MAX_STORED_PLAYS` because it lives in
+localStorage.
 
 ### Providers (`src/providers/`)
 
@@ -70,7 +122,17 @@ All stores use Zustand `persist` to localStorage:
 
 ### Sidebar (`src/components/global/sidebar.tsx`)
 
-Three modes: `"tasks"` | `"social"` | `"apps"`. In tasks mode, `SidebarTasksDrawer` renders a swipe-up panel showing today's tasks (filtered by active block when on `/`). Nav items support drag-to-reorder (Framer Motion `Reorder`). Width snaps to 220 or 260 px.
+Three content modes: `"tasks"` | `"social"` | `"apps"`. In tasks mode, `SidebarTasksDrawer` renders a swipe-up panel showing today's tasks (filtered by active block when on `/`). Nav items support drag-to-reorder (Framer Motion `Reorder`). Width snaps to 220 / 240 / 320 / 520 px.
+
+**Adaptive layout.** Independently of the content mode, the sidebar picks a *layout mode* from the app's width (`useAppViewportWidth` → `resolveSidebarLayoutMode` in `src/lib/sidebarLayout.ts`), surfaced as `data-sidebar-layout`:
+
+| Layout mode | App width | Behavior |
+|---|---|---|
+| `expanded` | ≥ 900 px | Normal sidebar; user controls open state and width (capped at 38% of the window) |
+| `rail` | 680–900 px | Icon-only strip (68 px): no labels, no inline task list, tooltips on hover |
+| `overlay` | < 680 px | Collapses out of the layout; opening floats it over a scrim, and content keeps the full width |
+
+Thresholds carry ±24 px hysteresis so dragging the window edge doesn't flicker between modes. Auto-collapsing is layered *on top of* the persisted `sidebar.open` preference — `manualOpen` is what gets saved, `overlayOpen` is transient — so shrinking the window never rewrites what the user chose.
 
 ### Rust ↔ Frontend bridge (`src-tauri/src/main.rs`)
 

@@ -208,6 +208,7 @@ export default function App() {
         <TasksSyncEngine />
         <GlobalPomodoroDock />
         <TaskDragGhost />
+        <code className="fixed bottom-12 font-mono right-12 z-999">PUBLIC ALPHA BUILD 1</code>
       </motion.div>
     </div>
   );

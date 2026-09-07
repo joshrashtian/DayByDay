@@ -16,7 +16,7 @@ export function TasksBreadcrumb({ items }: TasksBreadcrumbProps) {
   return (
     <nav
       aria-label="Tasks breadcrumb"
-      className="mx-auto flex w-full max-w-3xl flex-wrap items-center gap-1 px-5 pt-6 text-sm sm:px-8 xl:max-w-4xl"
+      className="mx-auto flex w-full max-w-3xl flex-wrap items-center gap-1 pt-6 text-sm  xl:max-w-4xl"
     >
       {items.map((item, index) => {
         const isLast = index === items.length - 1;

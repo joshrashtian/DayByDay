@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   IoApps,
   IoCalendarOutline,
@@ -12,10 +12,18 @@ import {
   IoPersonOutline,
   IoSettingsOutline,
 } from "react-icons/io5";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { AnimatePresence, Reorder, motion } from "motion/react";
 import spotifyIcon from "../../assets/spotifysvg.svg";
 import { TOOLKIT_PANELS } from "../../lib/toolkitPanels";
+import {
+  SIDEBAR_RAIL_WIDTH,
+  clampSidebarWidthToViewport,
+  resolveOverlayPanelWidth,
+  resolveSidebarLayoutMode,
+  type SidebarLayoutMode,
+} from "../../lib/sidebarLayout";
+import { useAppViewportWidth } from "../../hooks/useAppViewportWidth";
 import { useSettingsStore } from "../../stores/settingsStore";
 import type { SidebarMode } from "../../stores/settingsStore";
 import {
@@ -114,7 +122,11 @@ const SideBar = ({
     ],
     [pinnedPanelIds],
   );
-  const [sidebarOpen, setSidebarOpen] = useState(sidebarState.open);
+  // The user's own open/closed preference. Auto-collapsing at narrow widths is
+  // layered on top of this so shrinking the window never rewrites the pref.
+  const [manualOpen, setManualOpen] = useState(sidebarState.open);
+  // Transient: the sidebar is floating over content in overlay mode.
+  const [overlayOpen, setOverlayOpen] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState<number>(
     getNearestSnapWidth(sidebarState.width || DEFAULT_SIDEBAR_WIDTH),
   );
@@ -135,6 +147,59 @@ const SideBar = ({
   const [swipeStartX, setSwipeStartX] = useState<number | null>(null);
   const [edgeSwipeStartX, setEdgeSwipeStartX] = useState<number | null>(null);
 
+  const viewportWidth = useAppViewportWidth();
+  const [layoutMode, setLayoutMode] = useState<SidebarLayoutMode>(() =>
+    resolveSidebarLayoutMode(viewportWidth),
+  );
+
+  useEffect(() => {
+    setLayoutMode((previous) =>
+      resolveSidebarLayoutMode(viewportWidth, previous),
+    );
+  }, [viewportWidth]);
+
+  const isOverlay = layoutMode === "overlay";
+  const isRail = layoutMode === "rail";
+  const sidebarOpen = isOverlay ? overlayOpen : manualOpen;
+
+  const openSidebar = useCallback(() => {
+    if (isOverlay) setOverlayOpen(true);
+    else setManualOpen(true);
+  }, [isOverlay]);
+
+  const closeSidebar = useCallback(() => {
+    if (isOverlay) setOverlayOpen(false);
+    else setManualOpen(false);
+  }, [isOverlay]);
+
+  const toggleSidebar = useCallback(() => {
+    if (isOverlay) setOverlayOpen((prev) => !prev);
+    else setManualOpen((prev) => !prev);
+  }, [isOverlay]);
+
+  // Leaving overlay mode hands control back to the persisted preference.
+  useEffect(() => {
+    if (!isOverlay) setOverlayOpen(false);
+  }, [isOverlay]);
+
+  // A floating sidebar covers the page, so dismiss it once the user navigates.
+  const location = useLocation();
+  const lastPathRef = useRef(location.pathname);
+  useEffect(() => {
+    if (lastPathRef.current === location.pathname) return;
+    lastPathRef.current = location.pathname;
+    setOverlayOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!isOverlay || !overlayOpen) return;
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOverlayOpen(false);
+    };
+    window.addEventListener("keydown", onEscape);
+    return () => window.removeEventListener("keydown", onEscape);
+  }, [isOverlay, overlayOpen]);
+
   useEffect(() => {
     setAppItems((previous) =>
       restoreOrderedItems(
@@ -146,20 +211,16 @@ const SideBar = ({
 
   useEffect(() => {
     const unlisten = listen("toggle-left-panel", () => {
-      setSidebarOpen((prev) => !prev);
+      toggleSidebar();
     });
     return () => {
       unlisten.then((off) => off());
     };
-  }, []);
-
-  useEffect(() => {
-    onWidthChange?.(sidebarOpen ? sidebarWidth : 0);
-  }, [onWidthChange, sidebarOpen, sidebarWidth]);
+  }, [toggleSidebar]);
 
   useEffect(() => {
     setSidebarState({
-      open: sidebarOpen,
+      open: manualOpen,
       width: sidebarWidth,
       mode: sidebarMode,
       taskOrder: taskItems.map((item) => item.link),
@@ -168,8 +229,8 @@ const SideBar = ({
     });
   }, [
     appItems,
+    manualOpen,
     sidebarMode,
-    sidebarOpen,
     sidebarWidth,
     socialItems,
     taskItems,
@@ -181,11 +242,11 @@ const SideBar = ({
       if (event.key !== "\\") return;
       if (!(event.metaKey || event.ctrlKey)) return;
       event.preventDefault();
-      setSidebarOpen((prev) => !prev);
+      toggleSidebar();
     };
     window.addEventListener("keydown", handleShortcut);
     return () => window.removeEventListener("keydown", handleShortcut);
-  }, []);
+  }, [toggleSidebar]);
 
   useEffect(() => {
     if (!isResizing) return;
@@ -211,8 +272,24 @@ const SideBar = ({
     };
   }, [isResizing, previewWidth]);
 
-  const resolvedWidth = previewWidth ?? sidebarWidth;
-  const showLabel = sidebarOpen && resolvedWidth >= LABEL_REVEAL_WIDTH;
+  const expandedWidth = clampSidebarWidthToViewport(
+    previewWidth ?? sidebarWidth,
+    viewportWidth,
+  );
+  const resolvedWidth = isRail
+    ? SIDEBAR_RAIL_WIDTH
+    : isOverlay
+      ? resolveOverlayPanelWidth(sidebarWidth, viewportWidth)
+      : expandedWidth;
+
+  // In overlay mode the sidebar floats, so it claims no room in the layout.
+  const layoutOffset = isOverlay || !sidebarOpen ? 0 : resolvedWidth;
+  useEffect(() => {
+    onWidthChange?.(layoutOffset);
+  }, [layoutOffset, onWidthChange]);
+
+  const showLabel =
+    sidebarOpen && !isRail && resolvedWidth >= LABEL_REVEAL_WIDTH;
   const activeItems =
     sidebarMode === "tasks"
       ? taskItems
@@ -221,40 +298,60 @@ const SideBar = ({
         : appItems;
 
   return (
-    <div className="fixed inset-y-0 left-0 z-50 flex items-stretch">
-      <AnimatePresence initial={false} mode="wait">
-        {sidebarOpen ? (
-          <motion.nav
-            key="sidebar-nav"
-            aria-label="Primary navigation"
-            className={`relative flex h-full justify-between flex-col overflow-hidden rounded-r-3xl px-3 py-3 shadow-lg backdrop-blur-sm ${sidebarTokens.surface} border-r border-line`}
-            style={{ width: resolvedWidth }}
-            initial={{ x: -24 }}
-            animate={{ x: 0 }}
-            exit={{ x: -24 }}
+    <>
+      <AnimatePresence>
+        {isOverlay && sidebarOpen ? (
+          <motion.div
+            key="sidebar-scrim"
+            className="fixed inset-0 z-40 bg-overlay backdrop-blur-[2px]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.16, ease: "easeOut" }}
-            onPointerDown={(event) => {
-              if (isResizing) return;
-              setSwipeStartX(event.clientX);
-            }}
-            onPointerMove={(event) => {
-              if (swipeStartX === null) return;
-              const deltaX = event.clientX - swipeStartX;
-              if (deltaX <= -SWIPE_CLOSE_THRESHOLD) {
-                setSidebarOpen(false);
+            onPointerDown={() => setOverlayOpen(false)}
+            aria-hidden
+          />
+        ) : null}
+      </AnimatePresence>
+      <div
+        data-sidebar-layout={layoutMode}
+        className="fixed inset-y-0 left-0 z-50 flex items-stretch"
+      >
+        <AnimatePresence initial={false} mode="wait">
+          {sidebarOpen ? (
+            <motion.nav
+              key="sidebar-nav"
+              aria-label="Primary navigation"
+              className={`relative flex h-full justify-between flex-col overflow-hidden rounded-r-3xl py-3 shadow-lg backdrop-blur-sm ${
+                isRail ? "px-2" : "px-3"
+              } ${sidebarTokens.surface} border-r border-line`}
+              style={{ width: resolvedWidth }}
+              initial={{ x: -24 }}
+              animate={{ x: 0 }}
+              exit={{ x: -24 }}
+              transition={{ duration: 0.16, ease: "easeOut" }}
+              onPointerDown={(event) => {
+                if (isResizing) return;
+                setSwipeStartX(event.clientX);
+              }}
+              onPointerMove={(event) => {
+                if (swipeStartX === null) return;
+                const deltaX = event.clientX - swipeStartX;
+                if (deltaX <= -SWIPE_CLOSE_THRESHOLD) {
+                  closeSidebar();
+                  setSwipeStartX(null);
+                }
+              }}
+              onPointerUp={(event) => {
+                if (swipeStartX === null) return;
+                const deltaX = event.clientX - swipeStartX;
+                if (deltaX <= -SWIPE_CLOSE_THRESHOLD) {
+                  closeSidebar();
+                }
                 setSwipeStartX(null);
-              }
-            }}
-            onPointerUp={(event) => {
-              if (swipeStartX === null) return;
-              const deltaX = event.clientX - swipeStartX;
-              if (deltaX <= -SWIPE_CLOSE_THRESHOLD) {
-                setSidebarOpen(false);
-              }
-              setSwipeStartX(null);
-            }}
-            onPointerCancel={() => setSwipeStartX(null)}
-          >
+              }}
+              onPointerCancel={() => setSwipeStartX(null)}
+            >
               {/* Nav items — compact, non-scrolling */}
               <div className="flex shrink-0 flex-col gap-2">
                 <SidebarModeToggle
@@ -283,7 +380,6 @@ const SideBar = ({
                       <SidebarNavItemView
                         item={item}
                         showLabel={showLabel}
-                        sidebarOpen={sidebarOpen}
                         onOpenProfile={onOpenProfile}
                         onOpenSettings={onOpenSettings}
                       />
@@ -293,14 +389,15 @@ const SideBar = ({
               </div>
 
               {/* Divider */}
-              {sidebarMode === "tasks" && (
+              {sidebarMode === "tasks" && !isRail && (
                 <div
                   className={`my-0.5 mx-1 shrink-0 border-t ${sidebarTokens.divider}`}
                 />
               )}
 
-              {/* Inline task list — fills remaining space */}
-              {sidebarMode === "tasks" ? (
+              {/* Inline task list — fills remaining space. The rail is too
+                  narrow to read task titles, so it drops to icons only. */}
+              {sidebarMode === "tasks" && !isRail ? (
                 <SidebarInlineTaskList showLabel={showLabel} />
               ) : (
                 <div className="flex-1" />
@@ -308,7 +405,9 @@ const SideBar = ({
 
               {/* Utility icon bar */}
               <div
-                className={`flex shrink-0 items-center justify-around border-t pt-2 ${sidebarTokens.divider}`}
+                className={`flex shrink-0 items-center border-t pt-2 ${
+                  isRail ? "flex-col gap-1" : "justify-around"
+                } ${sidebarTokens.divider}`}
               >
                 <button
                   type="button"
@@ -337,61 +436,67 @@ const SideBar = ({
                   <IoHelpCircleOutline className="text-base" />
                 </NavLink>
               </div>
-              <div
-                aria-label="Resize sidebar"
-                onPointerDown={(event) => {
-                  event.preventDefault();
-                  setIsResizing(true);
-                }}
-                className="absolute right-0 top-0 h-full w-3 translate-x-1/2 cursor-e-resize bg-transparent"
-              />
-          </motion.nav>
-        ) : (
-          <motion.div
-            key="sidebar-edge-swipe-zone"
-            className="flex h-full items-center"
-            initial={{ x: -12 }}
-            animate={{ x: 0 }}
-            exit={{ x: -12 }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
-            style={{ width: EDGE_SWIPE_ZONE_WIDTH }}
-            onPointerDown={(event) => {
-              setEdgeSwipeStartX(event.clientX);
-            }}
-            onPointerMove={(event) => {
-              if (edgeSwipeStartX === null) return;
-              const deltaX = event.clientX - edgeSwipeStartX;
-              if (deltaX >= EDGE_SWIPE_OPEN_THRESHOLD) {
-                setSidebarOpen(true);
+              {layoutMode === "expanded" ? (
+                <div
+                  aria-label="Resize sidebar"
+                  onPointerDown={(event) => {
+                    event.preventDefault();
+                    setIsResizing(true);
+                  }}
+                  className="absolute right-0 top-0 h-full w-3 translate-x-1/2 cursor-e-resize bg-transparent"
+                />
+              ) : null}
+            </motion.nav>
+          ) : (
+            <motion.div
+              key="sidebar-edge-swipe-zone"
+              className="flex h-full items-center"
+              initial={{ x: -12 }}
+              animate={{ x: 0 }}
+              exit={{ x: -12 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+              style={{ width: EDGE_SWIPE_ZONE_WIDTH }}
+              onPointerDown={(event) => {
+                setEdgeSwipeStartX(event.clientX);
+              }}
+              onPointerMove={(event) => {
+                if (edgeSwipeStartX === null) return;
+                const deltaX = event.clientX - edgeSwipeStartX;
+                if (deltaX >= EDGE_SWIPE_OPEN_THRESHOLD) {
+                  openSidebar();
+                  setEdgeSwipeStartX(null);
+                }
+              }}
+              onPointerUp={(event) => {
+                if (edgeSwipeStartX === null) return;
+                const deltaX = event.clientX - edgeSwipeStartX;
+                if (
+                  deltaX >= EDGE_SWIPE_OPEN_THRESHOLD ||
+                  Math.abs(deltaX) < 8
+                ) {
+                  openSidebar();
+                }
                 setEdgeSwipeStartX(null);
-              }
-            }}
-            onPointerUp={(event) => {
-              if (edgeSwipeStartX === null) return;
-              const deltaX = event.clientX - edgeSwipeStartX;
-              if (deltaX >= EDGE_SWIPE_OPEN_THRESHOLD || Math.abs(deltaX) < 8) {
-                setSidebarOpen(true);
-              }
-              setEdgeSwipeStartX(null);
-            }}
-            onPointerCancel={() => setEdgeSwipeStartX(null)}
-          >
-            <button
-              type="button"
-              onClick={() => setSidebarOpen(true)}
-              className="ml-1 inline-flex h-14 w-5 items-center justify-center rounded-r-full border border-line bg-surface text-muted shadow-sm backdrop-blur transition-colors hover:bg-sunken hover:text-ink"
-              aria-label="Open sidebar"
-              title="Open sidebar"
+              }}
+              onPointerCancel={() => setEdgeSwipeStartX(null)}
             >
-              <IoChevronForward className="h-3.5 w-3.5" />
-            </button>
-            <span className="sr-only">
-              Swipe right from the left edge to open sidebar
-            </span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+              <button
+                type="button"
+                onClick={openSidebar}
+                className="ml-1 inline-flex h-14 w-5 items-center justify-center rounded-r-full border border-line bg-surface text-muted shadow-sm backdrop-blur transition-colors hover:bg-sunken hover:text-ink"
+                aria-label="Open sidebar"
+                title="Open sidebar"
+              >
+                <IoChevronForward className="h-3.5 w-3.5" />
+              </button>
+              <span className="sr-only">
+                Swipe right from the left edge to open sidebar
+              </span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </>
   );
 };
 

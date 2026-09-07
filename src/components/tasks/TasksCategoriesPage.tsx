@@ -79,17 +79,14 @@ export function TasksCategoriesPage() {
         ]}
       />
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-24 pt-4 sm:px-8">
+      <div className="min-h-0 flex-1 overflow-y-auto  pb-24 pt-4 ">
         <div className="mx-auto w-full max-w-3xl xl:max-w-4xl">
           <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
+            <h1 className="font-display text-3xl font-bold tracking-tight">
+              Categories
+            </h1>
             <div>
-              <h1 className="font-display text-3xl font-bold tracking-tight text-ink">
-                Categories
-              </h1>
-              <p className="mt-1 text-sm text-muted">
-                Organize tasks by category. Delete a category to remove it from
-                every task.
-              </p>
+
             </div>
             <span className="rounded-full bg-zinc-500/10 px-3 py-1 text-xs font-semibold text-muted">
               {categories.length}{" "}

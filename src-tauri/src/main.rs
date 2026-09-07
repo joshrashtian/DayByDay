@@ -1,4 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+mod spotify_oauth;
+
 use tauri::{
     menu::{AboutMetadata, AboutMetadataBuilder, MenuBuilder, MenuItemBuilder, SubmenuBuilder},
     Emitter,
@@ -6,6 +8,9 @@ use tauri::{
 
 fn main() {
     tauri::Builder::default()
+        .invoke_handler(tauri::generate_handler![
+            spotify_oauth::spotify_oauth_listen
+        ])
         .setup(|app| {
             let about_metadata = AboutMetadataBuilder::new()
                 .version(Some("0.1.0 Beta"))

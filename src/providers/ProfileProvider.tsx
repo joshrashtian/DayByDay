@@ -1,5 +1,6 @@
 import { useTasksStore } from "@/stores/tasksStore";
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useAuthStore } from "@/stores/authStore";
 
 export type Profile = {
   id: string;
@@ -38,9 +39,9 @@ export const ProfileProvider = ({
   children: React.ReactNode;
 }) => {
   const [profile, setProfile] = useState<Profile | null>({
-    id: "local-profile",
-    name: "RiseByDay User",
-    email: "you@example.com",
+    id: "Coming-Soon",
+    name: "Coming Soon",
+    email: "soon@coming.com",
     avatarUrl: null,
   });
   const tasks = useTasksStore((s) => s.tasks);
@@ -68,6 +69,11 @@ export const ProfileProvider = ({
     () => ({ profile, setProfile, stats }),
     [profile, stats],
   );
+  const authUser = useAuthStore((s) => s.user);
+
+  useEffect(() => {
+ setProfile({email: authUser?.email, id: authUser?.id})
+  }, [authUser])
 
   return (
     <ProfileContext.Provider value={value}>

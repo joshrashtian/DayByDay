@@ -15,19 +15,19 @@ const PHASE_LABELS: Record<PomodoroPhase, string> = {
 };
 
 const PHASE_ACCENT: Record<PomodoroPhase, string> = {
-  focus: "text-rose-500",
+  focus: "text-red-500",
   shortBreak: "text-emerald-500",
   longBreak: "text-sky-500",
 };
 
 const PHASE_BAR: Record<PomodoroPhase, string> = {
-  focus: "bg-rose-400",
+  focus: "bg-red-400",
   shortBreak: "bg-emerald-400",
   longBreak: "bg-sky-400",
 };
 
 const PHASE_BAR_BG: Record<PomodoroPhase, string> = {
-  focus: "bg-rose-200/60",
+  focus: "bg-red-200/60",
   shortBreak: "bg-emerald-200/60",
   longBreak: "bg-sky-200/60",
 };
@@ -139,7 +139,7 @@ export default function PomodoroScreen() {
           className={`relative h-2.5 w-full overflow-hidden rounded-full ${PHASE_BAR_BG[phase]}`}
         >
           <motion.div
-            className={`absolute inset-y-0 border-2 left-0 rounded-full ${PHASE_BAR[phase]}`}
+            className={`absolute inset-y-0  left-0 rounded-full ${PHASE_BAR[phase]}`}
             animate={{ width: `${progress * 100}%` }}
             transition={{ duration: 0.8, ease: "linear" }}
           />

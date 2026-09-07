@@ -11,7 +11,11 @@ node_modules
 dist
 dist-ssr
 *.local
+
+# Local env — dev/prod Supabase keys live here
 .env
+.env.*
+!.env.example
 
 # Editor directories and files
 .vscode/*

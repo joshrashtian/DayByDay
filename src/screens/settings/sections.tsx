@@ -6,6 +6,7 @@ import {
   IoCalendarOutline,
   IoVolumeHighOutline,
   IoLayersOutline,
+  IoMusicalNotesOutline,
 } from "react-icons/io5";
 
 export type SettingsSection =
@@ -15,6 +16,7 @@ export type SettingsSection =
   | "categories"
   | "profile"
   | "connected-calendars"
+  | "spotify"
   | "audio";
 
 export const DEFAULT_SECTION: SettingsSection = "home";
@@ -62,6 +64,12 @@ export const SECTIONS: SectionMeta[] = [
     label: "Connected Calendars",
     description: "Manage connected calendar feeds",
     icon: <IoCalendarOutline />,
+  },
+  {
+    id: "spotify",
+    label: "Spotify",
+    description: "Log listening history onto your calendar",
+    icon: <IoMusicalNotesOutline />,
   },
   {
     id: "audio",
