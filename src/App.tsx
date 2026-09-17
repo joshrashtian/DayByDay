@@ -18,7 +18,7 @@ import AppsScreen from "./screens/AppsScreen";
 import SpotifyScreen from "./screens/integrations/SpotifyScreen";
 import ToolkitScreen from "./screens/ToolkitScreen";
 import ToolkitWindowScreen from "./screens/ToolkitWindowScreen";
-import PomodoroScreen from "./screens/PomodoroScreen";
+import PomodoroScreen from "./screens/pomodoro/PomodoroScreen";
 import CognitionBar from "./ui/CognitionBar";
 import { GlobalPomodoroDock } from "./components/global/GlobalPomodoroDock";
 import { TaskDragGhost } from "./components/global/TaskDragGhost";
@@ -80,10 +80,16 @@ export default function App() {
         onOpenSettings={() => setShowSettingsModal(true)}
       />
       <motion.div
-        className="flex h-full min-h-0 flex-col overflow-hidden transition-[padding] duration-200"
+        className="relative flex h-full min-h-0 flex-col overflow-hidden transition-[padding] duration-200"
         style={{ paddingLeft: sidebarOffset }}
       >
-        <motion.div className="flex h-full min-h-0 flex-col overflow-hidden p-4 bg-sunken">
+        {/* Title-bar overlay: the native bar is hidden, so this strip keeps the window draggable */}
+        <div
+          data-tauri-drag-region
+          className="absolute inset-x-0 top-0 z-30 h-7"
+          aria-hidden
+        />
+        <motion.div className="flex h-full min-h-0 flex-col overflow-hidden px-4 pb-4 pt-7 bg-sunken">
           <Routes location={location} key={location.pathname}>
             <Route path="/auth/sign-in" element={<SignInScreen />} />
             <Route
@@ -173,7 +179,7 @@ export default function App() {
                   <SocialScreen />
                 </AnimatedPage>
               }
-              />
+            />
           </Routes>
           {showSettingsModal ? (
             <div
@@ -208,7 +214,9 @@ export default function App() {
         <TasksSyncEngine />
         <GlobalPomodoroDock />
         <TaskDragGhost />
-        <code className="fixed bottom-12 font-mono right-12 z-999">PUBLIC ALPHA BUILD 1</code>
+        <code className="fixed bottom-12 font-mono right-12 z-999">
+          PUBLIC ALPHA BUILD 1
+        </code>
       </motion.div>
     </div>
   );

@@ -43,7 +43,7 @@ export const HomeScreen = () => {
   const displayedBlockName = isAllDayMode ? undefined : activeBlockName;
 
   return (
-    <div className="min-h-dvh bg-canvas">
+    <div className="min-h-dvh">
       <main className="home-content mx-auto max-w-6xl px-3 pb-10 pt-20 sm:px-6 sm:pb-12 sm:pt-24 lg:px-8">
         <div className="grid grid-cols-1 items-start gap-6 sm:gap-8 xl:grid-cols-[minmax(0,1fr)_auto] xl:gap-10">
           <div className="flex min-w-0 flex-col items-stretch gap-5">

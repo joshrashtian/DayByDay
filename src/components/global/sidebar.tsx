@@ -322,7 +322,7 @@ const SideBar = ({
             <motion.nav
               key="sidebar-nav"
               aria-label="Primary navigation"
-              className={`relative flex h-full justify-between flex-col overflow-hidden rounded-r-3xl py-3 shadow-lg backdrop-blur-sm ${
+              className={`relative flex h-full justify-between flex-col overflow-hidden pt-9 pb-3 bg-zinc-200/80 dark:bg-zinc-950 ${
                 isRail ? "px-2" : "px-3"
               } ${sidebarTokens.surface} border-r border-line`}
               style={{ width: resolvedWidth }}
@@ -352,6 +352,12 @@ const SideBar = ({
               }}
               onPointerCancel={() => setSwipeStartX(null)}
             >
+              {/* Title-bar overlay: keeps the window draggable and clears the traffic lights */}
+              <div
+                data-tauri-drag-region
+                className="absolute inset-x-0 top-0 h-7"
+                aria-hidden
+              />
               {/* Nav items — compact, non-scrolling */}
               <div className="flex shrink-0 flex-col gap-2">
                 <SidebarModeToggle

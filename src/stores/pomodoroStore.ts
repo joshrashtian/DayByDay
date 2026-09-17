@@ -1,6 +1,10 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { migrateLocalStorageKey } from "@/lib/storageMigration";
+import {
+  DEFAULT_POMODORO_STYLE,
+  type PomodoroStyleId,
+} from "@/screens/pomodoro/PomodoroStyles";
 
 const POMODORO_STORAGE_KEY = "risebyday-pomodoro";
 migrateLocalStorageKey("daybyday-pomodoro", POMODORO_STORAGE_KEY);
@@ -31,6 +35,8 @@ type PomodoroState = {
   panelOpen: boolean;
   /** Floating dock expanded */
   dockExpanded: boolean;
+  /** Visual style of the pomodoro screen */
+  styleId: PomodoroStyleId;
 
   start: () => void;
   pause: () => void;
@@ -43,6 +49,7 @@ type PomodoroState = {
   togglePanelOpen: () => void;
   setDockExpanded: (expanded: boolean) => void;
   toggleDockExpanded: () => void;
+  setStyleId: (id: PomodoroStyleId) => void;
 };
 
 function nextPhaseAfterFocus(
@@ -65,6 +72,7 @@ export const usePomodoroStore = create<PomodoroState>()(
       linkedTaskTitle: undefined,
       panelOpen: false,
       dockExpanded: false,
+      styleId: DEFAULT_POMODORO_STYLE,
 
       checkDayReset: () => {
         const { lastActiveDay } = get();
@@ -142,6 +150,7 @@ export const usePomodoroStore = create<PomodoroState>()(
       setDockExpanded: (expanded) => set({ dockExpanded: expanded }),
       toggleDockExpanded: () =>
         set((s) => ({ dockExpanded: !s.dockExpanded })),
+      setStyleId: (id) => set({ styleId: id }),
     }),
     {
       name: POMODORO_STORAGE_KEY,
@@ -152,6 +161,7 @@ export const usePomodoroStore = create<PomodoroState>()(
         completedFocusSessions: state.completedFocusSessions,
         lastActiveDay: state.lastActiveDay,
         linkedTaskTitle: state.linkedTaskTitle,
+        styleId: state.styleId,
       }),
     },
   ),
