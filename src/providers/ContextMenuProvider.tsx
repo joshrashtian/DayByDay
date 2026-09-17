@@ -15,7 +15,7 @@ import {
   getAppZoomLevel,
   isCssHtmlZoomActive,
 } from "@/lib/appZoom";
-
+import { motion } from "framer-motion";
 export type ContextMenuItem =
   | {
       id: string;
@@ -33,6 +33,7 @@ export type ContextMenuItem =
   | {
       id: string;
       type: "header";
+      icon?: React.ReactNode;
       header: string;
     };
 
@@ -40,10 +41,15 @@ type MenuState = {
   x: number;
   y: number;
   items: ContextMenuItem[];
+  name?: string;
 };
 
 type ContextMenuApi = {
-  openMenu: (event: React.MouseEvent, items: ContextMenuItem[]) => void;
+  openMenu: (
+    event: React.MouseEvent,
+    items: ContextMenuItem[],
+    name?: string,
+  ) => void;
   closeMenu: () => void;
 };
 
@@ -76,7 +82,7 @@ export default function ContextMenuProvider({
   const closeMenu = useCallback(() => setMenu(null), []);
 
   const openMenu = useCallback(
-    (event: React.MouseEvent, items: ContextMenuItem[]) => {
+    (event: React.MouseEvent, items: ContextMenuItem[], name?: string) => {
       event.preventDefault();
       event.stopPropagation();
       if (items.length === 0) return;
@@ -85,7 +91,7 @@ export default function ContextMenuProvider({
       const z = isCssHtmlZoomActive() ? getAppZoomLevel() : 1;
       const x = event.clientX / z;
       const y = event.clientY / z;
-      setMenu({ x, y, items });
+      setMenu({ x, y, items, name });
       setPlaced({ x, y });
     },
     [],
@@ -143,14 +149,27 @@ export default function ContextMenuProvider({
           onMouseDown={closeMenu}
           style={{ background: "transparent" }}
         />
-        <div
+        <motion.div
           ref={menuPanelRef}
           role="menu"
+          drag
+          dragMomentum={false}
+          whileDrag={{
+            scale: 1.1,
+            boxShadow: "0px 10px 20px rgba(0,0,0,0.2)",
+          }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
           aria-label="Context menu"
           className="fixed z-60 min-w-44 overflow-hidden rounded-xl border border-line/70 bg-surface/30 py-1 shadow-[0_12px_40px_rgba(15,15,15,0.15),inset_0_1px_0_rgba(255,255,255,0.9)] ring-1 ring-line/5 backdrop-blur-xl dark:shadow-[0_16px_48px_rgba(0,0,0,0.5)]"
           style={{ left: placed.x, top: placed.y }}
           onMouseDown={(e) => e.stopPropagation()}
         >
+          {menu.name && (
+            <motion.div className="px-3 py-2 border-b border-dashed text-left text-medium  font-mono">
+              {menu.name}
+            </motion.div>
+          )}
           {menu.items.map((item) => {
             if (item.type === "break") {
               return (
@@ -164,8 +183,9 @@ export default function ContextMenuProvider({
               return (
                 <div
                   key={item.id}
-                  className="px-3 py-2 text-left text-lg font-bold"
+                  className="px-3 py-2 border-b border-slate-200/40 flex flex-row items-center gap-1 text-sm font-bold"
                 >
+                  {item?.icon}
                   {item.header}
                 </div>
               );
@@ -192,7 +212,7 @@ export default function ContextMenuProvider({
               </button>
             );
           })}
-        </div>
+        </motion.div>
       </>,
       document.body,
     );

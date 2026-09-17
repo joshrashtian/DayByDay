@@ -1,6 +1,8 @@
 import {
   IoCheckmark,
   IoClose,
+  IoCodeDownloadOutline,
+  IoCopy,
   IoCreateOutline,
   IoPencil,
   IoRepeatOutline,
@@ -98,35 +100,59 @@ export function TaskItem({
         tabIndex={0}
         onClick={onToggle}
         onContextMenu={(e) =>
-          openMenu(e, [
-            ...(onEditTask
-              ? [
-                  {
-                    id: "edit-task",
-                    label: "Edit task…",
-                    onSelect: onEditTask,
-                    icon: <IoPencil />,
-                  } as const,
-                ]
-              : []),
-            {
-              id: "toggle",
-              label: isDone ? "Mark Not Done" : "Mark Done",
-              onSelect: onToggle,
-              icon: <IoCheckmark />,
-            },
-            ...(onDelete
-              ? [
-                  {
-                    id: "delete",
-                    label: "Delete",
-                    onSelect: onDelete,
-                    destructive: true,
-                    icon: <IoTrash />,
-                  } as const,
-                ]
-              : []),
-          ])
+          openMenu(
+            e,
+            [
+              {
+                id: "copy-header",
+                type: "header",
+                icon: <IoCopy />,
+                header: "Copy Information",
+              },
+              {
+                id: "copy-json",
+                type: "item",
+                onSelect: () => {
+                  navigator.clipboard.writeText(JSON.stringify(task, null, 2));
+                },
+                icon: <IoCodeDownloadOutline />,
+                label: "Copy JSON",
+              },
+              {
+                id: "copy-break",
+                type: "break",
+              },
+
+              ...(onEditTask
+                ? [
+                    {
+                      id: "edit-task",
+                      label: "Edit task…",
+                      onSelect: onEditTask,
+                      icon: <IoPencil />,
+                    } as const,
+                  ]
+                : []),
+              {
+                id: "toggle",
+                label: isDone ? "Mark Not Done" : "Mark Done",
+                onSelect: onToggle,
+                icon: <IoCheckmark />,
+              },
+              ...(onDelete
+                ? [
+                    {
+                      id: "delete",
+                      label: "Delete",
+                      onSelect: onDelete,
+                      destructive: true,
+                      icon: <IoTrash />,
+                    } as const,
+                  ]
+                : []),
+            ],
+            task.title,
+          )
         }
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
@@ -177,9 +203,7 @@ export function TaskItem({
             </span>
             <span
               className={`min-w-0 flex-1 wrap-break-word text-lg font-medium tracking-tight text-ink transition-[color,opacity] ${
-                isDone
-                  ? "text-muted line-through opacity-70"
-                  : ""
+                isDone ? "text-muted line-through opacity-70" : ""
               }`}
             >
               {task.title}
