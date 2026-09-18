@@ -5,45 +5,14 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useState,
 } from "react";
-import { IoClose } from "react-icons/io5";
-import { ProfilePanel } from "@/components/panels/ProfilePanel";
-
-// ─── Panel registry ───────────────────────────────────────────────────────────
-// Add new panels here. Each entry defines the shell header and the content.
-
-export type RightPanelId = "profile";
-
-type PanelConfig = {
-  label: string;
-  title: React.ReactNode;
-  Component: React.ComponentType;
-};
-
-const PANELS: Record<RightPanelId, PanelConfig> = {
-  profile: {
-    label: "Profile",
-    title: (
-      <>
-        Your
-        <span className="font-black italic underline underline-offset-4">
-          self
-        </span>
-        .
-      </>
-    ),
-    Component: ProfilePanel,
-  },
-};
-
-// ─── Context ──────────────────────────────────────────────────────────────────
+import { useSettingsStore } from "@/stores/settingsStore";
 
 type RightPanelContextType = {
-  activePanel: RightPanelId | null;
-  openPanel: (id: RightPanelId) => void;
+  isOpen: boolean;
+  openPanel: () => void;
   closePanel: () => void;
-  togglePanel: (id: RightPanelId) => void;
+  togglePanel: () => void;
 };
 
 const RightPanelContext = createContext<RightPanelContextType | undefined>(
@@ -57,91 +26,62 @@ export const useRightPanel = () => {
   return ctx;
 };
 
-// ─── Provider ─────────────────────────────────────────────────────────────────
-
 export function RightPanelProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [activePanel, setActivePanel] = useState<RightPanelId | null>(null);
+  const isOpen = useSettingsStore((s) => s.rightPanel.open);
+  const setRightPanel = useSettingsStore((s) => s.setRightPanel);
 
-  const openPanel = useCallback((id: RightPanelId) => setActivePanel(id), []);
-  const closePanel = useCallback(() => setActivePanel(null), []);
+  const openPanel = useCallback(
+    () => setRightPanel({ open: true }),
+    [setRightPanel],
+  );
+  const closePanel = useCallback(
+    () => setRightPanel({ open: false }),
+    [setRightPanel],
+  );
   const togglePanel = useCallback(
-    (id: RightPanelId) => setActivePanel((prev) => (prev === id ? null : id)),
-    [],
+    () => setRightPanel({ open: !useSettingsStore.getState().rightPanel.open }),
+    [setRightPanel],
   );
 
-  // Tauri menu: "Toggle Right Panel" → toggle the profile panel (default)
+  // Native menu: View → Toggle Right Panel
   useEffect(() => {
-    const unlisten = listen("toggle-right-panel", () => {
-      togglePanel("profile");
-    });
+    const unlisten = listen("toggle-right-panel", () => togglePanel());
     return () => {
       unlisten.then((off) => off());
     };
   }, [togglePanel]);
 
-  // Legacy window event dispatched by useMenuNavigation "profile" route
+  // Legacy window event dispatched by useMenuNavigation's "profile" route
   useEffect(() => {
-    const handler = () => togglePanel("profile");
+    const handler = () => togglePanel();
     window.addEventListener("rbd:open-profile", handler);
     return () => window.removeEventListener("rbd:open-profile", handler);
   }, [togglePanel]);
 
-  // Escape closes the panel
+  // Cmd/Ctrl+Shift+\ mirrors the sidebar's Cmd+\ (Shift turns "\" into "|")
   useEffect(() => {
-    if (!activePanel) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closePanel();
+    const handleShortcut = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey) || !event.shiftKey) return;
+      if (event.key !== "|" && event.key !== "\\") return;
+      event.preventDefault();
+      togglePanel();
     };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [activePanel, closePanel]);
+    window.addEventListener("keydown", handleShortcut);
+    return () => window.removeEventListener("keydown", handleShortcut);
+  }, [togglePanel]);
 
   const value = useMemo(
-    () => ({ activePanel, openPanel, closePanel, togglePanel }),
-    [activePanel, openPanel, closePanel, togglePanel],
+    () => ({ isOpen, openPanel, closePanel, togglePanel }),
+    [isOpen, openPanel, closePanel, togglePanel],
   );
-
-  const panelConfig = activePanel ? PANELS[activePanel] : null;
-  const isOpen = activePanel !== null;
 
   return (
     <RightPanelContext.Provider value={value}>
       {children}
-
-      <aside
-        role="complementary"
-        aria-label={panelConfig?.label ?? "Right panel"}
-        className={`fixed inset-y-0 right-0 z-60 flex w-[360px] rounded-l-3xl flex-col bg-white shadow-2xl transition-transform duration-200 ease-out ${
-          isOpen ? "translate-x-0" : "translate-x-full"
-        }`}
-      >
-        {/* Header */}
-        <header className="shrink-0  px-5 py-4 ">
-          <div className="pr-10">
-            <p className="font-display text-xs font-semibold uppercase tracking-wide text-muted">
-              {panelConfig?.label ?? ""}
-            </p>
-            <h2 className="mt-1 text-2xl font-semibold text-ink">
-              {panelConfig?.title ?? ""}
-            </h2>
-          </div>
-          <button
-            type="button"
-            onClick={closePanel}
-            className="absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full border border-line bg-surface text-muted transition-colors hover:bg-sunken hover:text-ink"
-            aria-label="Close panel"
-          >
-            <IoClose className="h-5 w-5" />
-          </button>
-        </header>
-
-        {/* Body — only mount when open to avoid unnecessary renders */}
-        {panelConfig && <panelConfig.Component />}
-      </aside>
     </RightPanelContext.Provider>
   );
 }

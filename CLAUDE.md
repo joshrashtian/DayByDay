@@ -83,7 +83,7 @@ delete on their next pull.
 
 ### Spotify
 
-Read-only listening history, surfaced as a rail beside the calendar.
+Read-only listening history, surfaced as a tab in the right panel.
 
 | Layer | File |
 |---|---|
@@ -93,7 +93,7 @@ Read-only listening history, surfaced as a rail beside the calendar.
 | Web API client | `src/lib/integrations/spotify/api.ts` |
 | Log merge / day grouping | `src/lib/integrations/spotify/history.ts` |
 | Store | `src/stores/spotifyStore.ts` |
-| Calendar rail | `src/components/calendar/SpotifyListeningRail.tsx` |
+| Right panel tab | `src/components/global/rightpanel/SpotifyListeningHistory.tsx` |
 
 Auth is **Authorization Code + PKCE** — a desktop app cannot hold a client
 secret. Rust binds a one-shot `TcpListener` on `127.0.0.1:14565` to catch the

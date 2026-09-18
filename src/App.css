@@ -576,6 +576,10 @@ body,
   -webkit-app-region: no-drag;
 }
 
+.animate-spin-slow {
+  animation: spin 15s linear infinite;
+}
+
 
 .logo {
   height: 6em;

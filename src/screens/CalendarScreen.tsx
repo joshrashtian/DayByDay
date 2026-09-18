@@ -25,12 +25,6 @@ import { useCalendarTaskDrop } from "../hooks/useCalendarTaskDrop";
 import { useTasksStore } from "../stores/tasksStore";
 import { useSettingsStore } from "../stores/settingsStore";
 import { DatePicker } from "../components/application/date-picker/date-picker";
-import { SpotifyListeningRail } from "../components/calendar/SpotifyListeningRail";
-import { useAppViewportWidth } from "../hooks/useAppViewportWidth";
-import { useSpotifyHistorySync } from "../hooks/useSpotifyHistorySync";
-
-/** Below this app width the listening rail is dropped rather than shrunk. */
-const LISTENING_RAIL_MIN_WIDTH = 1100;
 
 type CalendarMode = "month" | "week" | "day" | "three" | "custom";
 
@@ -45,9 +39,6 @@ const modes: { id: CalendarMode; label: string }[] = [
 export default function CalendarScreen() {
   const [searchParams, setSearchParams] = useSearchParams();
   useCalendarTaskDrop();
-  useSpotifyHistorySync();
-  // The 280px rail would crowd the grid itself on a narrow window.
-  const showListeningRail = useAppViewportWidth() >= LISTENING_RAIL_MIN_WIDTH;
   const { open: openPopup, close: closePopup } = usePopup();
   const {
     tasks,
@@ -342,42 +333,62 @@ export default function CalendarScreen() {
           <AnimatePresence mode="wait">
             <motion.div
               key={viewKey}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
-            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-            className="min-h-0 min-w-0 flex-1"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -16 }}
+              transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+              className="min-h-0 min-w-0 flex-1"
             >
-            {mode === "month" ? (
-              <div className="h-full overflow-auto">
-                <MonthGridView
-                  month={monthRef}
+              {mode === "month" ? (
+                <div className="h-full overflow-auto">
+                  <MonthGridView
+                    month={monthRef}
+                    tasks={tasks}
+                    onToggleTask={toggleTask}
+                    onEditTask={openTaskEditor}
+                    onDeleteTask={removeTask}
+                    onDuplicateTask={duplicateTask}
+                    onPickDay={handlePickDay}
+                  />
+                </div>
+              ) : null}
+              {mode === "day" ? (
+                <DayAgendaView
+                  day={focus}
                   tasks={tasks}
                   onToggleTask={toggleTask}
                   onEditTask={openTaskEditor}
                   onDeleteTask={removeTask}
                   onDuplicateTask={duplicateTask}
-                  onPickDay={handlePickDay}
+                  onAddTaskForDay={openAddTaskForDay}
                 />
-              </div>
-            ) : null}
-            {mode === "day" ? (
-              <DayAgendaView
-                day={focus}
-                tasks={tasks}
-                onToggleTask={toggleTask}
-                onEditTask={openTaskEditor}
-                onDeleteTask={removeTask}
-                onDuplicateTask={duplicateTask}
-                onAddTaskForDay={openAddTaskForDay}
-              />
-            ) : null}
-            {mode === "week" ? (
-              <div className="h-full min-h-0">
-                <WeekView
+              ) : null}
+              {mode === "week" ? (
+                <div className="h-full min-h-0">
+                  <WeekView
+                    startDay={focus}
+                    tasks={tasks}
+                    onToggleTask={toggleTask}
+                    onDeleteTask={removeTask}
+                    onDuplicateTask={duplicateTask}
+                    onPickDay={handlePickDay}
+                    onAddTaskForDay={openAddTaskForDay}
+                    onCreateTimedTask={openAddTaskForRange}
+                    onQuickAddTimedTask={quickAddTaskForRange}
+                    categoryConfigs={categoryConfigs}
+                    onUpdateTaskSchedule={(taskId, dueDate, endDate) =>
+                      setTaskSchedule(taskId, dueDate, endDate)
+                    }
+                    onEditTask={openTaskEditor}
+                  />
+                </div>
+              ) : null}
+              {mode === "three" ? (
+                <ThreeDayView
                   startDay={focus}
                   tasks={tasks}
                   onToggleTask={toggleTask}
+                  onEditTask={openTaskEditor}
                   onDeleteTask={removeTask}
                   onDuplicateTask={duplicateTask}
                   onPickDay={handlePickDay}
@@ -388,54 +399,32 @@ export default function CalendarScreen() {
                   onUpdateTaskSchedule={(taskId, dueDate, endDate) =>
                     setTaskSchedule(taskId, dueDate, endDate)
                   }
-                  onEditTask={openTaskEditor}
                 />
-              </div>
-            ) : null}
-            {mode === "three" ? (
-              <ThreeDayView
-                startDay={focus}
-                tasks={tasks}
-                onToggleTask={toggleTask}
-                onEditTask={openTaskEditor}
-                onDeleteTask={removeTask}
-                onDuplicateTask={duplicateTask}
-                onPickDay={handlePickDay}
-                onAddTaskForDay={openAddTaskForDay}
-                onCreateTimedTask={openAddTaskForRange}
-                onQuickAddTimedTask={quickAddTaskForRange}
-                categoryConfigs={categoryConfigs}
-                onUpdateTaskSchedule={(taskId, dueDate, endDate) =>
-                  setTaskSchedule(taskId, dueDate, endDate)
-                }
-              />
-            ) : null}
-            {mode === "custom" ? (
-              <div className="h-full min-h-0">
-                <WeekView
-                  startDay={focus}
-                  tasks={tasks}
-                  onToggleTask={toggleTask}
-                  onDeleteTask={removeTask}
-                  onDuplicateTask={duplicateTask}
-                  onPickDay={handlePickDay}
-                  onAddTaskForDay={openAddTaskForDay}
-                  onCreateTimedTask={openAddTaskForRange}
-                  onQuickAddTimedTask={quickAddTaskForRange}
-                  categoryConfigs={categoryConfigs}
-                  onUpdateTaskSchedule={(taskId, dueDate, endDate) =>
-                    setTaskSchedule(taskId, dueDate, endDate)
-                  }
-                  onEditTask={openTaskEditor}
-                  dayCount={customDayCount}
-                  anchorToWeekStart={false}
-                />
-              </div>
-            ) : null}
+              ) : null}
+              {mode === "custom" ? (
+                <div className="h-full min-h-0">
+                  <WeekView
+                    startDay={focus}
+                    tasks={tasks}
+                    onToggleTask={toggleTask}
+                    onDeleteTask={removeTask}
+                    onDuplicateTask={duplicateTask}
+                    onPickDay={handlePickDay}
+                    onAddTaskForDay={openAddTaskForDay}
+                    onCreateTimedTask={openAddTaskForRange}
+                    onQuickAddTimedTask={quickAddTaskForRange}
+                    categoryConfigs={categoryConfigs}
+                    onUpdateTaskSchedule={(taskId, dueDate, endDate) =>
+                      setTaskSchedule(taskId, dueDate, endDate)
+                    }
+                    onEditTask={openTaskEditor}
+                    dayCount={customDayCount}
+                    anchorToWeekStart={false}
+                  />
+                </div>
+              ) : null}
             </motion.div>
           </AnimatePresence>
-
-          {showListeningRail && <SpotifyListeningRail day={focus} />}
         </div>
       </div>
     </main>

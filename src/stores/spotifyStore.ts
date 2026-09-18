@@ -33,6 +33,17 @@ import type {
 
 const STORAGE_KEY = "risebyday-spotify";
 
+/**
+ * Tauri `invoke` rejects with the raw Rust `Err` payload — a plain string for
+ * `Result<T, String>` — so an `instanceof Error` check alone would swallow
+ * every listener failure behind the generic fallback.
+ */
+function describeError(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) return error.message;
+  if (typeof error === "string" && error.trim()) return error;
+  return fallback;
+}
+
 type OauthCallback = {
   code: string | null;
   state: string | null;
@@ -69,6 +80,8 @@ type SpotifyState = {
   disconnect: () => void;
   clearHistory: () => void;
   syncHistory: () => Promise<void>;
+  /** Cheap single-endpoint refresh of `nowPlaying`, safe to poll often. */
+  syncNowPlaying: () => Promise<void>;
 };
 
 /** Serialises refreshes so parallel callers cannot burn the rotated token. */
@@ -139,13 +152,13 @@ export const useSpotifyStore = create<SpotifyState>()(
             const codeChallenge = await deriveCodeChallenge(codeVerifier);
 
             // Start listening *before* opening the browser, otherwise a fast
-            // redirect can arrive before the port is bound.
-            const callback = invoke<OauthCallback>("spotify_oauth_listen", {
-              timeoutSecs: 300,
-            });
-
-            await openUrl(buildAuthorizeUrl({ clientId, codeChallenge, state }));
-            const result = await callback;
+            // redirect can arrive before the port is bound. Both are awaited
+            // together so a bind failure is caught rather than left as an
+            // unhandled rejection while `openUrl` is still pending.
+            const [result] = await Promise.all([
+              invoke<OauthCallback>("spotify_oauth_listen", { timeoutSecs: 300 }),
+              openUrl(buildAuthorizeUrl({ clientId, codeChallenge, state })),
+            ]);
 
             if (result.error) throw new Error(`Spotify denied access: ${result.error}`);
             if (!result.code) throw new Error("Spotify did not return an authorization code.");
@@ -172,8 +185,7 @@ export const useSpotifyStore = create<SpotifyState>()(
           } catch (error) {
             set({
               status: "error",
-              error:
-                error instanceof Error ? error.message : "Could not connect to Spotify.",
+              error: describeError(error, "Could not connect to Spotify."),
             });
           }
         },
@@ -190,6 +202,25 @@ export const useSpotifyStore = create<SpotifyState>()(
         // The log is kept on disconnect — it is unrecoverable once dropped.
         clearHistory: () =>
           set({ plays: [], historyStartedAt: undefined, lastSyncedAt: undefined }),
+
+        syncNowPlaying: async () => {
+          if (!get().tokens) return;
+          try {
+            const accessToken = await ensureAccessToken();
+            set({ nowPlaying: await fetchCurrentlyPlaying(accessToken) });
+          } catch (error) {
+            if (error instanceof SpotifyAuthError) {
+              set({
+                tokens: undefined,
+                account: undefined,
+                nowPlaying: null,
+                status: "error",
+                error: "Spotify sign-in expired. Reconnect to keep logging plays.",
+              });
+            }
+            // Rate limits and network blips just leave the last value in place.
+          }
+        },
 
         syncHistory: async () => {
           const { tokens, isSyncing, plays } = get();
@@ -231,8 +262,7 @@ export const useSpotifyStore = create<SpotifyState>()(
             }
             set({
               status: "error",
-              error:
-                error instanceof Error ? error.message : "Could not reach Spotify.",
+              error: describeError(error, "Could not reach Spotify."),
             });
           } finally {
             set({ isSyncing: false });

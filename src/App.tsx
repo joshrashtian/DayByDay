@@ -8,6 +8,7 @@ import { isTauri } from "./lib/tauriEnv";
 import SignInScreen from "./screens/SignInScreen";
 import { AnimatedPage } from "./components/layout/AnimatedPage";
 import SideBar from "./components/global/sidebar";
+import { RightPanel } from "./components/global/rightpanel/RightPanel";
 import { HomeScreen } from "./screens/HomeScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
 import TasksScreen from "./screens/TasksScreen";
@@ -45,6 +46,7 @@ export default function App() {
   useAppTheme();
   useCreateTaskAction();
   const [sidebarOffset, setSidebarOffset] = useState(220);
+  const [rightPanelOffset, setRightPanelOffset] = useState(0);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   useEffect(() => {
@@ -76,12 +78,13 @@ export default function App() {
     <div id="app-zoom-root" className="h-full w-full overflow-hidden">
       <SideBar
         onWidthChange={setSidebarOffset}
-        onOpenProfile={() => togglePanel("profile")}
+        onOpenProfile={togglePanel}
         onOpenSettings={() => setShowSettingsModal(true)}
       />
+      <RightPanel onWidthChange={setRightPanelOffset} />
       <motion.div
         className="relative flex h-full min-h-0 flex-col overflow-hidden transition-[padding] duration-200"
-        style={{ paddingLeft: sidebarOffset }}
+        style={{ paddingLeft: sidebarOffset, paddingRight: rightPanelOffset }}
       >
         {/* Title-bar overlay: the native bar is hidden, so this strip keeps the window draggable */}
         <div

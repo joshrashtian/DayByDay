@@ -8,6 +8,7 @@ use tauri::{
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             spotify_oauth::spotify_oauth_listen
         ])

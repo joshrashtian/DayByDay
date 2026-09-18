@@ -119,7 +119,9 @@ export function TasksWorkspace({
 
   const openTaskEditorPopup = useCallback(
     (task: Task) => {
-      openPopup(taskEditorPopupContent({ task, updateTask, removeTask, closePopup }));
+      openPopup(
+        taskEditorPopupContent({ task, updateTask, removeTask, closePopup }),
+      );
     },
     [openPopup, updateTask, closePopup],
   );
@@ -319,7 +321,7 @@ export function TasksWorkspace({
               <div className="flex flex-col gap-6 pb-8">
                 {viewMode === "all" ? (
                   <section
-                    className="rounded-2xl border border-line/50 bg-surface/25 p-3 shadow-[0_6px_24px_rgba(15,15,15,0.05)] backdrop-blur-sm"
+                    className="rounded-2xl  bg-surface/25 p-3  backdrop-blur-sm"
                     aria-label="All tasks"
                   >
                     <header className="mb-3 flex items-center justify-between px-1">

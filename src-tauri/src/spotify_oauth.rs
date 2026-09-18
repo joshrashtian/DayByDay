@@ -7,10 +7,21 @@
 
 use std::io::{BufRead, BufReader, Write};
 use std::net::TcpListener;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
 
 /// Must match the redirect URI registered in the Spotify dashboard.
 pub const REDIRECT_PORT: u16 = 14565;
+
+/// Bumped by every `spotify_oauth_listen` call. A listener whose generation
+/// is no longer current drops its socket, so a retry from the frontend (after
+/// an error, a hot reload, or the user simply clicking Connect again) never
+/// collides with a stale listener still waiting out its timeout.
+static LISTENER_GENERATION: AtomicU64 = AtomicU64::new(0);
+
+/// How long a new listener waits for a superseded one to notice and release
+/// the port. The stale loop polls every 120ms, so this is generous.
+const SUPERSEDE_GRACE: Duration = Duration::from_secs(2);
 
 #[derive(serde::Serialize)]
 pub struct OauthCallback {
@@ -84,9 +95,26 @@ fn write_response(stream: &mut std::net::TcpStream, status: &str, body: &str) {
 #[tauri::command]
 pub async fn spotify_oauth_listen(timeout_secs: u64) -> Result<OauthCallback, String> {
     tauri::async_runtime::spawn_blocking(move || {
-        let listener = TcpListener::bind(("127.0.0.1", REDIRECT_PORT)).map_err(|err| {
-            format!("Could not listen on 127.0.0.1:{REDIRECT_PORT} for the Spotify redirect: {err}")
-        })?;
+        let generation = LISTENER_GENERATION.fetch_add(1, Ordering::SeqCst) + 1;
+
+        // A previous call may still hold the port; it will see the generation
+        // change on its next poll and release it, so retry the bind briefly.
+        let bind_deadline = Instant::now() + SUPERSEDE_GRACE;
+        let listener = loop {
+            match TcpListener::bind(("127.0.0.1", REDIRECT_PORT)) {
+                Ok(listener) => break listener,
+                Err(err) if err.kind() == std::io::ErrorKind::AddrInUse
+                    && Instant::now() < bind_deadline =>
+                {
+                    std::thread::sleep(Duration::from_millis(100));
+                }
+                Err(err) => {
+                    return Err(format!(
+                        "Could not listen on 127.0.0.1:{REDIRECT_PORT} for the Spotify redirect: {err}"
+                    ))
+                }
+            }
+        };
         listener
             .set_nonblocking(true)
             .map_err(|err| err.to_string())?;
@@ -94,6 +122,9 @@ pub async fn spotify_oauth_listen(timeout_secs: u64) -> Result<OauthCallback, St
         let deadline = Instant::now() + Duration::from_secs(timeout_secs.clamp(10, 600));
 
         loop {
+            if LISTENER_GENERATION.load(Ordering::SeqCst) != generation {
+                return Err("Superseded by a newer Spotify connect attempt.".to_string());
+            }
             if Instant::now() >= deadline {
                 return Err("Timed out waiting for Spotify to redirect back.".to_string());
             }

@@ -12,6 +12,10 @@ import {
   PHASE_LABELS,
   POMODORO_STYLE_LIST,
 } from "./PomodoroStyles";
+import { useState } from "react";
+import { useSpotifyNowPlayingSync } from "@/hooks/useSpotifyNowPlayingSync";
+import { useSpotifyStore } from "@/stores/spotifyStore";
+import { BsSpotify } from "react-icons/bs";
 
 function TimerDigit({ value, animated }: { value: string; animated: boolean }) {
   if (value === ":" || !animated) {
@@ -99,10 +103,10 @@ export default function PomodoroScreen() {
 
   const digits = formatPomodoroTime(secondsLeft).split("");
 
+  const [showNowPlaying, setShowNowPlaying] = useState<boolean>(true);
+
   return (
-    <main
-      className={twMerge(style.container, style.phase.background[phase])}
-    >
+    <main className={twMerge(style.container, style.phase.background[phase])}>
       <StylePicker />
       <motion.div
         className={twMerge(style.phaseLabel, style.phase.accent[phase])}
@@ -131,9 +135,7 @@ export default function PomodoroScreen() {
 
       {/* Progress bar */}
       <div className="mt-8 w-full max-w-md">
-        <div
-          className={twMerge(style.progressTrack, style.phase.barBg[phase])}
-        >
+        <div className={twMerge(style.progressTrack, style.phase.barBg[phase])}>
           <motion.div
             className={twMerge(style.progressFill, style.phase.bar[phase])}
             animate={{ width: `${progress * 100}%` }}
@@ -190,6 +192,26 @@ export default function PomodoroScreen() {
           <IoPlaySkipForward className="text-lg" aria-hidden />
         </button>
       </div>
+
+      {showNowPlaying && <NowPlayingPomodoro />}
     </main>
+  );
+}
+
+function NowPlayingPomodoro() {
+  useSpotifyNowPlayingSync();
+
+  const nowPlaying = useSpotifyStore((e) => e.nowPlaying);
+
+  if (!nowPlaying) return;
+  return (
+    <div className="bg-zinc-200/40 mt-5 p-3 min-w-72 gap-12 rounded-full items-center flex flex-row justify-between h-16 font-mono">
+      <BsSpotify size={24} />
+      <div className="flex flex-col items-center">
+        <span>{nowPlaying?.title}</span>
+        <span>{nowPlaying?.album}</span>
+      </div>
+      <span>{nowPlaying.artists}</span>
+    </div>
   );
 }

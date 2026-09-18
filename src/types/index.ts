@@ -205,6 +205,7 @@ export type SpotifyNowPlaying = {
   progressMs: number;
   isPlaying: boolean;
   trackUrl?: string;
+  
 };
 
 export type SpotifyAccount = {

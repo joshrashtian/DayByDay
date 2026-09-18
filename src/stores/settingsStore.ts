@@ -32,11 +32,17 @@ type SidebarState = {
   appOrder: string[];
 };
 
+type RightPanelState = {
+  open: boolean;
+  width: number;
+};
+
 type SettingsState = {
   theme: ThemePreference;
   dayTransitionEnabled: boolean;
   zoomLevel: number;
   sidebar: SidebarState;
+  rightPanel: RightPanelState;
   pinnedToolkitPanels: string[];
   weatherCoords: ManualWeatherCoords | null;
   audioPrefs: AudioPrefs;
@@ -48,6 +54,7 @@ type SettingsState = {
   setDayTransitionEnabled: (enabled: boolean) => void;
   setZoomLevel: (level: number) => void;
   setSidebar: (state: Partial<SidebarState>) => void;
+  setRightPanel: (state: Partial<RightPanelState>) => void;
   setPinnedToolkitPanels: (panelIds: string[]) => void;
   setWeatherCoords: (coords: ManualWeatherCoords | null) => void;
   setAudioPrefs: (
@@ -66,6 +73,11 @@ const DEFAULT_SIDEBAR: SidebarState = {
   taskOrder: [],
   socialOrder: [],
   appOrder: [],
+};
+
+const DEFAULT_RIGHT_PANEL: RightPanelState = {
+  open: false,
+  width: 320,
 };
 
 const DEFAULT_AUDIO_PREFS: AudioPrefs = {
@@ -219,6 +231,7 @@ export const useSettingsStore = create<SettingsState>()(
           : true,
       zoomLevel: 1,
       sidebar: DEFAULT_SIDEBAR,
+      rightPanel: DEFAULT_RIGHT_PANEL,
       pinnedToolkitPanels: [],
       weatherCoords: null,
       audioPrefs: DEFAULT_AUDIO_PREFS,
@@ -235,6 +248,8 @@ export const useSettingsStore = create<SettingsState>()(
       setZoomLevel: (level) => set({ zoomLevel: clampAppZoom(level) }),
       setSidebar: (partial) =>
         set((s) => ({ sidebar: { ...s.sidebar, ...partial } })),
+      setRightPanel: (partial) =>
+        set((s) => ({ rightPanel: { ...s.rightPanel, ...partial } })),
       setPinnedToolkitPanels: (panelIds) =>
         set({ pinnedToolkitPanels: panelIds }),
       setWeatherCoords: (coords) => set({ weatherCoords: coords }),
@@ -276,6 +291,7 @@ export const useSettingsStore = create<SettingsState>()(
         dayTransitionEnabled: state.dayTransitionEnabled,
         zoomLevel: state.zoomLevel,
         sidebar: state.sidebar,
+        rightPanel: state.rightPanel,
         pinnedToolkitPanels: state.pinnedToolkitPanels,
         weatherCoords: state.weatherCoords,
         audioPrefs: state.audioPrefs,
@@ -318,4 +334,4 @@ if (typeof window !== "undefined") {
   });
 }
 
-export type { SidebarMode, SidebarState };
+export type { RightPanelState, SidebarMode, SidebarState };
