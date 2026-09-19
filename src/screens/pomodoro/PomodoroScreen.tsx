@@ -205,11 +205,11 @@ function NowPlayingPomodoro() {
 
   if (!nowPlaying) return;
   return (
-    <div className="bg-zinc-200/40 mt-5 p-3 min-w-72 gap-12 rounded-full items-center flex flex-row justify-between h-16 font-mono">
+    <div className="bg-zinc-200/10 mt-5 p-3 px-10 min-w-[750px]  rounded-full items-center flex flex-row justify-between h-16 font-mono">
       <BsSpotify size={24} />
       <div className="flex flex-col items-center">
         <span>{nowPlaying?.title}</span>
-        <span>{nowPlaying?.album}</span>
+        <span className="text-xs">{nowPlaying?.album}</span>
       </div>
       <span>{nowPlaying.artists}</span>
     </div>
