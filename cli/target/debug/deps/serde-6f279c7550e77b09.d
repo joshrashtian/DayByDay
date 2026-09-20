@@ -1,0 +1,14 @@
+/Users/joshuarashtian/Documents/DayByDay/cli/target/debug/deps/serde-6f279c7550e77b09.d: /Users/joshuarashtian/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/lib.rs /Users/joshuarashtian/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/integer128.rs /Users/joshuarashtian/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/mod.rs /Users/joshuarashtian/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/de.rs /Users/joshuarashtian/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/ser.rs /Users/joshuarashtian/Documents/DayByDay/cli/target/debug/build/serde-d7af9f7189517044/out/private.rs
+
+/Users/joshuarashtian/Documents/DayByDay/cli/target/debug/deps/libserde-6f279c7550e77b09.rlib: /Users/joshuarashtian/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/lib.rs /Users/joshuarashtian/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/integer128.rs /Users/joshuarashtian/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/mod.rs /Users/joshuarashtian/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/de.rs /Users/joshuarashtian/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/ser.rs /Users/joshuarashtian/Documents/DayByDay/cli/target/debug/build/serde-d7af9f7189517044/out/private.rs
+
+/Users/joshuarashtian/Documents/DayByDay/cli/target/debug/deps/libserde-6f279c7550e77b09.rmeta: /Users/joshuarashtian/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/lib.rs /Users/joshuarashtian/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/integer128.rs /Users/joshuarashtian/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/mod.rs /Users/joshuarashtian/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/de.rs /Users/joshuarashtian/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/ser.rs /Users/joshuarashtian/Documents/DayByDay/cli/target/debug/build/serde-d7af9f7189517044/out/private.rs
+
+/Users/joshuarashtian/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/lib.rs:
+/Users/joshuarashtian/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/integer128.rs:
+/Users/joshuarashtian/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/mod.rs:
+/Users/joshuarashtian/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/de.rs:
+/Users/joshuarashtian/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/ser.rs:
+/Users/joshuarashtian/Documents/DayByDay/cli/target/debug/build/serde-d7af9f7189517044/out/private.rs:
+
+# env-dep:OUT_DIR=/Users/joshuarashtian/Documents/DayByDay/cli/target/debug/build/serde-d7af9f7189517044/out

@@ -1,1 +1,1 @@
-/Users/joshuarashtian/Documents/DayByDay/cli/target/debug/cli: /Users/joshuarashtian/Documents/DayByDay/cli/src/main.rs
+/Users/joshuarashtian/Documents/DayByDay/cli/target/debug/cli: /Users/joshuarashtian/Documents/DayByDay/cli/src/config.rs /Users/joshuarashtian/Documents/DayByDay/cli/src/main.rs /Users/joshuarashtian/Documents/DayByDay/cli/src/session.rs /Users/joshuarashtian/Documents/DayByDay/cli/src/supabase.rs

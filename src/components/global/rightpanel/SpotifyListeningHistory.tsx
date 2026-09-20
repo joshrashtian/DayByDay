@@ -15,7 +15,7 @@ import { sidebarTokens } from "../sidebar/sidebarTokens";
 import { useSpotifyNowPlayingSync } from "@/hooks/useSpotifyNowPlayingSync";
 import { useDominantColor } from "@/hooks/useDominantColor";
 import Tilt from "react-parallax-tilt";
-import { now } from "@internationalized/date";
+import Vinyl from "@/components/Vinyl";
 /** How many days back the panel renders; the log itself keeps more. */
 const VISIBLE_DAYS = 14;
 
@@ -105,31 +105,20 @@ function NowPlayingCard({ nowPlaying }: { nowPlaying: SpotifyNowPlaying }) {
       {/* Stacks in a narrow panel; sits side-by-side once there is room.
           Both are driven by the card's own width, not the window's. */}
       <div className="flex flex-col items-center gap-4 @min-[340px]:flex-row">
-        <div
-          className="relative shrink-0 rounded-full"
+        <Tilt
+          className="shrink-0"
           style={{
             // Scale the record with the panel, within sane bounds.
             width: "clamp(88px, 36cqw, 150px)",
             height: "clamp(88px, 36cqw, 150px)",
           }}
         >
-          {nowPlaying.albumArtUrl ? (
-            <Tilt
-              className={`absolute inset-0 h-full w-full rounded-full object-cover ring-2 ring-ink/70  motion-reduce:animate-none `}
-            >
-              <img
-                src={nowPlaying.albumArtUrl}
-                className={`rounded-full ${nowPlaying.isPlaying ? "animate-spin-slow" : ""}`}
-                alt=""
-                aria-hidden
-              />
-            </Tilt>
-          ) : (
-            <div className="absolute inset-0 rounded-full bg-sunken ring-2 ring-ink/70" />
-          )}
-
-          <div className="absolute left-1/2 top-1/2 size-[12%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-canvas ring-2 ring-ink/70" />
-        </div>
+          <Vinyl
+            albumArtUrl={nowPlaying.albumArtUrl}
+            spinning={nowPlaying.isPlaying}
+            className="size-full drop-shadow-lg"
+          />
+        </Tilt>
 
         <div className="w-full min-w-0 flex-1 text-center @min-[340px]:text-left">
           <p
