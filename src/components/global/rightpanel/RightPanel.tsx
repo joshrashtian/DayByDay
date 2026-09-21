@@ -16,6 +16,8 @@ import { useRightPanel } from "../../../providers/RightPanelProvider";
 import { useSettingsStore } from "../../../stores/settingsStore";
 import { sidebarTokens } from "../sidebar/sidebarTokens";
 import { SiSpotify } from "react-icons/si";
+import { IoCompassOutline } from "react-icons/io5";
+import { ContextPanel } from "./context/ContextPanel";
 import { SpotifyListeningHistory } from "./SpotifyListeningHistory";
 
 // ─── Panel tabs ───────────────────────────────────────────────────────────────
@@ -29,6 +31,13 @@ type PanelTab = {
 };
 
 const PANEL_TABS: PanelTab[] = [
+  {
+    // Follows the route: see lib/rightPanelContext.ts for the page → panel map.
+    id: "page",
+    label: "This page",
+    icon: <IoCompassOutline />,
+    Component: ContextPanel,
+  },
   {
     id: "spotify",
     label: "Spotify",

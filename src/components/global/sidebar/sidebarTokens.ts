@@ -4,7 +4,7 @@
  * semantic color tokens so it follows light/dark automatically.
  */
 export const sidebarTokens = {
-  surface: "bg-surface",
+  surface: "bg-surface/50",
   navItemActive: "bg-accent-soft text-accent",
   navItemIdle: "text-muted hover:bg-sunken hover:text-ink",
   navAccent: "bg-accent",

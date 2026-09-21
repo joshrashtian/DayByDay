@@ -11,6 +11,13 @@ migrateLocalStorageKey("daybyday-pomodoro", POMODORO_STORAGE_KEY);
 
 export type PomodoroPhase = "focus" | "shortBreak" | "longBreak";
 
+export type PomodoroHistory = {
+    start_time: Date,
+    end_time: Date,
+    notes: string,
+    
+}[]
+
 export const POMODORO_DURATIONS: Record<PomodoroPhase, number> = {
   focus: 25 * 60,
   shortBreak: 5 * 60,
@@ -68,6 +75,9 @@ export const usePomodoroStore = create<PomodoroState>()(
       secondsLeft: POMODORO_DURATIONS.focus,
       isRunning: false,
       completedFocusSessions: 0,
+      focusSessionDetails: {
+
+      },
       lastActiveDay: getDayKey(),
       linkedTaskTitle: undefined,
       panelOpen: false,

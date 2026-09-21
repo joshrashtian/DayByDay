@@ -3,7 +3,7 @@ import {
   IoClose,
   IoCodeDownloadOutline,
   IoCopy,
-  IoCreateOutline,
+  IoOpen,
   IoPencil,
   IoRepeatOutline,
   IoTrash,
@@ -11,7 +11,10 @@ import {
 import { renderCategoryIcon } from "../../lib/categoryIcons";
 import { resolveCategoryVisual } from "../../lib/taskCategories";
 import { formatTaskDue, taskDueToIso } from "../../lib/taskDates";
+import { recurrenceLabel } from "../../lib/taskRecurrenceLabel";
 import { useContextMenu } from "../../providers/ContextMenuProvider";
+import { usePopup } from "../../providers/PopupProvider";
+import { taskInfoPopupContent } from "./taskInfoPopupContent";
 import type { Task, TaskPriority } from "@/types";
 import { normalizeTaskTags } from "../../types/task";
 
@@ -35,44 +38,6 @@ function priorityChipClass(p: TaskPriority) {
   return "bg-slate-500/12 text-slate-800 ring-slate-500/20";
 }
 
-function recurrenceLabel(task: Task): string | undefined {
-  if (!task.recurrence) return undefined;
-  const dayLabels: Record<number, string> = {
-    1: "Mon",
-    2: "Tue",
-    3: "Wed",
-    4: "Thu",
-    5: "Fri",
-    6: "Sat",
-    7: "Sun",
-  };
-  const cadence =
-    task.recurrence.frequency === "daily"
-      ? task.recurrence.interval === 1
-        ? "day"
-        : "days"
-      : task.recurrence.frequency === "weekly"
-        ? task.recurrence.interval === 1
-          ? "week"
-          : "weeks"
-        : task.recurrence.interval === 1
-          ? "month"
-          : "months";
-  let base = `Repeats every ${task.recurrence.interval} ${cadence}`;
-  if (
-    task.recurrence.frequency === "weekly" &&
-    task.recurrence.weekdays?.length
-  ) {
-    const onDays = task.recurrence.weekdays
-      .map((day) => dayLabels[day] ?? "")
-      .filter(Boolean)
-      .join(", ");
-    if (onDays) base += ` on ${onDays}`;
-  }
-  if (!task.recurrence.untilDate) return base;
-  return `${base}, until ${formatTaskDue(task.recurrence.untilDate)}`;
-}
-
 export function TaskItem({
   task,
   onToggle,
@@ -81,9 +46,22 @@ export function TaskItem({
   onSetTags,
 }: Props) {
   const { openMenu } = useContextMenu();
+  const { open: openPopup, close: closePopup } = usePopup();
   const tags = task.tags ?? [];
   const categoryVisual = resolveCategoryVisual(task.category);
   const isDone = task.done;
+
+  const openInfo = () => {
+    openPopup(
+      taskInfoPopupContent({
+        task,
+        closePopup,
+        onToggle,
+        onEdit: onEditTask,
+        onDelete,
+      }),
+    );
+  };
 
   const removeTag = (label: string) => {
     if (!onSetTags) return;
@@ -98,7 +76,7 @@ export function TaskItem({
       <div
         role="button"
         tabIndex={0}
-        onClick={onToggle}
+        onClick={openInfo}
         onContextMenu={(e) =>
           openMenu(
             e,
@@ -123,6 +101,13 @@ export function TaskItem({
                 type: "break",
               },
 
+              {
+                id: "view-task-info",
+                type: "item",
+                label: "View Task",
+                onSelect: openInfo,
+                icon: <IoOpen />,
+              },
               ...(onEditTask
                 ? [
                     {
@@ -155,12 +140,15 @@ export function TaskItem({
           )
         }
         onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            openInfo();
+          } else if (e.key === " ") {
             e.preventDefault();
             onToggle();
           }
         }}
-        className="group relative cursor-pointer overflow-hidden rounded-2xl border border-line/70 bg-surface/45 px-4 py-3.5 outline-none backdrop-blur-xl backdrop-saturate-150 ring-1 ring-line/30 transition-shadow focus-visible:ring-2 focus-visible:ring-line-strong/50 active:scale-[0.99]"
+        className="group relative cursor-pointer overflow-hidden rounded-xl  px-4 py-3.5 outline-none backdrop-blur-xl backdrop-saturate-150 ring-1 ring-line/30 transition-shadow focus-visible:ring-2 focus-visible:ring-line-strong/50 active:scale-[0.99]"
       >
         <div
           className="pointer-events-none absolute inset-0 rounded-2xl bg-linear-to-br from-surface/70 via-surface/15 to-transparent opacity-80"
@@ -176,13 +164,19 @@ export function TaskItem({
         />
         <div className="relative flex min-w-0 flex-col gap-2">
           <div className="flex min-w-0 items-center gap-3.5">
-            <span
-              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors ${
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggle();
+              }}
+              className={`flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full border transition-colors ${
                 isDone
                   ? "border-emerald-500/60 bg-emerald-500/25 text-emerald-800"
-                  : "border-line-strong/45 bg-surface/50 group-hover:border-zinc-500/55"
+                  : "border-black/40 bg-surface/80 group-hover:border-zinc-500/55"
               }`}
-              aria-hidden
+              aria-label={isDone ? "Mark not done" : "Mark done"}
+              aria-pressed={isDone}
             >
               {isDone ? (
                 <svg
@@ -200,7 +194,7 @@ export function TaskItem({
                   />
                 </svg>
               ) : null}
-            </span>
+            </button>
             <span
               className={`min-w-0 flex-1 wrap-break-word text-lg font-medium tracking-tight text-ink transition-[color,opacity] ${
                 isDone ? "text-muted line-through opacity-70" : ""
@@ -208,27 +202,13 @@ export function TaskItem({
             >
               {task.title}
             </span>
-            {onEditTask ? (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEditTask();
-                }}
-                className="shrink-0 rounded-md p-1.5 text-muted transition-colors hover:bg-sunken/50 hover:text-ink"
-                aria-label="Edit task"
-                title="Edit task"
-              >
-                <IoCreateOutline className="h-4 w-4" aria-hidden />
-              </button>
-            ) : null}
           </div>
           <div
             className="flex min-w-0 flex-wrap items-center gap-2 pl-8 text-xs font-medium text-muted"
             onClick={(e) => e.stopPropagation()}
           >
             {task.block ? (
-              <span className="rounded-md bg-sky-500/12 px-2 py-0.5 text-sky-900 ring-1 ring-sky-500/25 dark:text-sky-200">
+              <span className="rounded-md absolute top-0 right-0 bg-sky-700 px-2 py-0.5 text-white  ">
                 {task.block}
               </span>
             ) : null}
@@ -250,7 +230,7 @@ export function TaskItem({
             {task.dueDate ? (
               <time
                 dateTime={taskDueToIso(task.dueDate)}
-                className="rounded-md bg-surface/50 px-2 py-0.5 ring-1 ring-line/80"
+                className="rounded-md font-mono  "
               >
                 {formatTaskDue(task.dueDate)}
               </time>
@@ -292,6 +272,28 @@ export function TaskItem({
                 ) : null}
               </span>
             ))}
+            <div className="absolute right-0 bottom-0 flex flex-row gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+              <button
+                type="button"
+                onClick={openInfo}
+                className="rounded-md p-1 text-muted transition-colors hover:bg-sunken/50 hover:text-ink"
+                aria-label="View task"
+                title="View task"
+              >
+                <IoOpen className="h-4 w-4" aria-hidden />
+              </button>
+              {onEditTask ? (
+                <button
+                  type="button"
+                  onClick={onEditTask}
+                  className="rounded-md p-1 text-muted transition-colors hover:bg-sunken/50 hover:text-ink"
+                  aria-label="Edit task"
+                  title="Edit task"
+                >
+                  <IoPencil className="h-4 w-4" aria-hidden />
+                </button>
+              ) : null}
+            </div>
           </div>
         </div>
       </div>
