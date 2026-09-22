@@ -28,3 +28,4 @@ dist-ssr
 *.sln
 *.sw?
 .claude/launch.json
+/cli/target

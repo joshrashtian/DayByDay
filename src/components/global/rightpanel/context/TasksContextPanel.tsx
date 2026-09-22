@@ -21,7 +21,9 @@ export function TasksContextPanel() {
       .sort((a, b) => a.dueDate!.getTime() - b.dueDate!.getTime());
     const dueToday = open.filter((t) => isTaskDueToday(t.dueDate));
     const doneToday = own.filter(
-      (t) => t.done && (isTaskDueToday(t.dueDate) || isTaskDueToday(t.lastCompletedAt)),
+      (t) =>
+        t.done &&
+        (isTaskDueToday(t.dueDate) || isTaskDueToday(t.lastCompletedAt)),
     );
     const critical = open.filter((t) => t.critical);
 
@@ -88,7 +90,7 @@ export function TasksContextPanel() {
                   </div>
                   <div className="h-1 overflow-hidden rounded-full bg-sunken">
                     <div
-                      className="h-full rounded-full"
+                      className="h-full duration-300 rounded-full"
                       style={{ width: `${share}%`, background: visual.color }}
                     />
                   </div>
