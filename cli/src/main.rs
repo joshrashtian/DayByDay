@@ -3,7 +3,7 @@ mod session;
 mod supabase;
 
 use anyhow::Result;
-use clap::{Args, Parser, Subcommand};
+use clap::{Args, Parser, Subcommand, ValueHint::Unknown};
 use colored::*;
 use config::Config;
 use session::Session;
@@ -40,7 +40,14 @@ pub enum TaskSubcommand {
     /// Create New Task
     Create(CreateTask),
     /// List open tasks
-    List,
+    List(ListTasks),
+}
+
+#[derive(Debug, Args)]
+pub struct ListTasks {
+    /// Option for list, such as all, uncompleted or completed. Defaults to uncompleted.
+    #[arg(short, long)]
+    pub filter: Option<String>,
 }
 
 #[derive(Debug, Args)]
@@ -84,7 +91,7 @@ async fn run() -> Result<()> {
     match cli.command {
         CommandType::Task(task_cmd) => match task_cmd.command {
             TaskSubcommand::Create(args) => create_task(&supabase, args).await,
-            TaskSubcommand::List => list_tasks(&supabase).await,
+            TaskSubcommand::List(args) => list_tasks(&supabase, args).await,
         },
         CommandType::SignIn(args) => sign_in(&supabase, args.email).await,
         CommandType::SignOut => sign_out(&supabase).await,
@@ -114,9 +121,12 @@ async fn create_task(supabase: &Supabase, args: CreateTask) -> Result<()> {
     Ok(())
 }
 
-async fn list_tasks(supabase: &Supabase) -> Result<()> {
+async fn list_tasks(supabase: &Supabase, args: ListTasks) -> Result<()> {
     let session = supabase.authed().await?;
-    let rows = supabase.list_open_tasks(&session).await?;
+    let rows = match args.filter.as_deref() {
+        Some("all") => supabase.list_all_tasks(&session).await?,
+        Some("open") | _ => supabase.list_open_tasks(&session).await?,
+    };
 
     if rows.is_empty() {
         println!("{}", "No open tasks.".dimmed());

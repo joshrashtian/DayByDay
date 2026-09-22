@@ -6,7 +6,7 @@
 
 use crate::config::Config;
 use crate::session::Session;
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{Context, Ok, Result, anyhow, bail};
 use reqwest::header::{AUTHORIZATION, CONTENT_TYPE, HeaderMap, HeaderValue};
 use reqwest::{Client, RequestBuilder, Response};
 use serde::{Deserialize, Serialize};
@@ -130,8 +130,9 @@ impl Supabase {
 
     /// The saved session, refreshed and re-saved if it is about to expire.
     pub async fn authed(&self) -> Result<Session> {
-        let session = Session::load()?
-            .ok_or_else(|| anyhow!("not signed in — run `sign-in --email you@example.com` first"))?;
+        let session = Session::load()?.ok_or_else(|| {
+            anyhow!("not signed in — run `sign-in --email you@example.com` first")
+        })?;
         if !session.needs_refresh() {
             return Ok(session);
         }
@@ -170,6 +171,19 @@ impl Supabase {
             .send()
             .await
             .context("reaching Supabase")?;
+        Ok(check(res).await?.json().await?)
+    }
+
+    pub async fn list_all_tasks(&self, session: &Session) -> Result<Vec<TaskRow>> {
+        let res = self
+            .table(session, self.http.get(self.rest_url("tasks")))
+            .query(&[
+                ("select", "id,title,due_date,priority,block,category"),
+                ("deleted_at", "is.null"),
+            ])
+            .send()
+            .await
+            .context("Reaching Server")?;
         Ok(check(res).await?.json().await?)
     }
 
