@@ -9,7 +9,10 @@ export default function TasksScreen() {
       <Routes>
         <Route index element={<TasksMainPage />} />
         <Route path="categories" element={<TasksCategoriesPage />} />
-        <Route path="categories/:categorySlug" element={<TasksCategoryDetailPage />} />
+        <Route
+          path="categories/:categorySlug"
+          element={<TasksCategoryDetailPage />}
+        />
         <Route path="*" element={<Navigate to="/tasks" replace />} />
       </Routes>
     </div>

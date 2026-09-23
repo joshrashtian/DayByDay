@@ -1,6 +1,11 @@
 import { motion } from "motion/react";
 import Kbd from "../ui/kbd";
 import { IoHelpCircle } from "react-icons/io5";
+import { useState } from "react";
+import { isAxiosError } from "axios";
+import { api } from "@/api";
+import { useTasksStore } from "@/stores/tasksStore";
+import { useAuthStore } from "@/stores/authStore";
 
 function ShortcutRow({
   keys,
@@ -42,6 +47,97 @@ function SectionCard({
   );
 }
 
+function ApiDebugCard() {
+  const firstTaskId = useTasksStore((s) => s.tasks[0]?.id ?? "");
+  const userId = useAuthStore((s) => s.user?.id);
+  const [taskId, setTaskId] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<{ status: string; body: string } | null>(
+    null,
+  );
+
+  const call = async (path: string, params?: Record<string, string>) => {
+    setLoading(true);
+    try {
+      const res = await api.get(path, { params });
+      setResult({
+        status: `${res.status} ${res.statusText}`,
+        body: JSON.stringify(res.data, null, 2),
+      });
+    } catch (err) {
+      if (isAxiosError(err)) {
+        setResult({
+          status: err.response
+            ? `${err.response.status} ${err.response.statusText}`
+            : err.message,
+          // Never echo the request config — it carries the bearer token.
+          body: JSON.stringify(
+            err.response?.data ?? { code: err.code, message: err.message },
+            null,
+            2,
+          ),
+        });
+      } else {
+        setResult({ status: "Error", body: String(err) });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const run = () => {
+    const id = taskId.trim() || firstTaskId;
+    if (id) call(`/tasksapi/tasks/getdata/${encodeURIComponent(id)}`);
+  };
+
+  const runAll = () => {
+    if (userId) call("/tasksapi/tasks/getdata/all", { user_id: userId });
+  };
+
+  return (
+    <SectionCard
+      id="debug"
+      title="Debug: API"
+      subtitle={`GET /tasksapi/tasks/getdata/:id and /all against ${import.meta.env.VITE_API_URL ?? "(VITE_API_URL unset)"}`}
+    >
+      <div className="flex gap-2">
+        <input
+          value={taskId}
+          onChange={(e) => setTaskId(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && run()}
+          placeholder={firstTaskId || "task id"}
+          className="min-w-0 flex-1 rounded-lg border border-line bg-sunken px-3 py-1.5 font-mono text-[13px] text-ink outline-none focus:border-accent"
+        />
+        <button
+          type="button"
+          onClick={run}
+          disabled={loading || !(taskId.trim() || firstTaskId)}
+          className="rounded-lg bg-accent px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50"
+        >
+          {loading ? "Fetching…" : "Fetch"}
+        </button>
+        <button
+          type="button"
+          onClick={runAll}
+          disabled={loading || !userId}
+          title={userId ? undefined : "Sign in to fetch your tasks"}
+          className="rounded-lg border border-accent px-3 py-1.5 text-sm font-semibold text-accent disabled:opacity-50"
+        >
+          Fetch all
+        </button>
+      </div>
+      {result ? (
+        <div className="mt-3 text-sm">
+          <p className="font-semibold text-ink">{result.status}</p>
+          <pre className="mt-2 max-h-80 overflow-auto rounded-lg bg-sunken p-3 font-mono text-[12px] text-muted">
+            {result.body}
+          </pre>
+        </div>
+      ) : null}
+    </SectionCard>
+  );
+}
+
 const helpSections = [
   { id: "quick-start", label: "Quick Start" },
   { id: "task-chat-composer", label: "Composer Tokens" },
@@ -49,6 +145,7 @@ const helpSections = [
   { id: "keys", label: "Keyboard" },
   { id: "common-mistakes", label: "Troubleshooting" },
   { id: "examples", label: "Examples" },
+  ...(import.meta.env.DEV ? [{ id: "debug", label: "Debug" }] : []),
 ];
 
 const HelpScreen = () => {
@@ -303,6 +400,8 @@ const HelpScreen = () => {
               </li>
             </ul>
           </SectionCard>
+
+          {import.meta.env.DEV ? <ApiDebugCard /> : null}
         </div>
 
         <aside className="sticky top-5 hidden w-full max-w-[240px] self-start rounded-2xl border border-line bg-surface/90 p-4 shadow-sm backdrop-blur lg:block">
