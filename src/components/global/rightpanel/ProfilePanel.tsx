@@ -20,11 +20,11 @@ export function ProfilePanel() {
           className="skew-3"
           src={profile?.avatarUrl ?? undefined}
           initials={profileInitials}
-          alt={profile?.name ?? "Profile avatar"}
+          alt={profile?.full_name ?? "Profile avatar"}
         />
         <div className="min-w-0 skew-3">
           <p className="truncate text-sm font-semibold text-ink">
-            {profile?.name ?? "Not signed in"}
+            {profile?.full_name ?? "Not signed in"}
           </p>
           <p className="truncate text-sm text-muted">
             {profile?.email ?? "Local profile"}
@@ -69,7 +69,6 @@ export function ProfilePanel() {
         <p className="mt-1 text-2xl font-semibold text-ink">
           {stats.categoriesCount}
         </p>
-
       </div>
     </div>
   );

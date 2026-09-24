@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { IoChevronBack, IoChevronForward } from "react-icons/io5";
+import {
+  IoChevronBack,
+  IoChevronForward,
+  IoPersonCircle,
+} from "react-icons/io5";
 import { useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { useAppViewportWidth } from "../../../hooks/useAppViewportWidth";
@@ -20,6 +24,7 @@ import { IoCompassOutline } from "react-icons/io5";
 import { ContextPanel } from "./context/ContextPanel";
 import { SpotifyListeningHistory } from "./SpotifyListeningHistory";
 import { SPOTIFY_ENABLED } from "@/lib/featureFlags";
+import { ProfilePanel } from "./ProfilePanel";
 
 // ─── Panel tabs ───────────────────────────────────────────────────────────────
 // Add new tabs here. Each entry is an icon in the strip plus the body it shows.
@@ -49,6 +54,12 @@ const PANEL_TABS: PanelTab[] = [
         },
       ]
     : []),
+  {
+    id: "profile",
+    label: "Your Profile",
+    icon: <IoPersonCircle />,
+    Component: ProfilePanel,
+  },
 ];
 
 const SWIPE_CLOSE_THRESHOLD = 56;
