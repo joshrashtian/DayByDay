@@ -1,4 +1,6 @@
 import { create } from "zustand";
+import { isAxiosError } from "axios";
+import { api } from "@/api";
 import { supabase } from "@/utils/supabase";
 import { useAuthStore } from "@/stores/authStore";
 import { useTasksStore } from "@/stores/tasksStore";
@@ -25,22 +27,83 @@ function setStatus(status: SyncStatus) {
 }
 
 let isSyncing = false;
+/** Set when syncNow() is called mid-sync, so changes made during it (a new
+ * task, say) go out right after instead of waiting for the next interval. */
+let rerunRequested = false;
 /** Epoch ms watermark for locally-dirty tasks; module-scoped (not persisted) — a
  * restart re-pushes unchanged tasks once, which is harmless since upserts are
  * idempotent. */
 let lastPushedAt = 0;
 
-async function pushLocalChanges(userId: string) {
+/** The create endpoint lives on the RiseByDay API; builds without
+ * VITE_API_URL fall back to upserting new tasks straight into Supabase. */
+const hasApi = Boolean(import.meta.env.VITE_API_URL);
+
+/** A retry after a lost response hits the primary key — the row exists. */
+function isAlreadyCreated(err: unknown) {
+  if (!isAxiosError(err) || err.response?.status !== 400) return false;
+  const detail = (err.response.data as { detail?: unknown } | undefined)?.detail;
+  return typeof detail === "string" && detail.includes("duplicate key");
+}
+
+/** POSTs each pending create; returns the ids that still aren't on the server. */
+async function pushPendingCreates(
+  userId: string,
+  parents: Map<string, string>,
+): Promise<Set<string>> {
+  const { tasks, pendingCreateIds } = useTasksStore.getState();
+  const failed = new Set<string>();
+  const done: string[] = [];
+
+  for (const id of pendingCreateIds) {
+    const task = tasks.find((t) => t.id === id);
+    if (!task) {
+      done.push(id);
+      continue;
+    }
+    try {
+      await api.post(
+        "/tasksapi/tasks/create",
+        taskToRow(task, userId, parents.get(id) ?? null),
+      );
+      done.push(id);
+    } catch (err) {
+      if (isAlreadyCreated(err)) {
+        done.push(id);
+      } else {
+        console.error(`Task create failed for ${id}`, err);
+        failed.add(id);
+      }
+    }
+  }
+
+  useTasksStore.getState().clearPendingCreateIds(done);
+  return failed;
+}
+
+/** Returns true when every pending create reached the API. */
+async function pushLocalChanges(userId: string): Promise<boolean> {
   const state = useTasksStore.getState();
-  const dirty = state.tasks.filter(
-    (t) => t.updatedAt.getTime() > lastPushedAt,
-  );
   const pushTime = Date.now();
+  // parent_id is derived from every task's children_tasks, so the index has
+  // to be built from the full set even though only dirty rows get pushed.
+  const parents = buildParentIndex(state.tasks);
+
+  // New tasks go through the API; a create that failed stays pending and is
+  // kept out of the upsert so it's retried as a create next sync.
+  const pendingCreates = hasApi ? new Set(state.pendingCreateIds) : new Set<string>();
+  const failedCreates = hasApi
+    ? await pushPendingCreates(userId, parents)
+    : new Set<string>();
+
+  const dirty = state.tasks.filter(
+    (t) =>
+      t.updatedAt.getTime() > lastPushedAt &&
+      !pendingCreates.has(t.id) &&
+      !failedCreates.has(t.id),
+  );
 
   if (dirty.length > 0) {
-    // parent_id is derived from every task's children_tasks, so the index has
-    // to be built from the full set even though only dirty rows get pushed.
-    const parents = buildParentIndex(state.tasks);
     const { error } = await supabase
       .from("tasks")
       .upsert(dirty.map((t) => taskToRow(t, userId, parents.get(t.id) ?? null)));
@@ -56,8 +119,12 @@ async function pushLocalChanges(userId: string) {
     if (error) throw error;
     useTasksStore.getState().clearPendingDeletedIds(pendingDeletedIds);
   }
+  if (!hasApi) {
+    useTasksStore.getState().clearPendingCreateIds(state.pendingCreateIds);
+  }
 
   lastPushedAt = pushTime;
+  return failedCreates.size === 0;
 }
 
 async function pullRemoteChanges(userId: string) {
@@ -97,18 +164,26 @@ export async function syncNow() {
     return;
   }
   const userId = useAuthStore.getState().user?.id;
-  if (!userId || isSyncing) return;
+  if (!userId) return;
+  if (isSyncing) {
+    rerunRequested = true;
+    return;
+  }
 
   isSyncing = true;
   setStatus("syncing");
   try {
-    await pushLocalChanges(userId);
+    const createsPushed = await pushLocalChanges(userId);
     await pullRemoteChanges(userId);
-    setStatus("synced");
+    setStatus(createsPushed ? "synced" : "error");
   } catch (err) {
     console.error("Task sync failed", err);
     setStatus("error");
   } finally {
     isSyncing = false;
+  }
+  if (rerunRequested) {
+    rerunRequested = false;
+    void syncNow();
   }
 }

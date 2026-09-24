@@ -16,6 +16,7 @@ drop table if exists public.custom_sounds         cascade;
 drop table if exists public.user_settings         cascade;
 drop table if exists public.user_categories       cascade;
 drop table if exists public.user_blocks           cascade;
+drop table if exists public.pomodoro_sessions     cascade;
 drop table if exists public.tasks                 cascade;
 
 drop trigger if exists on_auth_user_created on auth.users;

@@ -2,7 +2,7 @@ import { motion } from "motion/react";
 import Kbd from "../ui/kbd";
 import { IoHelpCircle } from "react-icons/io5";
 import { useState } from "react";
-import { isAxiosError } from "axios";
+import { isAxiosError, type AxiosResponse } from "axios";
 import { api } from "@/api";
 import { useTasksStore } from "@/stores/tasksStore";
 import { useAuthStore } from "@/stores/authStore";
@@ -56,10 +56,10 @@ function ApiDebugCard() {
     null,
   );
 
-  const call = async (path: string, params?: Record<string, string>) => {
+  const call = async (request: () => Promise<AxiosResponse>) => {
     setLoading(true);
     try {
-      const res = await api.get(path, { params });
+      const res = await request();
       setResult({
         status: `${res.status} ${res.statusText}`,
         body: JSON.stringify(res.data, null, 2),
@@ -87,18 +87,32 @@ function ApiDebugCard() {
 
   const run = () => {
     const id = taskId.trim() || firstTaskId;
-    if (id) call(`/tasksapi/tasks/getdata/${encodeURIComponent(id)}`);
+    if (id) call(() => api.get(`/tasksapi/tasks/getdata/${encodeURIComponent(id)}`));
   };
 
   const runAll = () => {
-    if (userId) call("/tasksapi/tasks/getdata/all", { user_id: userId });
+    if (userId)
+      call(() =>
+        api.get("/tasksapi/tasks/getdata/all", { params: { user_id: userId } }),
+      );
+  };
+
+  const runCreate = () => {
+    const now = new Date().toISOString();
+    call(() =>
+      api.post("/tasksapi/tasks/create", {
+        id: crypto.randomUUID(),
+        title: `API test ${now}`,
+        updated_at: now,
+      }),
+    );
   };
 
   return (
     <SectionCard
       id="debug"
       title="Debug: API"
-      subtitle={`GET /tasksapi/tasks/getdata/:id and /all against ${import.meta.env.VITE_API_URL ?? "(VITE_API_URL unset)"}`}
+      subtitle={`GET /tasksapi/tasks/getdata/:id, /all and POST /create against ${import.meta.env.VITE_API_URL ?? "(VITE_API_URL unset)"}`}
     >
       <div className="flex gap-2">
         <input
@@ -124,6 +138,15 @@ function ApiDebugCard() {
           className="rounded-lg border border-accent px-3 py-1.5 text-sm font-semibold text-accent disabled:opacity-50"
         >
           Fetch all
+        </button>
+        <button
+          type="button"
+          onClick={runCreate}
+          disabled={loading || !userId}
+          title={userId ? undefined : "Sign in to create a task"}
+          className="rounded-lg border border-accent px-3 py-1.5 text-sm font-semibold text-accent disabled:opacity-50"
+        >
+          Create test task
         </button>
       </div>
       {result ? (

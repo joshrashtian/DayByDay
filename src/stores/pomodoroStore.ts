@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { migrateLocalStorageKey } from "@/lib/storageMigration";
+import { endFocusSession, startFocusSession } from "@/lib/pomodoroSessions";
+import { useHomeFocusStore } from "@/stores/homeFocusStore";
 import {
   DEFAULT_POMODORO_STYLE,
   type PomodoroStyleId,
@@ -38,6 +40,8 @@ type PomodoroState = {
   /** Calendar day (toDateString) the session count last belonged to */
   lastActiveDay: string;
   linkedTaskTitle?: string;
+  /** Cloud id of the focus session in progress (see lib/pomodoroSessions) */
+  activeSessionId?: string;
   /** Home focus-zone overlay */
   panelOpen: boolean;
   /** Floating dock expanded */
@@ -68,6 +72,14 @@ function nextPhaseAfterFocus(
     : "shortBreak";
 }
 
+/** Closes the in-progress focus session, if any. */
+function endActiveSession() {
+  const { activeSessionId } = usePomodoroStore.getState();
+  if (!activeSessionId) return;
+  endFocusSession(activeSessionId);
+  usePomodoroStore.setState({ activeSessionId: undefined });
+}
+
 export const usePomodoroStore = create<PomodoroState>()(
   persist(
     (set, get) => ({
@@ -75,11 +87,9 @@ export const usePomodoroStore = create<PomodoroState>()(
       secondsLeft: POMODORO_DURATIONS.focus,
       isRunning: false,
       completedFocusSessions: 0,
-      focusSessionDetails: {
-
-      },
       lastActiveDay: getDayKey(),
       linkedTaskTitle: undefined,
+      activeSessionId: undefined,
       panelOpen: false,
       dockExpanded: false,
       styleId: DEFAULT_POMODORO_STYLE,
@@ -93,12 +103,18 @@ export const usePomodoroStore = create<PomodoroState>()(
 
       start: () => {
         get().checkDayReset();
+        const { phase, activeSessionId } = get();
+        if (phase === "focus" && !activeSessionId) {
+          const focusedTaskId = useHomeFocusStore.getState().focusedTaskId;
+          set({ activeSessionId: startFocusSession(focusedTaskId) });
+        }
         set({ isRunning: true });
       },
       pause: () => set({ isRunning: false }),
 
       reset: () => {
         const { phase } = get();
+        endActiveSession();
         set({
           isRunning: false,
           secondsLeft: POMODORO_DURATIONS[phase],
@@ -108,6 +124,7 @@ export const usePomodoroStore = create<PomodoroState>()(
       skipToNextPhase: () => {
         const { phase, completedFocusSessions } = get();
         if (phase === "focus") {
+          endActiveSession();
           const nextCount = completedFocusSessions + 1;
           const nextPhase = nextPhaseAfterFocus(completedFocusSessions);
           set({
@@ -136,6 +153,7 @@ export const usePomodoroStore = create<PomodoroState>()(
         }
 
         if (phase === "focus") {
+          endActiveSession();
           const nextCount = completedFocusSessions + 1;
           const nextPhase = nextPhaseAfterFocus(completedFocusSessions);
           set({
@@ -171,6 +189,7 @@ export const usePomodoroStore = create<PomodoroState>()(
         completedFocusSessions: state.completedFocusSessions,
         lastActiveDay: state.lastActiveDay,
         linkedTaskTitle: state.linkedTaskTitle,
+        activeSessionId: state.activeSessionId,
         styleId: state.styleId,
       }),
     },

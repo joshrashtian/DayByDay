@@ -22,6 +22,9 @@ type TasksState = {
   tasks: Task[];
   /** Ids removed locally but not yet pushed as tombstones to Supabase. */
   pendingDeletedIds: string[];
+  /** Ids created locally (addTask / duplicateTask) and not yet sent to the
+   * API's create endpoint. Sync POSTs these instead of upserting them. */
+  pendingCreateIds: string[];
   /** ISO timestamp of the last successful Supabase pull. */
   lastPulledAt: string | null;
   addTask: (payload: AddTaskPayload) => void;
@@ -39,6 +42,7 @@ type TasksState = {
   ) => { imported: number; skipped: number };
   removeAllIcsTasks: () => number;
   clearPendingDeletedIds: (ids: string[]) => void;
+  clearPendingCreateIds: (ids: string[]) => void;
   setLastPulledAt: (iso: string) => void;
   upsertFromRemote: (task: Task) => void;
   removeFromRemote: (id: string) => void;
@@ -182,6 +186,7 @@ export const useTasksStore = create<TasksState>()(
     (set, get) => ({
       tasks: [],
       pendingDeletedIds: [],
+      pendingCreateIds: [],
       lastPulledAt: null,
 
       setTaskCategory: (taskId, category) =>
@@ -290,11 +295,13 @@ export const useTasksStore = create<TasksState>()(
               }
             : undefined;
         const tags = normalizeTaskTags(payload.tags ?? null);
+        const id = crypto.randomUUID();
         set((s) => ({
+          pendingCreateIds: [...s.pendingCreateIds, id],
           tasks: [
             ...s.tasks,
             {
-              id: crypto.randomUUID(),
+              id,
               kind: payload.kind ?? "task",
               title: trimmed,
               done: false,
@@ -486,6 +493,7 @@ export const useTasksStore = create<TasksState>()(
       removeTask: (id) =>
         set((s) => ({
           tasks: s.tasks.filter((t) => t.id !== id),
+          pendingCreateIds: s.pendingCreateIds.filter((pid) => pid !== id),
           pendingDeletedIds: s.pendingDeletedIds.includes(id)
             ? s.pendingDeletedIds
             : [...s.pendingDeletedIds, id],
@@ -510,7 +518,7 @@ export const useTasksStore = create<TasksState>()(
           };
           const tasks = [...s.tasks];
           tasks.splice(index + 1, 0, clone);
-          return { tasks };
+          return { tasks, pendingCreateIds: [...s.pendingCreateIds, clone.id] };
         }),
 
       importIcsTasks: (payloads) => {
@@ -593,6 +601,11 @@ export const useTasksStore = create<TasksState>()(
           ),
         })),
 
+      clearPendingCreateIds: (ids) =>
+        set((s) => ({
+          pendingCreateIds: s.pendingCreateIds.filter((id) => !ids.includes(id)),
+        })),
+
       setLastPulledAt: (iso) => set({ lastPulledAt: iso }),
 
       upsertFromRemote: (task) =>
@@ -612,6 +625,7 @@ export const useTasksStore = create<TasksState>()(
       partialize: (state) => ({
         tasks: state.tasks,
         pendingDeletedIds: state.pendingDeletedIds,
+        pendingCreateIds: state.pendingCreateIds,
         lastPulledAt: state.lastPulledAt,
       }),
       merge: (persisted, current) => {
@@ -619,6 +633,7 @@ export const useTasksStore = create<TasksState>()(
           tasks: unknown[];
           categories: LegacyCategory[];
           pendingDeletedIds: string[];
+          pendingCreateIds: string[];
           lastPulledAt: string | null;
         }>;
         const base = current as TasksState;
@@ -632,6 +647,9 @@ export const useTasksStore = create<TasksState>()(
           pendingDeletedIds: Array.isArray(p?.pendingDeletedIds)
             ? p.pendingDeletedIds
             : base.pendingDeletedIds,
+          pendingCreateIds: Array.isArray(p?.pendingCreateIds)
+            ? p.pendingCreateIds
+            : base.pendingCreateIds,
           lastPulledAt: typeof p?.lastPulledAt === "string" ? p.lastPulledAt : null,
         };
       },

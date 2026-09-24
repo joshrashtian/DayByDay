@@ -183,6 +183,16 @@ export type CalendarSourceRow = {
   updated_at: IsoTimestamp;
 };
 
+/** `pomodoro_sessions`. `end_time` is null while the session is in progress. */
+export type PomodoroSessionRow = {
+  id: string;
+  user_id: string;
+  created_at: IsoTimestamp;
+  start_time: IsoTimestamp;
+  end_time: IsoTimestamp | null;
+  focused_task_id: string | null;
+};
+
 // ── Insert / Update shapes ────────────────────────────────────────────────
 // Columns with a database default are optional on insert; `user_id` defaults
 // to auth.uid(), so it can be omitted when the caller is the owner.
@@ -235,6 +245,11 @@ export type CalendarSourceInsert = Defaulted<
   "id" | "user_id" | "color" | "enabled" | "sort_order" | "created_at" | "updated_at"
 >;
 
+export type PomodoroSessionInsert = Defaulted<
+  PomodoroSessionRow,
+  "id" | "user_id" | "created_at" | "end_time" | "focused_task_id"
+>;
+
 // ── Database (for createClient<Database>) ─────────────────────────────────
 
 type TableDef<Row, Insert> = {
@@ -258,6 +273,7 @@ export type Database = {
         CalendarConnectionInsert
       >;
       calendar_sources: TableDef<CalendarSourceRow, CalendarSourceInsert>;
+      pomodoro_sessions: TableDef<PomodoroSessionRow, PomodoroSessionInsert>;
     };
     Views: {
       /** `tasks` filtered to `deleted_at is null`. Read-only. */

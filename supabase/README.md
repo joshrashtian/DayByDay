@@ -13,6 +13,8 @@ supabase/
     20260903000400_settings.sql               settings, blocks, categories, sounds
     20260903000500_calendar_integrations.sql  connections, sources, credentials
     20260903000600_realtime.sql               realtime publication (optional)
+    20260922000700_purge_tombstones.sql       nightly pg_cron tombstone purge
+    20260923000800_pomodoro_sessions.sql      pomodoro focus sessions, RLS
   seed.sql        dev fixtures — edit the email at the top first
   reset_dev.sql   drops everything this schema created (dev only)
 ```
