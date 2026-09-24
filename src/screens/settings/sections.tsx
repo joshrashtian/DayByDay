@@ -8,6 +8,7 @@ import {
   IoLayersOutline,
   IoMusicalNotesOutline,
 } from "react-icons/io5";
+import { SPOTIFY_ENABLED } from "@/lib/featureFlags";
 
 export type SettingsSection =
   | "home"
@@ -28,7 +29,7 @@ export interface SectionMeta {
   icon: React.ReactNode;
 }
 
-export const SECTIONS: SectionMeta[] = [
+const ALL_SECTIONS: SectionMeta[] = [
   {
     id: "home",
     label: "Home",
@@ -78,6 +79,10 @@ export const SECTIONS: SectionMeta[] = [
     icon: <IoVolumeHighOutline />,
   },
 ];
+
+export const SECTIONS = ALL_SECTIONS.filter(
+  (s) => SPOTIFY_ENABLED || s.id !== "spotify",
+);
 
 /** All sections except the home hub itself. */
 export const NON_HOME_SECTIONS = SECTIONS.filter((s) => s.id !== "home");

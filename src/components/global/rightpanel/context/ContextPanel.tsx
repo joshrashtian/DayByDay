@@ -13,11 +13,13 @@ import { PomodoroContextPanel } from "./PomodoroContextPanel";
 import { TasksContextPanel } from "./TasksContextPanel";
 import { ToolkitContextPanel } from "./ToolkitContextPanel";
 import { EmptyNote } from "./primitives";
+import { SPOTIFY_ENABLED } from "@/lib/featureFlags";
 
 function GenericContextPanel() {
   return (
     <EmptyNote>
-      Nothing page-specific here yet. Switch tabs above for Spotify.
+      Nothing page-specific here yet.
+      {SPOTIFY_ENABLED && " Switch tabs above for Spotify."}
     </EmptyNote>
   );
 }

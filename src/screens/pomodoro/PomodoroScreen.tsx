@@ -16,6 +16,7 @@ import { useState } from "react";
 import { useSpotifyNowPlayingSync } from "@/hooks/useSpotifyNowPlayingSync";
 import { useSpotifyStore } from "@/stores/spotifyStore";
 import { BsSpotify } from "react-icons/bs";
+import { SPOTIFY_ENABLED } from "@/lib/featureFlags";
 
 function TimerDigit({ value, animated }: { value: string; animated: boolean }) {
   if (value === ":" || !animated) {
@@ -193,7 +194,7 @@ export default function PomodoroScreen() {
         </button>
       </div>
 
-      {showNowPlaying && <NowPlayingPomodoro />}
+      {SPOTIFY_ENABLED && showNowPlaying && <NowPlayingPomodoro />}
     </main>
   );
 }

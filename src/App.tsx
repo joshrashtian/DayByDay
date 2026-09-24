@@ -17,6 +17,7 @@ import HelpScreen from "./screens/HelpScreen";
 import BlockScreen from "./screens/BlockScreen";
 import AppsScreen from "./screens/AppsScreen";
 import SpotifyScreen from "./screens/integrations/SpotifyScreen";
+import { SPOTIFY_ENABLED } from "./lib/featureFlags";
 import ToolkitScreen from "./screens/ToolkitScreen";
 import ToolkitWindowScreen from "./screens/ToolkitWindowScreen";
 import PomodoroScreen from "./screens/pomodoro/PomodoroScreen";
@@ -95,14 +96,16 @@ export default function App() {
         <motion.div className="flex h-full min-h-0 flex-col overflow-hidden px-4 pb-4 pt-7 bg-sunken">
           <Routes location={location} key={location.pathname}>
             <Route path="/auth/sign-in" element={<SignInScreen />} />
-            <Route
-              path="/spotify"
-              element={
-                <AnimatedPage>
-                  <SpotifyScreen />
-                </AnimatedPage>
-              }
-            />
+            {SPOTIFY_ENABLED && (
+              <Route
+                path="/spotify"
+                element={
+                  <AnimatedPage>
+                    <SpotifyScreen />
+                  </AnimatedPage>
+                }
+              />
+            )}
             <Route
               path="/"
               element={

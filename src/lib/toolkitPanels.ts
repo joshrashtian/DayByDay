@@ -1,9 +1,10 @@
 import type { ToolkitPanel } from "@/types";
 import { useSettingsStore } from "../stores/settingsStore";
+import { SPOTIFY_ENABLED } from "./featureFlags";
 
 export type { ToolkitPanel } from "@/types";
 
-export const TOOLKIT_PANELS: ToolkitPanel[] = [
+const ALL_TOOLKIT_PANELS: ToolkitPanel[] = [
   {
     id: "spotify",
     label: "Spotify",
@@ -18,6 +19,10 @@ export const TOOLKIT_PANELS: ToolkitPanel[] = [
     route: "/toolkit/classes",
   },
 ];
+
+export const TOOLKIT_PANELS = ALL_TOOLKIT_PANELS.filter(
+  (panel) => SPOTIFY_ENABLED || panel.id !== "spotify",
+);
 
 export function getToolkitPanelRoute(panelId: string): string {
   return `/toolkit/${panelId}`;

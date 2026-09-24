@@ -38,6 +38,7 @@ import {
   type ListeningSession,
 } from "@/lib/integrations/spotify/history";
 import { useSpotifyStore } from "@/stores/spotifyStore";
+import { SPOTIFY_ENABLED } from "@/lib/featureFlags";
 import {
   SpotifySessionRail,
   SPOTIFY_RAIL_WIDTH_PX,
@@ -904,7 +905,7 @@ export function WeekView({
   const rangeStartIso = rangeStart.toISODate();
   const sessionsByDay = useMemo(() => {
     const map = new Map<string, ListeningSession[]>();
-    if (spotifyPlays.length === 0) return map;
+    if (!SPOTIFY_ENABLED || spotifyPlays.length === 0) return map;
     const first = DateTime.fromISO(rangeStartIso ?? "");
     for (let i = 0; i < safeDayCount; i++) {
       const day = first.plus({ days: i });

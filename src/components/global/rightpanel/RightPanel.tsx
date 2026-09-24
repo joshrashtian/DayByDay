@@ -19,6 +19,7 @@ import { SiSpotify } from "react-icons/si";
 import { IoCompassOutline } from "react-icons/io5";
 import { ContextPanel } from "./context/ContextPanel";
 import { SpotifyListeningHistory } from "./SpotifyListeningHistory";
+import { SPOTIFY_ENABLED } from "@/lib/featureFlags";
 
 // ─── Panel tabs ───────────────────────────────────────────────────────────────
 // Add new tabs here. Each entry is an icon in the strip plus the body it shows.
@@ -38,12 +39,16 @@ const PANEL_TABS: PanelTab[] = [
     icon: <IoCompassOutline />,
     Component: ContextPanel,
   },
-  {
-    id: "spotify",
-    label: "Spotify",
-    icon: <SiSpotify />,
-    Component: SpotifyListeningHistory,
-  },
+  ...(SPOTIFY_ENABLED
+    ? [
+        {
+          id: "spotify",
+          label: "Spotify",
+          icon: <SiSpotify />,
+          Component: SpotifyListeningHistory,
+        },
+      ]
+    : []),
 ];
 
 const SWIPE_CLOSE_THRESHOLD = 56;

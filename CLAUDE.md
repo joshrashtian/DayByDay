@@ -85,6 +85,12 @@ delete on their next pull.
 
 Read-only listening history, surfaced as a tab in the right panel.
 
+**Hidden behind `VITE_ENABLE_SPOTIFY=true`** (`src/lib/featureFlags.ts`). Spotify
+only grants extended quota to apps with 250k+ MAU, so the app is stuck in
+development mode (hand-allowlisted users only). With the flag off, the route,
+settings section, toolkit panel, right-panel tab, Pomodoro now-playing and
+calendar listening rail are all hidden; the code stays in place.
+
 | Layer | File |
 |---|---|
 | OAuth loopback listener | `src-tauri/src/spotify_oauth.rs` (`spotify_oauth_listen`) |
