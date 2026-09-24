@@ -2,6 +2,7 @@ import { LayoutGroup, motion } from "motion/react";
 import { DateTime } from "luxon";
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
   type CSSProperties,
@@ -31,6 +32,16 @@ import { useContextMenu } from "../../../providers/ContextMenuProvider";
 import { Tooltip } from "../../base/tooltip/tooltip";
 import BottomSheet from "../../../ui/BottomSheet";
 import { completedCheckeredStyle } from "./_shared";
+import {
+  groupIntoSessions,
+  playsForDay,
+  type ListeningSession,
+} from "@/lib/integrations/spotify/history";
+import { useSpotifyStore } from "@/stores/spotifyStore";
+import {
+  SpotifySessionRail,
+  SPOTIFY_RAIL_WIDTH_PX,
+} from "./SpotifySessionRail";
 
 function categoryIconTitlePrefix(icon: string | undefined): string {
   if (!icon) return "";
@@ -269,6 +280,7 @@ type MinuteRange = {
 };
 
 const MINUTES_PER_DAY = 24 * 60;
+const NO_SESSIONS: ListeningSession[] = [];
 const SLOTS_PER_DAY = MINUTES_PER_DAY / 15;
 const MIN_SLOT_HEIGHT_PX = 28;
 
@@ -500,6 +512,7 @@ type WeekDayTimeColumnProps = {
   day: DateTime;
   dayIndex: number;
   rows: CalendarTaskRow[];
+  listeningSessions: ListeningSession[];
   quarterSlots: number[];
   previewRange: WeekPreviewRange | null;
   disableTooltips: boolean;
@@ -702,6 +715,7 @@ function WeekDayTimeColumn({
   day,
   dayIndex,
   rows,
+  listeningSessions,
   quarterSlots,
   previewRange,
   disableTooltips,
@@ -767,8 +781,18 @@ function WeekDayTimeColumn({
         </div>
       ) : null}
 
+      <SpotifySessionRail day={day} sessions={listeningSessions} />
+
       <LayoutGroup id={`week-events-${key}`}>
-        <div className="pointer-events-none absolute inset-0 z-10">
+        <div
+          className="pointer-events-none absolute inset-0 z-10"
+          // Events give up the column's right edge so the rail stays visible.
+          style={
+            listeningSessions.length > 0
+              ? { right: SPOTIFY_RAIL_WIDTH_PX }
+              : undefined
+          }
+        >
           {layouts.map((layout) => (
             <WeekEventBlock
               key={layout.row.rowKey}
@@ -875,6 +899,20 @@ export function WeekView({
   );
   const today = DateTime.local().startOf("day");
   const quarterSlots = Array.from({ length: 96 }, (_, i) => i * 15);
+
+  const spotifyPlays = useSpotifyStore((s) => s.plays);
+  const rangeStartIso = rangeStart.toISODate();
+  const sessionsByDay = useMemo(() => {
+    const map = new Map<string, ListeningSession[]>();
+    if (spotifyPlays.length === 0) return map;
+    const first = DateTime.fromISO(rangeStartIso ?? "");
+    for (let i = 0; i < safeDayCount; i++) {
+      const day = first.plus({ days: i });
+      const sessions = groupIntoSessions(playsForDay(spotifyPlays, day));
+      if (sessions.length > 0) map.set(day.toISODate() ?? "", sessions);
+    }
+    return map;
+  }, [spotifyPlays, rangeStartIso, safeDayCount]);
 
   const getNowMinute = () => {
     const now = DateTime.local();
@@ -1235,6 +1273,7 @@ export function WeekView({
                 day={day}
                 dayIndex={dayIndex}
                 rows={byDay.get(key) ?? []}
+                listeningSessions={sessionsByDay.get(key) ?? NO_SESSIONS}
                 quarterSlots={quarterSlots}
                 previewRange={previewRange}
                 disableTooltips={disableTooltips}
