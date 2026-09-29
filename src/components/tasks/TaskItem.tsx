@@ -151,15 +151,11 @@ export function TaskItem({
         className="group relative cursor-pointer overflow-hidden rounded-xl  px-4 py-3.5 outline-none backdrop-blur-xl backdrop-saturate-150 ring-1 ring-line/30 transition-shadow focus-visible:ring-2 focus-visible:ring-line-strong/50 active:scale-[0.99]"
       >
         <div
-          className="pointer-events-none absolute inset-0 rounded-2xl bg-linear-to-br from-surface/70 via-surface/15 to-transparent opacity-80"
+          className="pointer-events-none absolute inset-0 rounded-2xl dark:bg-zinc-800 bg-linear-to-br from-surface/70 via-surface/15 to-transparent opacity-80"
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-          style={{
-            background:
-              "linear-gradient(135deg, rgba(255,255,255,0.5) 0%, transparent 45%, transparent 55%, rgba(255,255,255,0.12) 100%)",
-          }}
+          className="pointer-events-none absolute bg-slate-800 -inset-px rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
           aria-hidden
         />
         <div className="relative flex min-w-0 flex-col gap-2">
@@ -170,10 +166,10 @@ export function TaskItem({
                 e.stopPropagation();
                 onToggle();
               }}
-              className={`flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full border transition-colors ${
+              className={`flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 transition-colors ${
                 isDone
                   ? "border-emerald-500/60 bg-emerald-500/25 text-emerald-800"
-                  : "border-black/40 bg-surface/80 group-hover:border-zinc-500/55"
+                  : "border-black/40 bg-surface/80 dark:border-zinc-200/50 group-hover:dark:border-zinc-200/80 group-hover:border-zinc-500/55"
               }`}
               aria-label={isDone ? "Mark not done" : "Mark done"}
               aria-pressed={isDone}
@@ -196,7 +192,7 @@ export function TaskItem({
               ) : null}
             </button>
             <span
-              className={`min-w-0 flex-1 wrap-break-word text-lg font-medium tracking-tight text-ink transition-[color,opacity] ${
+              className={`min-w-0 flex-1 wrap-break-word text-lg font-bold tracking-tight text-ink transition-[color,opacity] ${
                 isDone ? "text-muted line-through opacity-70" : ""
               }`}
             >

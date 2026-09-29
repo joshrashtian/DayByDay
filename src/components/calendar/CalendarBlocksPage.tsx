@@ -12,6 +12,7 @@ import {
   TIME_BLOCK_SUGGESTIONS,
 } from "@/lib/taskBlocks";
 import { CALENDAR_PATH } from "@/lib/calendarRoutes";
+import { useBreadcrumbs } from "@/hooks/useBreadcrumbs";
 import { useTasksStore } from "@/stores/tasksStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import "./CalendarBlocksPage.css";
@@ -67,6 +68,10 @@ const rowClassName = (variant?: BlockRowVariant) => {
 /** Blocks, as a sub-page of the calendar (`/calendar/blocks`). */
 export function CalendarBlocksPage() {
   const location = useLocation();
+  useBreadcrumbs([
+    { label: "Calendar", to: { pathname: CALENDAR_PATH, search: location.search } },
+    { label: "Blocks" },
+  ]);
   const storedBlockConfigs = useSettingsStore((s) => s.blockConfigs);
   const tasks = useTasksStore((s) => s.tasks);
   const setTaskBlock = useTasksStore((s) => s.setTaskBlock);

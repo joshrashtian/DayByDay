@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Navigate, useParams } from "react-router-dom";
 import { IoSettingsOutline } from "react-icons/io5";
 import { TasksWorkspace } from "./TasksWorkspace";
-import { TasksBreadcrumb } from "./TasksBreadcrumb";
+import { useBreadcrumbs } from "@/hooks/useBreadcrumbs";
 import {
   getCategoryConfigByName,
   resolveCategoryVisual,
@@ -16,6 +16,11 @@ export function TasksCategoryDetailPage() {
     () => slugToCategory(categorySlug),
     [categorySlug],
   );
+  useBreadcrumbs([
+    { label: "Your Tasks", to: "/tasks" },
+    { label: "Categories", to: "/tasks/categories" },
+    { label: categoryName ?? "" },
+  ]);
 
   if (!categoryName) {
     return <Navigate to="/tasks/categories" replace />;
@@ -26,14 +31,7 @@ export function TasksCategoryDetailPage() {
 
   return (
     <>
-      <TasksBreadcrumb
-        items={[
-          { label: "Your Tasks", to: "/tasks" },
-          { label: "Categories", to: "/tasks/categories" },
-          { label: categoryName },
-        ]}
-      />
-      <header className="shrink-0 px-5 pb-2 pt-2 sm:px-8">
+      <header className="shrink-0 px-5 pb-2 pt-8 sm:px-8">
         <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-3 xl:max-w-4xl">
           <div className="flex min-w-0 flex-wrap items-center gap-3">
             <span

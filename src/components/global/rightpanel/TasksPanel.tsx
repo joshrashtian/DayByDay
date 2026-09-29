@@ -14,7 +14,7 @@ import { taskEditorPopupContent } from "../../tasks/taskEditorPopupContent";
 import { isIcsTask } from "../../../lib/icsTasks";
 import { isCalendarGridPath } from "../../../lib/calendarRoutes";
 import { useDisplayedBlockName } from "../../../hooks/useDisplayedBlockName";
-import { sidebarTokens as tokens } from "./sidebarTokens";
+import { sidebarTokens as tokens } from "../sidebar/sidebarTokens";
 
 function formatTaskDuration(task: Task): string | null {
   if (!task.dueDate || !task.endDate) return null;
@@ -26,11 +26,12 @@ function formatTaskDuration(task: Task): string | null {
   return `${mins} min`;
 }
 
-type Props = {
-  showLabel: boolean;
-};
-
-export function SidebarInlineTaskList({ showLabel }: Props) {
+/**
+ * Right-panel tab listing today's tasks (scoped to the active block on Home).
+ * Rows can be dragged onto Home to focus them, or onto the calendar grid to
+ * schedule them.
+ */
+export function TasksPanel() {
   const location = useLocation();
   const onHome = location.pathname === "/";
   const onCalendar = isCalendarGridPath(location.pathname);
@@ -75,39 +76,27 @@ export function SidebarInlineTaskList({ showLabel }: Props) {
   }, [openPopup, addTask, closePopup, onHome, displayedBlockName]);
 
   return (
-    <div className="flex min-h-0 flex-1 max-h-1/2 flex-col gap-1.5">
+    <div className="flex min-h-0 flex-1 flex-col gap-1.5">
       {/* Section header */}
       <div className="flex items-center justify-between px-1 pt-1">
-        {showLabel ? (
-          <>
-            <span
-              className={`font-eudoxus text-[10px] font-semibold uppercase tracking-[0.12em] ${tokens.mutedText}`}
-            >
-              {scopeLabel}
-            </span>
-            <span
-              className={`rounded-full px-1.5 py-0.5 font-eudoxus text-[10px] font-medium ${tokens.softChip}`}
-            >
-              {activeCount} active
-            </span>
-          </>
-        ) : (
-          <span
-            className={`mx-auto font-eudoxus text-[10px] font-semibold ${tokens.mutedText}`}
-          >
-            {activeCount}
-          </span>
-        )}
+        <span
+          className={`font-eudoxus text-[10px] font-semibold uppercase tracking-[0.12em] ${tokens.mutedText}`}
+        >
+          {scopeLabel}
+        </span>
+        <span
+          className={`rounded-full px-1.5 py-0.5 font-eudoxus text-[10px] font-medium ${tokens.softChip}`}
+        >
+          {activeCount} active
+        </span>
       </div>
 
       {/* Task rows */}
       <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto">
         {panelTasks.length === 0 ? (
-          showLabel ? (
-            <p className={`px-2 py-2 font-eudoxus text-xs ${tokens.mutedText}`}>
-              Nothing scheduled.
-            </p>
-          ) : null
+          <p className={`px-2 py-2 font-eudoxus text-xs ${tokens.mutedText}`}>
+            Nothing scheduled.
+          </p>
         ) : (
           panelTasks.map((task) => {
             const category = categoryConfigs.find(
@@ -144,6 +133,8 @@ export function SidebarInlineTaskList({ showLabel }: Props) {
                   ]);
                 }}
                 onPointerDown={(e) => {
+                  // Keep the panel's swipe-to-close from reading a task drag.
+                  e.stopPropagation();
                   if (!canDragTask || isIcsTask(task)) return;
                   const rect = e.currentTarget.getBoundingClientRect();
                   startTaskDrag(
@@ -171,7 +162,7 @@ export function SidebarInlineTaskList({ showLabel }: Props) {
                   >
                     {task.title}
                   </span>
-                  {isFocused && showLabel && (
+                  {isFocused && (
                     <span
                       className={`shrink-0 rounded-full px-1.5 py-px font-eudoxus text-[9px] font-bold uppercase tracking-wide ${tokens.softChip}`}
                     >
@@ -179,7 +170,7 @@ export function SidebarInlineTaskList({ showLabel }: Props) {
                     </span>
                   )}
                 </div>
-                {showLabel && (category || duration) && (
+                {(category || duration) && (
                   <div
                     className={`mt-0.5 flex items-center gap-1 font-eudoxus text-[10px] ${tokens.mutedText}`}
                   >
@@ -209,7 +200,7 @@ export function SidebarInlineTaskList({ showLabel }: Props) {
         className={`flex shrink-0 w-full items-center justify-center gap-1.5 rounded-xl border border-dashed px-3 py-2 font-eudoxus text-[11px] font-medium transition-colors ${tokens.addButton}`}
       >
         <IoAdd className="text-sm" aria-hidden />
-        {showLabel ? "Add a task" : ""}
+        Add a task
       </button>
     </div>
   );

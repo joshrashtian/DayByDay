@@ -29,6 +29,7 @@ import PomodoroScreen from "./screens/pomodoro/PomodoroScreen";
 import CognitionBar from "./ui/CognitionBar";
 import { GlobalPomodoroDock } from "./components/global/GlobalPomodoroDock";
 import { TaskDragGhost } from "./components/global/TaskDragGhost";
+import { TopBreadcrumbBar } from "./components/global/TopBreadcrumbBar";
 import { PomodoroTicker } from "./components/global/PomodoroTicker";
 import { PomodoroLinkedTaskSync } from "./components/global/PomodoroLinkedTaskSync";
 import { TasksSyncEngine } from "./components/global/TasksSyncEngine";
@@ -99,6 +100,7 @@ export default function App() {
           className="absolute inset-x-0 top-0 z-30 h-7"
           aria-hidden
         />
+        <TopBreadcrumbBar left={sidebarOffset} right={rightPanelOffset} />
         <motion.div className="flex h-full min-h-0 flex-col overflow-hidden px-4 pb-4 pt-7 bg-sunken">
           <Routes location={location} key={location.pathname}>
             <Route path="/auth/sign-in" element={<SignInScreen />} />

@@ -5,7 +5,7 @@
  */
 export const sidebarTokens = {
   surface: "bg-surface/50",
-  navItemActive: "bg-accent-soft text-accent",
+  navItemActive: "dark:bg-zinc-800/10 dark:text-white",
   navItemIdle: "text-muted hover:bg-sunken hover:text-ink",
   navAccent: "bg-accent",
   divider: "border-line",

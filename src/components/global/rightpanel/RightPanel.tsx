@@ -20,8 +20,9 @@ import { useRightPanel } from "../../../providers/RightPanelProvider";
 import { useSettingsStore } from "../../../stores/settingsStore";
 import { sidebarTokens } from "../sidebar/sidebarTokens";
 import { SiSpotify } from "react-icons/si";
-import { IoCompassOutline } from "react-icons/io5";
+import { IoCheckboxOutline, IoCompassOutline } from "react-icons/io5";
 import { ContextPanel } from "./context/ContextPanel";
+import { TasksPanel } from "./TasksPanel";
 import { SpotifyListeningHistory } from "./SpotifyListeningHistory";
 import { SPOTIFY_ENABLED } from "@/lib/featureFlags";
 import { ProfilePanel } from "@/components/global/rightpanel/ProfilePanel";
@@ -43,6 +44,13 @@ const PANEL_TABS: PanelTab[] = [
     label: "This page",
     icon: <IoCompassOutline />,
     Component: ContextPanel,
+  },
+  {
+    // Today's tasks; rows drag onto Home (focus) or the calendar (schedule).
+    id: "tasks",
+    label: "Today's tasks",
+    icon: <IoCheckboxOutline />,
+    Component: TasksPanel,
   },
   ...(SPOTIFY_ENABLED
     ? [

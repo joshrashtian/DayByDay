@@ -31,7 +31,6 @@ import {
   type SidebarNavItem,
 } from "./sidebar/SidebarNavItem";
 import { SidebarModeToggle } from "./sidebar/SidebarModeToggle";
-import { SidebarInlineTaskList } from "./sidebar/SidebarInlineTaskList";
 import { sidebarTokens } from "./sidebar/sidebarTokens";
 import { listen } from "@tauri-apps/api/event";
 
@@ -321,7 +320,7 @@ const SideBar = ({
             <motion.nav
               key="sidebar-nav"
               aria-label="Primary navigation"
-              className={`relative flex h-full justify-between flex-col overflow-hidden pt-9 pb-3 bg-zinc-200/80 dark:bg-zinc-950 ${
+              className={`relative flex h-full justify-between flex-col overflow-hidden pt-9 pb-3 bg-zinc-200/80 dark:bg-zinc-950/10 ${
                 isRail ? "px-2" : "px-3"
               } ${sidebarTokens.surface} border-r border-line`}
               style={{ width: resolvedWidth }}
@@ -393,20 +392,7 @@ const SideBar = ({
                 </Reorder.Group>
               </div>
 
-              {/* Divider */}
-              {sidebarMode === "tasks" && !isRail && (
-                <div
-                  className={`my-0.5 mx-1 shrink-0 border-t ${sidebarTokens.divider}`}
-                />
-              )}
-
-              {/* Inline task list — fills remaining space. The rail is too
-                  narrow to read task titles, so it drops to icons only. */}
-              {sidebarMode === "tasks" && !isRail ? (
-                <SidebarInlineTaskList showLabel={showLabel} />
-              ) : (
-                <div className="flex-1" />
-              )}
+              <div className="flex-1" />
 
               {/* Utility icon bar */}
               <div

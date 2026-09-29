@@ -1,14 +1,12 @@
 import { motion } from "motion/react";
 import { TasksWorkspace } from "./TasksWorkspace";
-import { TasksBreadcrumb } from "./TasksBreadcrumb";
 import { Link } from "react-router-dom";
 import { IoPricetagsOutline } from "react-icons/io5";
 
 export function TasksMainPage() {
   return (
     <>
-      <TasksBreadcrumb items={[{ label: "Your Tasks" }]} />
-      <header className="shrink-0 px-5 pb-2 pt-2 sm:px-8">
+      <header className="shrink-0 px-5 pb-2 pt-8 sm:px-8">
         <div className="mx-auto flex w-full max-w-3xl items-end justify-between gap-3 xl:max-w-4xl">
           <motion.h1 className="font-display flex flex-row text-4xl font-bold tracking-tight text-ink">
             {"Your  Tasks".split("").map((char, i) => (

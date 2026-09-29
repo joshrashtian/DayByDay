@@ -14,9 +14,13 @@ import {
 } from "../../lib/taskCategories";
 import { isIcsTask } from "../../lib/icsTasks";
 import { useTasksStore } from "../../stores/tasksStore";
-import { TasksBreadcrumb } from "./TasksBreadcrumb";
+import { useBreadcrumbs } from "@/hooks/useBreadcrumbs";
 
 export function TasksCategoriesPage() {
+  useBreadcrumbs([
+    { label: "Your Tasks", to: "/tasks" },
+    { label: "Categories" },
+  ]);
   const navigate = useNavigate();
   const tasks = useTasksStore((s) => s.tasks);
   const userTasks = useMemo(
@@ -72,14 +76,7 @@ export function TasksCategoriesPage() {
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
-      <TasksBreadcrumb
-        items={[
-          { label: "Your Tasks", to: "/tasks" },
-          { label: "Categories" },
-        ]}
-      />
-
-      <div className="min-h-0 flex-1 overflow-y-auto  pb-24 pt-4 ">
+      <div className="min-h-0 flex-1 overflow-y-auto pb-24 pt-10">
         <div className="mx-auto w-full max-w-3xl xl:max-w-4xl">
           <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
             <h1 className="font-display text-3xl font-bold tracking-tight">

@@ -89,7 +89,7 @@ export function SidebarNavItemView({
       draggable={false}
       aria-label={item.label}
       title={!showLabel ? item.label : undefined}
-      className={`group relative flex h-10 items-center rounded-xl px-2 text-base transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line/50 focus-visible:ring-offset-2 ${
+      className={`group relative flex h-10 font-mono items-center rounded-xl px-2 text-base transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line/50 focus-visible:ring-offset-2 ${
         isActive ? tokens.navItemActive : tokens.navItemIdle
       }`}
     >
