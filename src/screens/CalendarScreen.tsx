@@ -7,7 +7,15 @@ import {
 } from "@internationalized/date";
 import { DateTime } from "luxon";
 import { useShallow } from "zustand/react/shallow";
-import { useSearchParams } from "react-router-dom";
+import {
+  Link,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useSearchParams,
+} from "react-router-dom";
+import { IoGrid } from "react-icons/io5";
 import {
   DayAgendaView,
   MonthGridView,
@@ -25,6 +33,8 @@ import { useCalendarTaskDrop } from "../hooks/useCalendarTaskDrop";
 import { useTasksStore } from "../stores/tasksStore";
 import { useSettingsStore } from "../stores/settingsStore";
 import { DatePicker } from "../components/application/date-picker/date-picker";
+import { CalendarBlocksPage } from "../components/calendar/CalendarBlocksPage";
+import { CALENDAR_BLOCKS_PATH, CALENDAR_PATH } from "../lib/calendarRoutes";
 
 type CalendarMode = "month" | "week" | "day" | "three" | "custom";
 
@@ -37,6 +47,17 @@ const modes: { id: CalendarMode; label: string }[] = [
 ];
 
 export default function CalendarScreen() {
+  return (
+    <Routes>
+      <Route index element={<CalendarMainPage />} />
+      <Route path="blocks" element={<CalendarBlocksPage />} />
+      <Route path="*" element={<Navigate to={CALENDAR_PATH} replace />} />
+    </Routes>
+  );
+}
+
+function CalendarMainPage() {
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   useCalendarTaskDrop();
   const { open: openPopup, close: closePopup } = usePopup();
@@ -287,6 +308,13 @@ export default function CalendarScreen() {
 
           {/* Right: date picker + nav */}
           <div className="flex items-center gap-2">
+            <Link
+              to={{ pathname: CALENDAR_BLOCKS_PATH, search: location.search }}
+              className="flex items-center gap-1.5 rounded-full border border-line/80 bg-surface/60 px-3 py-1.5 text-xs font-semibold text-muted transition-colors hover:text-ink"
+            >
+              <IoGrid className="h-3.5 w-3.5" aria-hidden />
+              Blocks
+            </Link>
             <DatePicker
               value={pickerValue}
               onChange={(value: DateValue | null) => {

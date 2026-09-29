@@ -14,10 +14,18 @@ export function TasksMainPage() {
             {"Your  Tasks".split("").map((char, i) => (
               <motion.span
                 key={`${char}-${i}`}
-                initial={{ opacity: 0, y: 10, rotate: -30 + Math.random() * 60 }}
+                initial={{
+                  opacity: 0,
+                  y: 10,
+                  rotate: -30 + Math.random() * 60,
+                }}
                 animate={{ opacity: 1, y: 0, rotate: Math.random() }}
                 exit={{ opacity: 0, y: 10, rotate: -30 + Math.random() * -60 }}
-                transition={{ duration: 0.5, ease: "easeInOut", delay: i * 0.1 }}
+                transition={{
+                  duration: 0.5,
+                  ease: "easeInOut",
+                  delay: i * 0.1,
+                }}
               >
                 {char}
               </motion.span>

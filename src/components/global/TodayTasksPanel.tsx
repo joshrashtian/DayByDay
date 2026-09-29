@@ -14,6 +14,7 @@ import { IoAdd, IoPencil, IoTrash } from "react-icons/io5";
 import type { Task } from "@/types";
 import { useContextMenu } from "../../providers/ContextMenuProvider";
 import { usePopup } from "../../providers/PopupProvider";
+import { isCalendarGridPath } from "../../lib/calendarRoutes";
 import { TaskPreviewBottomSheet } from "../tasks/TaskPreviewBottomSheet";
 import { taskCreatorPopupContent } from "../tasks/taskCreatorPopupContent";
 import { taskEditorPopupContent } from "../tasks/taskEditorPopupContent";
@@ -54,7 +55,7 @@ type TodayTasksPanelProps = {
 export function TodayTasksPanel({ compact = false }: TodayTasksPanelProps) {
   const location = useLocation();
   const onHome = location.pathname === "/";
-  const onCalendar = location.pathname.startsWith("/calendar");
+  const onCalendar = isCalendarGridPath(location.pathname);
   const canDragTask = onHome || onCalendar;
   const displayedBlockName = useDisplayedBlockName();
   const { panelTasks } = useTodayTasksScope();

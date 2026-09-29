@@ -1,24 +1,26 @@
 import { useEffect, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import {
   collectAvailableBlocks,
   CONTEXT_BLOCK_SUGGESTIONS,
   formatMinutesAsTimeInput,
+  getActiveBlockNameAt,
   getBlockConfigs,
   parseTimeInputToMinutes,
   removeBlockConfigByName,
   setOrUpdateBlockConfig,
   TIME_BLOCK_SUGGESTIONS,
-} from "../lib/taskBlocks";
-import { useTasksStore } from "../stores/tasksStore";
-import { useSettingsStore } from "../stores/settingsStore";
-import "./BlockScreen.css";
-import BottomSheet from "../ui/BottomSheet";
-import { IoAdd } from "react-icons/io5";
-import BlockDial, { getBlockColor } from "../components/blocks/BlockDial";
-import { getActiveBlockNameAt } from "../lib/taskBlocks";
-import { ColorPicker } from "../components/base/input/color-picker";
-import { IconPicker } from "../components/base/input/icon-picker";
-import { renderCategoryIcon } from "../lib/categoryIcons";
+} from "@/lib/taskBlocks";
+import { CALENDAR_PATH } from "@/lib/calendarRoutes";
+import { useTasksStore } from "@/stores/tasksStore";
+import { useSettingsStore } from "@/stores/settingsStore";
+import "./CalendarBlocksPage.css";
+import BottomSheet from "@/ui/BottomSheet";
+import { IoAdd, IoChevronBack } from "react-icons/io5";
+import BlockDial, { getBlockColor } from "@/components/blocks/BlockDial";
+import { ColorPicker } from "@/components/base/input/color-picker";
+import { IconPicker } from "@/components/base/input/icon-picker";
+import { renderCategoryIcon } from "@/lib/categoryIcons";
 
 const nowMinuteOfDay = () => {
   const now = new Date();
@@ -62,7 +64,9 @@ const rowClassName = (variant?: BlockRowVariant) => {
   return base;
 };
 
-const BlockScreen = () => {
+/** Blocks, as a sub-page of the calendar (`/calendar/blocks`). */
+export function CalendarBlocksPage() {
+  const location = useLocation();
   const storedBlockConfigs = useSettingsStore((s) => s.blockConfigs);
   const tasks = useTasksStore((s) => s.tasks);
   const setTaskBlock = useTasksStore((s) => s.setTaskBlock);
@@ -204,6 +208,13 @@ const BlockScreen = () => {
       <div id="block-screen" className="block-screen">
         <div className="block-screen__header">
           <div className="block-screen__heading-group">
+            <Link
+              to={{ pathname: CALENDAR_PATH, search: location.search }}
+              className="inline-flex w-fit items-center gap-1 text-sm font-medium text-muted transition-colors hover:text-ink"
+            >
+              <IoChevronBack className="h-3.5 w-3.5" aria-hidden />
+              Calendar
+            </Link>
             <h1 className="block-screen__title">Blocks</h1>
           </div>
           <button
@@ -379,6 +390,4 @@ const BlockScreen = () => {
       </BottomSheet>
     </>
   );
-};
-
-export default BlockScreen;
+}

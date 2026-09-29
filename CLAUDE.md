@@ -40,7 +40,7 @@ StyleProvider → ThemeRegistryProvider → GuideProvider → ContextMenuProvide
 
 ### Screens (`src/screens/`)
 
-Each file is a full-page component: `HomeScreen`, `TasksScreen` (nested routes via `/*`), `CalendarScreen`, `BlockScreen`, `PomodoroScreen`, `SettingsScreen`, `ToolkitScreen`, `AppsScreen`, plus integrations under `screens/integrations/`.
+Each file is a full-page component: `HomeScreen`, `TasksScreen` (nested routes via `/*`), `CalendarScreen` (nested routes via `/*`; Blocks lives at `/calendar/blocks`), `PomodoroScreen`, `SettingsScreen`, `ToolkitScreen`, `AppsScreen`, plus integrations under `screens/integrations/`.
 
 ### State (`src/stores/`)
 

@@ -39,7 +39,6 @@ const taskDefaultNavItems: SidebarNavItem[] = [
   { label: "Home", icon: <IoHomeOutline />, link: "/" },
   { label: "Tasks", icon: <IoListOutline />, link: "/tasks" },
   { label: "Calendar", icon: <IoCalendarOutline />, link: "/calendar" },
-  { label: "Blocks", icon: <IoGrid />, link: "/blocks" },
   { label: "Pomodoro", icon: <IoHourglassOutline />, link: "/pomodoro" },
 ];
 

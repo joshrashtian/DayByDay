@@ -12,6 +12,7 @@ import { useContextMenu } from "../../../providers/ContextMenuProvider";
 import { taskCreatorPopupContent } from "../../tasks/taskCreatorPopupContent";
 import { taskEditorPopupContent } from "../../tasks/taskEditorPopupContent";
 import { isIcsTask } from "../../../lib/icsTasks";
+import { isCalendarGridPath } from "../../../lib/calendarRoutes";
 import { useDisplayedBlockName } from "../../../hooks/useDisplayedBlockName";
 import { sidebarTokens as tokens } from "./sidebarTokens";
 
@@ -32,7 +33,7 @@ type Props = {
 export function SidebarInlineTaskList({ showLabel }: Props) {
   const location = useLocation();
   const onHome = location.pathname === "/";
-  const onCalendar = location.pathname.startsWith("/calendar");
+  const onCalendar = isCalendarGridPath(location.pathname);
   const canDragTask = onHome || onCalendar;
   const displayedBlockName = useDisplayedBlockName();
   const { panelTasks, activeCount, scopeLabel } = useTodayTasksScope();

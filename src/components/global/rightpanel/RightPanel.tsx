@@ -24,7 +24,7 @@ import { IoCompassOutline } from "react-icons/io5";
 import { ContextPanel } from "./context/ContextPanel";
 import { SpotifyListeningHistory } from "./SpotifyListeningHistory";
 import { SPOTIFY_ENABLED } from "@/lib/featureFlags";
-import { ProfilePanel } from "./ProfilePanel";
+import { ProfilePanel } from "@/components/global/rightpanel/ProfilePanel";
 
 // ─── Panel tabs ───────────────────────────────────────────────────────────────
 // Add new tabs here. Each entry is an icon in the strip plus the body it shows.

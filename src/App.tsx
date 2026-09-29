@@ -1,6 +1,12 @@
 import "./App.css";
 import { useEffect, useState } from "react";
-import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import {
+  Navigate,
+  Routes,
+  Route,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { motion } from "motion/react";
 import { IoClose } from "react-icons/io5";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -14,7 +20,6 @@ import { SettingsScreen } from "./screens/SettingsScreen";
 import TasksScreen from "./screens/TasksScreen";
 import CalendarScreen from "./screens/CalendarScreen";
 import HelpScreen from "./screens/HelpScreen";
-import BlockScreen from "./screens/BlockScreen";
 import AppsScreen from "./screens/AppsScreen";
 import SpotifyScreen from "./screens/integrations/SpotifyScreen";
 import { SPOTIFY_ENABLED } from "./lib/featureFlags";
@@ -33,6 +38,7 @@ import { useMenuNavigation } from "./hooks/useMenuNavigation";
 import { useCreateTaskAction } from "./hooks/useCreateTaskAction";
 import { useRightPanel } from "./providers/RightPanelProvider";
 import SocialScreen from "./screens/social/SocialScreen";
+import { HevyProvider } from "hevy-javascript";
 
 const isSignInWindow = isTauri() && getCurrentWindow().label === "sign-in";
 
@@ -123,7 +129,7 @@ export default function App() {
               }
             />
             <Route
-              path="/calendar"
+              path="/calendar/*"
               element={
                 <AnimatedPage>
                   <CalendarScreen />
@@ -138,13 +144,10 @@ export default function App() {
                 </AnimatedPage>
               }
             />
+            {/* Blocks moved under the calendar; keep old links working. */}
             <Route
               path="/blocks"
-              element={
-                <AnimatedPage>
-                  <BlockScreen />
-                </AnimatedPage>
-              }
+              element={<Navigate to="/calendar/blocks" replace />}
             />
             <Route
               path="/pomodoro"

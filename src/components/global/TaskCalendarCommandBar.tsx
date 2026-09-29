@@ -38,6 +38,7 @@ import {
   sanitizeCategoryValue,
 } from "./commandbar/categoryHelpers";
 import { CategoryPicker } from "./commandbar/CategoryPicker";
+import { isCalendarGridPath } from "../../lib/calendarRoutes";
 
 const TOKEN_HINT_KEYS = new Set([
   "due",
@@ -168,7 +169,7 @@ export function TaskCalendarCommandBar() {
   const [feedback, setFeedback] = useState<Feedback | null>(null);
 
   const routeMode: Mode = useMemo(() => {
-    if (location.pathname.startsWith("/calendar")) return "calendar";
+    if (isCalendarGridPath(location.pathname)) return "calendar";
     return "task";
   }, [location.pathname]);
   const mode: Mode = manualMode ?? routeMode;

@@ -8,12 +8,13 @@ import {
   setActiveCalendarDropTarget,
 } from "../lib/calendarDropTargets";
 import { isIcsTask } from "../lib/icsTasks";
+import { isCalendarGridPath } from "../lib/calendarRoutes";
 import { useHomeFocusStore } from "../stores/homeFocusStore";
 import { useTasksStore } from "../stores/tasksStore";
 
 export function useCalendarTaskDrop() {
   const location = useLocation();
-  const onCalendar = location.pathname.startsWith("/calendar");
+  const onCalendar = isCalendarGridPath(location.pathname);
   const isPointerDragging = useHomeFocusStore((s) => s.isPointerDragging);
   const taskDragIntent = useHomeFocusStore((s) => s.taskDragIntent);
   const draggedTaskId = useHomeFocusStore((s) => s.draggedTaskId);

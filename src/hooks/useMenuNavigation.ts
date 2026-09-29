@@ -69,7 +69,7 @@ export function useMenuNavigation() {
           navigate("/calendar");
           break;
         case "blocks":
-          navigate("/blocks");
+          navigate("/calendar/blocks");
           break;
         case "pomodoro":
           navigate("/pomodoro");
