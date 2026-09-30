@@ -147,7 +147,7 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
   const activeCount = sortedTasks.filter((task) => !task.done).length;
 
   return (
-    <div className="font-eudoxus text-ink">
+    <div className="font-eudoxus w-full text-ink">
       <motion.div
         layout
         className="flex min-h-100 flex-col gap-4 sm:min-h-112 sm:gap-5"
@@ -161,9 +161,7 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
               {sortedTasks.length} total &middot; {activeCount} active
             </p>
           </div>
-          <div
-            className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-sunken p-0.5"
-          >
+          <div className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-sunken p-0.5">
             <HomePomodoroToggle />
           </div>
         </div>
@@ -218,9 +216,7 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
                   </p>
                 ) : null}
                 <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs font-medium">
-                  <span
-                    className="rounded-md border-b border-accent bg-sunken px-2 py-0.5 font-sans text-muted"
-                  >
+                  <span className="rounded-md border-b border-accent bg-sunken px-2 py-0.5 font-sans text-muted">
                     {visibleFocusedTask.critical
                       ? "Critical"
                       : visibleFocusedTask.priority
@@ -228,9 +224,7 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
                           visibleFocusedTask.priority.slice(1)
                         : "No priority"}
                   </span>
-                  <span
-                    className="rounded-md border-b border-line bg-sunken px-2 py-0.5 font-sans text-muted"
-                  >
+                  <span className="rounded-md border-b border-line bg-sunken px-2 py-0.5 font-sans text-muted">
                     {visibleFocusedTask.dueDate
                       ? formatTaskDue(visibleFocusedTask.dueDate)
                       : "No Due Date"}

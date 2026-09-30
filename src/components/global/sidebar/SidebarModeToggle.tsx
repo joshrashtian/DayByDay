@@ -10,14 +10,14 @@ type Props = {
 
 const getNextSidebarMode = (current: SidebarMode): SidebarMode => {
   if (current === "tasks") return "social";
-  if (current === "social") return "apps";
+  if (current === "social") return "tasks";
   return "tasks";
 };
 
 const MODES: { id: SidebarMode; icon: ReactNode }[] = [
   { id: "tasks", icon: <IoListOutline /> },
   { id: "social", icon: <IoPeople /> },
- // { id: "apps", icon: <IoApps /> },
+  // { id: "apps", icon: <IoApps /> },
 ];
 
 export function SidebarModeToggle({
@@ -30,7 +30,7 @@ export function SidebarModeToggle({
       <button
         type="button"
         onClick={() => setSidebarMode(getNextSidebarMode(sidebarMode))}
-        className="inline-flex h-9 w-full items-center justify-center rounded-lg text-base text-muted transition-colors hover:bg-zinc-500/10"
+        className="inline-flex h-9 w-full bg-zinc-300/50 items-center justify-center rounded-lg text-base text-muted transition-colors hover:bg-zinc-500/10"
         aria-label="Toggle navigation mode"
         title="Toggle navigation mode"
       >

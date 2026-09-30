@@ -46,7 +46,7 @@ export const HomeScreen = () => {
     <div className="min-h-dvh">
       <main className="home-content mx-auto max-w-6xl px-3 pb-10 pt-20 sm:px-6 sm:pb-12 sm:pt-24 lg:px-8">
         <div className="grid grid-cols-1 items-start gap-6 sm:gap-8 xl:grid-cols-[minmax(0,1fr)_auto] xl:gap-10">
-          <div className="flex min-w-0 flex-col items-stretch gap-5">
+          <div className="flex min-w-0 w-full flex-col items-stretch gap-5">
             <div className="flex flex-col w-fit max-w-full items-baseline gap-3 rounded-2xl bg-sunken p-4 px-5 text-left sm:p-6 sm:px-10">
               <div className="bg-blue-700 p-5 -skew-5">
                 <h1 className="font-display skew-5 text-4xl font-bold text-white  sm:text-5xl">
@@ -61,7 +61,7 @@ export const HomeScreen = () => {
               ) : null}
             </div>
 
-            <div className="inline-flex w-fit items-center gap-0.5 rounded-full bg-sunken p-0.5 font-eudoxus text-xs">
+            <div className="inline-flex w-full items-center gap-0.5 rounded-full bg-sunken p-0.5 font-eudoxus text-xs">
               <button
                 type="button"
                 onClick={() =>
@@ -104,7 +104,7 @@ export const HomeScreen = () => {
 
             <TasksFrontPage activeBlockName={displayedBlockName} />
           </div>
-          <aside className="flex justify-start xl:shrink-0 xl:justify-end">
+          <aside className="flex justify-start absolute top-12 right-12 xl:shrink-0 xl:justify-end">
             <DateCorner />
           </aside>
         </div>

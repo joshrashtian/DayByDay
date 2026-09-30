@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   IoApps,
   IoCalendarOutline,
+  IoChevronBack,
   IoChevronForward,
   IoGrid,
   IoHelpCircleOutline,
@@ -74,6 +75,8 @@ const MAX_EXPANDED_WIDTH = SNAP_WIDTHS[3] + 16;
 const SWIPE_CLOSE_THRESHOLD = 56;
 const EDGE_SWIPE_OPEN_THRESHOLD = 48;
 const EDGE_SWIPE_ZONE_WIDTH = 28;
+// Dragging the resize handle left of this collapses the sidebar to icons only.
+const COMPACT_SNAP_WIDTH = 140;
 
 type SideBarProps = {
   onWidthChange?: (width: number) => void;
@@ -129,6 +132,9 @@ const SideBar = ({
     getNearestSnapWidth(sidebarState.width || DEFAULT_SIDEBAR_WIDTH),
   );
   const [previewWidth, setPreviewWidth] = useState<number | null>(null);
+  // Icon-only by choice. Distinct from the automatic rail at narrow widths.
+  const [compact, setCompact] = useState(sidebarState.compact ?? false);
+  const [dragX, setDragX] = useState<number | null>(null);
   const [sidebarMode, setSidebarMode] = useState<SidebarMode>(
     sidebarState.mode,
   );
@@ -157,7 +163,14 @@ const SideBar = ({
   }, [viewportWidth]);
 
   const isOverlay = layoutMode === "overlay";
-  const isRail = layoutMode === "rail";
+  // The user's compact preference only applies when the window could expand;
+  // narrower windows already force the rail or overlay.
+  const canExpand = layoutMode === "expanded";
+  const isDraggingToCompact = dragX !== null && dragX < COMPACT_SNAP_WIDTH;
+  const isRail =
+    layoutMode === "rail" ||
+    (canExpand && (dragX === null ? compact : isDraggingToCompact));
+  const effectiveLayoutMode: SidebarLayoutMode = isRail ? "rail" : layoutMode;
   const sidebarOpen = isOverlay ? overlayOpen : manualOpen;
 
   const openSidebar = useCallback(() => {
@@ -224,9 +237,11 @@ const SideBar = ({
       taskOrder: taskItems.map((item) => item.link),
       socialOrder: socialItems.map((item) => item.link),
       appOrder: appItems.map((item) => item.link),
+      compact,
     });
   }, [
     appItems,
+    compact,
     manualOpen,
     sidebarMode,
     sidebarWidth,
@@ -250,14 +265,19 @@ const SideBar = ({
     if (!isResizing) return;
 
     const handlePointerMove = (event: PointerEvent) => {
+      setDragX(event.clientX);
       setPreviewWidth(clampExpandedWidth(event.clientX - 8));
     };
 
     const handlePointerUp = () => {
-      if (previewWidth !== null) {
+      if (dragX !== null && dragX < COMPACT_SNAP_WIDTH) {
+        setCompact(true);
+      } else if (previewWidth !== null) {
+        setCompact(false);
         setSidebarWidth(getNearestSnapWidth(previewWidth));
       }
       setPreviewWidth(null);
+      setDragX(null);
       setIsResizing(false);
     };
 
@@ -268,7 +288,7 @@ const SideBar = ({
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
     };
-  }, [isResizing, previewWidth]);
+  }, [dragX, isResizing, previewWidth]);
 
   const expandedWidth = clampSidebarWidthToViewport(
     previewWidth ?? sidebarWidth,
@@ -312,7 +332,7 @@ const SideBar = ({
         ) : null}
       </AnimatePresence>
       <div
-        data-sidebar-layout={layoutMode}
+        data-sidebar-layout={effectiveLayoutMode}
         className="fixed inset-y-0 left-0 z-50 flex items-stretch"
       >
         <AnimatePresence initial={false} mode="wait">
@@ -426,8 +446,23 @@ const SideBar = ({
                 >
                   <IoHelpCircleOutline className="text-base" />
                 </NavLink>
+                {canExpand ? (
+                  <button
+                    type="button"
+                    onClick={() => setCompact((prev) => !prev)}
+                    aria-label={compact ? "Show labels" : "Icons only"}
+                    title={compact ? "Show labels" : "Icons only"}
+                    className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${sidebarTokens.utilityButton}`}
+                  >
+                    {compact ? (
+                      <IoChevronForward className="text-base" />
+                    ) : (
+                      <IoChevronBack className="text-base" />
+                    )}
+                  </button>
+                ) : null}
               </div>
-              {layoutMode === "expanded" ? (
+              {canExpand ? (
                 <div
                   aria-label="Resize sidebar"
                   onPointerDown={(event) => {

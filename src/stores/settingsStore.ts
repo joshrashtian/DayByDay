@@ -30,6 +30,8 @@ type SidebarState = {
   taskOrder: string[];
   socialOrder: string[];
   appOrder: string[];
+  /** User chose the icon-only rail even though the window has room to expand. */
+  compact: boolean;
 };
 
 type RightPanelState = {
@@ -73,6 +75,7 @@ const DEFAULT_SIDEBAR: SidebarState = {
   taskOrder: [],
   socialOrder: [],
   appOrder: [],
+  compact: false,
 };
 
 const DEFAULT_RIGHT_PANEL: RightPanelState = {
