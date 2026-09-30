@@ -151,11 +151,11 @@ export function TaskItem({
         className="group relative cursor-pointer overflow-hidden rounded-xl  px-4 py-3.5 outline-none backdrop-blur-xl backdrop-saturate-150 ring-1 ring-line/30 transition-shadow focus-visible:ring-2 focus-visible:ring-line-strong/50 active:scale-[0.99]"
       >
         <div
-          className="pointer-events-none absolute inset-0 rounded-2xl dark:bg-zinc-800 bg-linear-to-br from-surface/70 via-surface/15 to-transparent opacity-80"
+          className="pointer-events-none absolute inset-0 rounded-2xl  dark:bg-zinc-800 bg-linear-to-br from-surface/70 via-surface/15 to-transparent opacity-80"
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute bg-slate-800 -inset-px rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          className="pointer-events-none absolute dark:bg-slate-800 bg-slate-100 -inset-px rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
           aria-hidden
         />
         <div className="relative flex min-w-0 flex-col gap-2">

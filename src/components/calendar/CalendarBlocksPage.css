@@ -139,7 +139,7 @@
 }
 
 .block-dial__center-name {
-    font-family: var(--font-quantify);
+    font-family: var(--font-sans);
     font-size: 1.5rem;
     font-weight: 900;
     line-height: 1.1;
@@ -262,7 +262,7 @@
 
 .block-screen__row--title {
     margin: 0;
-    font-family: var(--font-quantify);
+    font-family: var(--font-sans);
     font-size: 1.5rem;
     line-height: 1.1;
     font-weight: 900;

@@ -28,13 +28,13 @@ export const DateCorner = ({ rootClassName }: Props) => {
             className="pointer-events-none absolute inset-0 -z-10 -skew-x-12 rounded-sm bg-accent shadow-md"
             aria-hidden
           />
-          <span className="flex font-baron font-light tracking-wide text-accent-ink">
+          <span className="flex font-sans font-light tracking-wide text-accent-ink">
             <span className="rotate-15 text-3xl">{month}/</span>
             <span className="font-display text-6xl font-bold">{day}</span>
           </span>
         </div>
         <div className="flex w-full flex-nowrap items-baseline justify-end gap-3 pr-0.5">
-          <h3 className="shrink-0 text-right font-quantify text-2xl font-black leading-none tracking-wide text-ink sm:text-3xl">
+          <h3 className="shrink-0 text-right font-sans text-2xl font-black leading-none tracking-wide text-ink sm:text-3xl">
             {weekday}
           </h3>
           <WeatherBadge
@@ -42,7 +42,7 @@ export const DateCorner = ({ rootClassName }: Props) => {
             compact
             className="shrink-0 -skew-x-12 items-baseline bg-sunken p-1 px-3 text-ink"
             iconClassName="text-ink"
-            temperatureClassName="font-quantify skew-x-12 text-2xl font-black tabular-nums tracking-wide text-ink sm:text-3xl"
+            temperatureClassName="font-sans skew-x-12 text-2xl font-black tabular-nums tracking-wide text-ink sm:text-3xl"
           />
         </div>
       </div>

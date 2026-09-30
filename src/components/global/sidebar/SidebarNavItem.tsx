@@ -94,8 +94,10 @@ export function SidebarNavItemView({
       }`}
     >
       <span
-        className={`absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r transition-opacity duration-150 ${
-          isActive ? `${tokens.navAccent} opacity-100` : "opacity-0"
+        className={`absolute left-0 top-1/2 h-1 w-1 -translate-y-1/2 rounded-r transition-all duration-500 ${
+          isActive
+            ? `${tokens.navAccent} translate-x-0 opacity-100`
+            : "-translate-x-5 opacity-0"
         }`}
         aria-hidden
       />

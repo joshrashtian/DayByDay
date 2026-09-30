@@ -1,9 +1,10 @@
 import { motion } from "motion/react";
 import { DateTime } from "luxon";
-import { IoAdd } from "react-icons/io5";
+import { IoAdd, IoGitBranch, IoGitCommit } from "react-icons/io5";
 import type { Task } from "@/types";
 import { tasksByDueDateKeyInRange } from "../../../lib/calendarUtils";
 import { TaskDueList } from "./_shared";
+import { FaWeightScale } from "react-icons/fa6";
 
 type DayViewProps = {
   day: DateTime;
@@ -38,17 +39,18 @@ export function DayAgendaView({
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -16 }}
       transition={{ duration: 0.28, ease: [0.25, 0.1, 0.25, 1] }}
+      className="relative"
     >
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted">
           {dayTasks.length} due {dayTasks.length === 1 ? "item" : "items"}
         </p>
+
         {onAddTaskForDay ? (
           <motion.button
-            initial={{ opacity: 0, x: 16, transform: "skewX(-3deg)" }}
-            animate={{ opacity: 1, x: 0, transform: "skewX(6deg)" }}
-            exit={{ opacity: 0, x: -16, transform: "skewX(-3deg)" }}
-            whileHover={{ transform: "skew(-5deg, -5deg)", scale: 1.2 }}
+            initial={{ opacity: 0, x: 40, rotateX: 90 }}
+            animate={{ opacity: 1, x: 0, rotateX: 0 }}
+            exit={{ opacity: 0, x: 40, rotateX: 90 }}
             transition={{
               duration: 0.28,
               delay: 0.06,
@@ -56,12 +58,21 @@ export function DayAgendaView({
             }}
             type="button"
             onClick={() => onAddTaskForDay(day)}
-            className="shrink-0 shadow-lg flex flex-row items-center justify-center gap-2 bg-sky-500/50 px-4 py-4 text-xl font-semibold text-sky-800 hover:bg-sky-500/25 dark:border-sky-400/35 dark:bg-sky-500/20 dark:text-sky-100 dark:hover:bg-sky-500/30"
+            className="shrink-0 shadow-lg absolute top-5 right-5 flex rounded-full flex-row items-center justify-center gap-2 bg-sky-500/50 px-4 py-4 text-xl font-semibold text-sky-800 hover:bg-sky-500/25 dark:border-sky-400/35 dark:bg-sky-500/20 dark:text-sky-100 dark:hover:bg-sky-500/30"
           >
-            <IoAdd className="text-white drop-shadow-lg -skew-x-3" />{" "}
-            <span className="text-xl font-semibold text-sky-800">Add Task</span>
+            <IoAdd className="text-white drop-shadow-lg " />
           </motion.button>
         ) : null}
+      </div>
+      <div className="grid grid-cols-5 gap-4 grid-rows-2">
+        <div className="col-span-1 h-48 bg-zinc-200/50 flex flex-col justify-between p-5 rounded-2xl">
+          <IoGitBranch className="text-6xl" />
+          <h3 className="text-4xl font-mono font-black">5 commits</h3>
+        </div>
+        <div className="col-span-1 h-48 bg-zinc-200/50 flex flex-col justify-between p-5 rounded-2xl">
+          <FaWeightScale className="text-6xl" />
+          <h3 className="text-2xl font-mono font-black">Leg day</h3>
+        </div>
       </div>
       <div
         className="mt-6 max-w-md"

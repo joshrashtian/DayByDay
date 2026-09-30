@@ -43,7 +43,7 @@ export function HomePomodoroToggle() {
           : "text-muted hover:text-muted"
       }`}
     >
-      <span className="font-quantify tabular-nums">
+      <span className="font-sans tabular-nums">
         {formatPomodoroTime(secondsLeft)}
       </span>
       <span className="uppercase tracking-[0.1em]">
@@ -90,11 +90,11 @@ export function HomePomodoroPanel({
           />
           <motion.div className="pointer-events-auto relative flex max-w-[min(100%,13rem)] flex-col items-end gap-2 px-1 text-right sm:max-w-[15rem]">
             <div className="space-y-0.5">
-              <p className="font-baron text-[10px] font-bold uppercase tracking-[0.2em] text-faint">
+              <p className="font-sans text-[10px] font-bold uppercase tracking-[0.2em] text-faint">
                 Pomodoro
               </p>
               <p
-                className={`font-quantify text-3xl font-semibold tabular-nums leading-none sm:text-4xl ${PHASE_ACCENT[phase]}`}
+                className={`font-sans text-3xl font-semibold tabular-nums leading-none sm:text-4xl ${PHASE_ACCENT[phase]}`}
               >
                 {formatPomodoroTime(secondsLeft)}
               </p>

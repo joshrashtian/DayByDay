@@ -716,7 +716,7 @@ export function TaskCreatorPopupForm({
         <button
           type="submit"
           disabled={!canSubmit}
-          className="min-w-32 flex-1 font-quantify rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white transition-opacity enabled:hover:bg-ink disabled:cursor-not-allowed disabled:opacity-35"
+          className="min-w-32 flex-1 font-sans rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white transition-opacity enabled:hover:bg-ink disabled:cursor-not-allowed disabled:opacity-35"
         >
           {submitText}
         </button>

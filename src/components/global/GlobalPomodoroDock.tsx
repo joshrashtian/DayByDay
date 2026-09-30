@@ -167,7 +167,7 @@ export function GlobalPomodoroDock() {
               aria-hidden
             />
             <IoHourglassOutline className="text-sm" aria-hidden />
-            <span className="font-quantify tabular-nums">
+            <span className="font-sans tabular-nums">
               {formatPomodoroTime(secondsLeft)}
             </span>
             <span className="uppercase tracking-[0.08em]">

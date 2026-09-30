@@ -69,7 +69,7 @@ export function CategoryPicker({
   return (
     <div className="absolute left-3 right-3 top-0 -translate-y-full rounded-xl border border-line/80 bg-surface/95 skew-x-12 shadow-lg">
       <div className="mb-2 flex items-center gap-2 p-2">
-        <span className="shrink-0 text-[11px] font-semibold font-quantify -skew-x-12 uppercase tracking-wide text-muted">
+        <span className="shrink-0 text-[11px] font-semibold font-sans -skew-x-12 uppercase tracking-wide text-muted">
           Category
         </span>
         <input

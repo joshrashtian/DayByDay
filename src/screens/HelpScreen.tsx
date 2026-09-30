@@ -199,7 +199,7 @@ const HelpScreen = () => {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 10 }}
           transition={{ duration: 0.5, ease: "easeInOut" }}
-          className="relative z-10 flex flex-row font-quantify text-6xl font-bold text-white"
+          className="relative z-10 flex flex-row font-sans text-6xl font-bold text-white"
         >
           HELP CENTER
         </motion.p>

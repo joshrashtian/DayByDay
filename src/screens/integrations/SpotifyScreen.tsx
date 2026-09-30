@@ -127,7 +127,7 @@ export default function SpotifyScreen() {
     <main className="mx-auto flex min-h-[calc(100dvh-7rem)] w-full max-w-6xl flex-col items-start px-3 pb-24 pt-20 sm:px-6 sm:pt-24 lg:px-8">
       <div className="flex items-center gap-3">
         <img src={spotifyIcon} alt="" className="h-8 w-8" aria-hidden />
-        <h1 className="font-quantify text-4xl text-ink sm:text-5xl">Spotify</h1>
+        <h1 className="font-sans text-4xl text-ink sm:text-5xl">Spotify</h1>
       </div>
       <p className="mt-3 max-w-2xl text-base text-muted">
         A running log of what you listened to, day by day, alongside the work

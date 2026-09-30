@@ -142,50 +142,70 @@
   }
 }
 
-@font-face {
-  font-family: "Louis George Cafe";
-  src: url("./assets/fonts/louis_george_cafe/Louis George Cafe Light.ttf")
-    format("truetype");
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Louis George Cafe";
-  src: url("./assets/fonts/louis_george_cafe/Louis George Cafe Light Italic.ttf")
-    format("truetype");
-  font-weight: 300;
-  font-style: italic;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Louis George Cafe";
-  src: url("./assets/fonts/louis_george_cafe/Louis George Cafe.ttf")
-    format("truetype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Louis George Cafe";
-  src: url("./assets/fonts/louis_george_cafe/Louis George Cafe Italic.ttf")
-    format("truetype");
-  font-weight: 400;
-  font-style: italic;
-  font-display: swap;
-}
-
 /*
  * Discrete weights (not ranges): WebKit/WKWebView used by Tauri often ignores
  * font-weight ranges in @font-face; with font-synthesis: none, bold utilities
- * would otherwise match no face and stay visually regular.
+ * would otherwise match no face and stay visually regular. Satoshi is a
+ * variable font, so every face points at the same file and the declared
+ * weight drives its wght axis.
  */
 @font-face {
-  font-family: "Louis George Cafe";
-  src: url("./assets/fonts/louis_george_cafe/Louis George Cafe Bold.ttf")
+  font-family: "Satoshi";
+  src: url("./assets/fonts/Satoshi/Satoshi-Variable.ttf")
+    format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("./assets/fonts/Satoshi/Satoshi-VariableItalic.ttf")
+    format("truetype");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("./assets/fonts/Satoshi/Satoshi-Variable.ttf")
+    format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("./assets/fonts/Satoshi/Satoshi-VariableItalic.ttf")
+    format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("./assets/fonts/Satoshi/Satoshi-Variable.ttf")
+    format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("./assets/fonts/Satoshi/Satoshi-VariableItalic.ttf")
+    format("truetype");
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("./assets/fonts/Satoshi/Satoshi-Variable.ttf")
     format("truetype");
   font-weight: 600;
   font-style: normal;
@@ -193,35 +213,8 @@
 }
 
 @font-face {
-  font-family: "Louis George Cafe";
-  src: url("./assets/fonts/louis_george_cafe/Louis George Cafe Bold.ttf")
-    format("truetype");
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Louis George Cafe";
-  src: url("./assets/fonts/louis_george_cafe/Louis George Cafe Bold.ttf")
-    format("truetype");
-  font-weight: 800;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Louis George Cafe";
-  src: url("./assets/fonts/louis_george_cafe/Louis George Cafe Bold.ttf")
-    format("truetype");
-  font-weight: 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Louis George Cafe";
-  src: url("./assets/fonts/louis_george_cafe/Louis George Cafe Bold Italic.ttf")
+  font-family: "Satoshi";
+  src: url("./assets/fonts/Satoshi/Satoshi-VariableItalic.ttf")
     format("truetype");
   font-weight: 600;
   font-style: italic;
@@ -229,8 +222,17 @@
 }
 
 @font-face {
-  font-family: "Louis George Cafe";
-  src: url("./assets/fonts/louis_george_cafe/Louis George Cafe Bold Italic.ttf")
+  font-family: "Satoshi";
+  src: url("./assets/fonts/Satoshi/Satoshi-Variable.ttf")
+    format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("./assets/fonts/Satoshi/Satoshi-VariableItalic.ttf")
     format("truetype");
   font-weight: 700;
   font-style: italic;
@@ -238,8 +240,17 @@
 }
 
 @font-face {
-  font-family: "Louis George Cafe";
-  src: url("./assets/fonts/louis_george_cafe/Louis George Cafe Bold Italic.ttf")
+  font-family: "Satoshi";
+  src: url("./assets/fonts/Satoshi/Satoshi-Variable.ttf")
+    format("truetype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("./assets/fonts/Satoshi/Satoshi-VariableItalic.ttf")
     format("truetype");
   font-weight: 800;
   font-style: italic;
@@ -247,10 +258,128 @@
 }
 
 @font-face {
-  font-family: "Louis George Cafe";
-  src: url("./assets/fonts/louis_george_cafe/Louis George Cafe Bold Italic.ttf")
+  font-family: "Satoshi";
+  src: url("./assets/fonts/Satoshi/Satoshi-Variable.ttf")
     format("truetype");
   font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("./assets/fonts/Satoshi/Satoshi-VariableItalic.ttf")
+    format("truetype");
+  font-weight: 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Google Sans Code (Nerd Font Mono build) — discrete weights for WKWebView */
+@font-face {
+  font-family: "Google Sans Code";
+  src: url("./assets/fonts/mono/GoogleSansCodeNerdFontMono-Light.ttf")
+    format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Google Sans Code";
+  src: url("./assets/fonts/mono/GoogleSansCodeNerdFontMono-LightItalic.ttf")
+    format("truetype");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Google Sans Code";
+  src: url("./assets/fonts/mono/GoogleSansCodeNerdFontMono-Regular.ttf")
+    format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Google Sans Code";
+  src: url("./assets/fonts/mono/GoogleSansCodeNerdFontMono-Italic.ttf")
+    format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Google Sans Code";
+  src: url("./assets/fonts/mono/GoogleSansCodeNerdFontMono-Medium.ttf")
+    format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Google Sans Code";
+  src: url("./assets/fonts/mono/GoogleSansCodeNerdFontMono-MediumItalic.ttf")
+    format("truetype");
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Google Sans Code";
+  src: url("./assets/fonts/mono/GoogleSansCodeNerdFontMono-SemiBold.ttf")
+    format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Google Sans Code";
+  src: url("./assets/fonts/mono/GoogleSansCodeNerdFontMono-SemiBoldItalic.ttf")
+    format("truetype");
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Google Sans Code";
+  src: url("./assets/fonts/mono/GoogleSansCodeNerdFontMono-Bold.ttf")
+    format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Google Sans Code";
+  src: url("./assets/fonts/mono/GoogleSansCodeNerdFontMono-BoldItalic.ttf")
+    format("truetype");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Google Sans Code";
+  src: url("./assets/fonts/mono/GoogleSansCodeNerdFontMono-ExtraBold.ttf")
+    format("truetype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Google Sans Code";
+  src: url("./assets/fonts/mono/GoogleSansCodeNerdFontMono-ExtraBoldItalic.ttf")
+    format("truetype");
+  font-weight: 800;
   font-style: italic;
   font-display: swap;
 }
@@ -290,131 +419,6 @@
 @font-face {
   font-family: "Soopafresh";
   src: url("./assets/fonts/soopafresh/soopafre.ttf") format("truetype");
-  font-weight: 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* Baron Neue — discrete weights for WKWebView */
-@font-face {
-  font-family: "Baron Neue";
-  src: url("./assets/fonts/baron_neue/Baron Neue.otf") format("opentype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Baron Neue";
-  src: url("./assets/fonts/baron_neue/Baron Neue Italic.otf") format("opentype");
-  font-weight: 400;
-  font-style: italic;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Baron Neue";
-  src: url("./assets/fonts/baron_neue/Baron Neue Bold.otf") format("opentype");
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Baron Neue";
-  src: url("./assets/fonts/baron_neue/Baron Neue Bold.otf") format("opentype");
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Baron Neue";
-  src: url("./assets/fonts/baron_neue/Baron Neue Black.otf") format("opentype");
-  font-weight: 800;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Baron Neue";
-  src: url("./assets/fonts/baron_neue/Baron Neue Black.otf") format("opentype");
-  font-weight: 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Baron Neue";
-  src: url("./assets/fonts/baron_neue/Baron Neue Bold Italic.otf")
-    format("opentype");
-  font-weight: 600;
-  font-style: italic;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Baron Neue";
-  src: url("./assets/fonts/baron_neue/Baron Neue Bold Italic.otf")
-    format("opentype");
-  font-weight: 700;
-  font-style: italic;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Baron Neue";
-  src: url("./assets/fonts/baron_neue/Baron Neue Black Italic.otf")
-    format("opentype");
-  font-weight: 800;
-  font-style: italic;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Baron Neue";
-  src: url("./assets/fonts/baron_neue/Baron Neue Black Italic.otf")
-    format("opentype");
-  font-weight: 900;
-  font-style: italic;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Quantify";
-  src: url("./assets/fonts/quantify/Quantify.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Quantify";
-  src: url("./assets/fonts/quantify/Quantify.ttf") format("truetype");
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Quantify";
-  src: url("./assets/fonts/quantify/Quantify.ttf") format("truetype");
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Quantify";
-  src: url("./assets/fonts/quantify/Quantify.ttf") format("truetype");
-  font-weight: 800;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Quantify";
-  src: url("./assets/fonts/quantify/Quantify.ttf") format("truetype");
   font-weight: 900;
   font-style: normal;
   font-display: swap;
@@ -449,14 +453,6 @@
   font-family: "PP Neue Montreal";
   src: url("./assets/fonts/ppneue/PPNeueMontreal-Bold.otf") format("opentype");
   font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Fava";
-  src: url("./assets/fonts/Fava-black.ttf") format("truetype");
-  font-weight: 900;
   font-style: normal;
   font-display: swap;
 }
@@ -506,14 +502,11 @@
 }
 
 @theme {
+  --font-sans: "Satoshi", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Google Sans Code", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-display: "Soopafresh", "Satoshi", ui-sans-serif, sans-serif;
   --font-ppneue: "PP Neue Montreal", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Louis George Cafe", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Soopafresh", "Louis George Cafe", ui-sans-serif, sans-serif;
-  --font-baron: "Baron Neue", ui-sans-serif, system-ui, sans-serif;
-  --font-quantify: "Quantify", ui-sans-serif, sans-serif;
   --font-eudoxus: "Eudoxus Sans", ui-sans-serif, system-ui, sans-serif;
-
-  --font-fava: "Fava", ui-sans-serif, sans-serif;
 }
 
 .logo.vite:hover {
@@ -524,7 +517,7 @@
   filter: drop-shadow(0 0 2em #61dafb);
 }
 :root {
-  font-family:  "Eudoxus Sans", "Louis George Cafe", ui-sans-serif, system-ui, sans-serif;
+  font-family:  "Eudoxus Sans", "Satoshi", ui-sans-serif, system-ui, sans-serif;
   font-size: 16px;
   line-height: 24px;
   font-weight: 400;

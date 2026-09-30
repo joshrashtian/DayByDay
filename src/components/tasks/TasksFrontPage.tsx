@@ -154,7 +154,7 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
       >
         <div className="flex w-full items-start justify-between gap-3">
           <div className="min-w-0 flex flex-col items-start gap-1">
-            <p className="font-baron text-lg font-bold uppercase tracking-[0.14em]">
+            <p className="font-sans text-lg font-bold uppercase tracking-[0.14em]">
               {activeBlockName ? `${activeBlockName} Tasks` : "All Tasks"}
             </p>
             <p className="font-eudoxus text-xs tracking-wide opacity-70">
@@ -219,7 +219,7 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
                 ) : null}
                 <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs font-medium">
                   <span
-                    className="rounded-md border-b border-accent bg-sunken px-2 py-0.5 font-quantify text-muted"
+                    className="rounded-md border-b border-accent bg-sunken px-2 py-0.5 font-sans text-muted"
                   >
                     {visibleFocusedTask.critical
                       ? "Critical"
@@ -229,7 +229,7 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
                         : "No priority"}
                   </span>
                   <span
-                    className="rounded-md border-b border-line bg-sunken px-2 py-0.5 font-quantify text-muted"
+                    className="rounded-md border-b border-line bg-sunken px-2 py-0.5 font-sans text-muted"
                   >
                     {visibleFocusedTask.dueDate
                       ? formatTaskDue(visibleFocusedTask.dueDate)
@@ -241,7 +241,7 @@ export const TasksFrontPage = ({ activeBlockName }: Props) => {
                 {isTaskOverdue(visibleFocusedTask.dueDate) ||
                 isTaskDueToday(visibleFocusedTask.dueDate) ? (
                   <h3
-                    className={`text-center font-baron text-2xl tracking-[0.08em] sm:text-3xl ${isTaskOverdue(visibleFocusedTask.dueDate) ? "text-red-500" : "text-muted"}`}
+                    className={`text-center font-sans text-2xl tracking-[0.08em] sm:text-3xl ${isTaskOverdue(visibleFocusedTask.dueDate) ? "text-red-500" : "text-muted"}`}
                   >
                     {isTaskOverdue(visibleFocusedTask.dueDate)
                       ? "OVERDUE"

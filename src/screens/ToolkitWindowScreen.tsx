@@ -202,7 +202,7 @@ function ClassesView() {
 
   return (
     <>
-      <h1 className="font-quantify text-3xl text-ink sm:text-4xl">
+      <h1 className="font-sans text-3xl text-ink sm:text-4xl">
         Classes
       </h1>
 
@@ -225,7 +225,7 @@ function ClassesView() {
                   key={day.label}
                   className="-skew-x-12 rounded-xl border border-sky-100 bg-sky-50/60 p-3 dark:border-sky-900/30 dark:bg-sky-950/20"
                 >
-                  <p className="skew-x-12 text-[11px] font-quantify font-semibold uppercase tracking-[0.14em] text-muted">
+                  <p className="skew-x-12 text-[11px] font-sans font-semibold uppercase tracking-[0.14em] text-muted">
                     {day.label}
                   </p>
                   {dayTasks.length ? (
@@ -379,7 +379,7 @@ export default function ToolkitWindowScreen() {
   if (!selectedPanel) {
     return (
       <main className="mx-auto flex min-h-[calc(100dvh-7rem)] w-full max-w-5xl flex-col px-3 pb-24 pt-20 sm:px-6 sm:pt-24 lg:px-8">
-        <h1 className="font-quantify text-3xl text-ink sm:text-4xl">
+        <h1 className="font-sans text-3xl text-ink sm:text-4xl">
           Panel Not Found
         </h1>
         <p className="mt-3 text-base text-muted">
@@ -394,7 +394,7 @@ export default function ToolkitWindowScreen() {
       {selectedPanel.id === "classes" ? <ClassesView /> : null}
       {selectedPanel.id !== "classes" ? (
         <>
-          <h1 className="font-quantify text-3xl text-ink sm:text-4xl">
+          <h1 className="font-sans text-3xl text-ink sm:text-4xl">
             {selectedPanel.label}
           </h1>
           <p className="mt-3 max-w-2xl text-base text-muted">
