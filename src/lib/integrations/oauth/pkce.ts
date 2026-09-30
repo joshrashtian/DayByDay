@@ -25,7 +25,7 @@ export async function deriveCodeChallenge(verifier: string): Promise<string> {
   return base64Url(new Uint8Array(digest));
 }
 
-/** Opaque value echoed back by Spotify; guards against a stray callback. */
+/** Opaque value echoed back by the provider; guards against a stray callback. */
 export function createState(): string {
   return base64Url(randomBytes(16));
 }

@@ -22,7 +22,7 @@ import {
   createCodeVerifier,
   createState,
   deriveCodeChallenge,
-} from "@/lib/integrations/spotify/pkce";
+} from "@/lib/integrations/oauth/pkce";
 import { isTauri } from "@/lib/tauriEnv";
 import type {
   SpotifyAccount,

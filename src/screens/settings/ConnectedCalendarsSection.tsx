@@ -1,5 +1,11 @@
-import { useId, useRef, useState } from "react";
-import { IoDocumentTextOutline } from "react-icons/io5";
+import { useEffect, useId, useRef, useState } from "react";
+import {
+  IoCalendarOutline,
+  IoDocumentTextOutline,
+  IoLogoGoogle,
+} from "react-icons/io5";
+import { Checkbox } from "@/components/base/checkbox/checkbox";
+import { GOOGLE_CALENDAR_ENABLED } from "@/lib/featureFlags";
 import { parseIcsFile } from "@/lib/integrations/ics/parseIcsFile";
 import {
   formatLastImport,
@@ -7,45 +13,45 @@ import {
 } from "@/stores/calendarIntegrationsStore";
 import { useTasksStore } from "@/stores/tasksStore";
 
-/*
- * The Google Calendar half of this screen is disabled until OAuth is wired up.
- * Its JSX is commented out at the bottom of the file; the helper, store
- * selectors and handlers it needs are commented out alongside it so the file
- * type-checks. Restoring the section means restoring all of these together,
- * plus the `IoCalendarOutline` / `IoLogoGoogle` / `Checkbox` imports.
- *
- * function CalendarColorDot({ color }: { color?: string }) {
- *   return (
- *     <span
- *       className="inline-block size-2.5 shrink-0 rounded-full ring-1 ring-line"
- *       style={{ backgroundColor: color ?? "#6366f1" }}
- *       aria-hidden="true"
- *     />
- *   );
- * }
- */
+function CalendarColorDot({ color }: { color?: string }) {
+  return (
+    <span
+      className="inline-block size-2.5 shrink-0 rounded-full ring-1 ring-line"
+      style={{ backgroundColor: color ?? "#6366f1" }}
+      aria-hidden="true"
+    />
+  );
+}
 
 export function ConnectedCalendarsSection() {
   const uid = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  // const google = useCalendarIntegrationsStore((s) => s.google);
-  // const importPastMonths = useCalendarIntegrationsStore((s) => s.importPastMonths);
-  // const importFutureMonths = useCalendarIntegrationsStore(
-  //   (s) => s.importFutureMonths,
-  // );
+  const google = useCalendarIntegrationsStore((s) => s.google);
+  const googleStatus = useCalendarIntegrationsStore((s) => s.googleStatus);
+  const googleError = useCalendarIntegrationsStore((s) => s.googleError);
+  const isImportingGoogle = useCalendarIntegrationsStore(
+    (s) => s.isImportingGoogle,
+  );
+  const importPastMonths = useCalendarIntegrationsStore((s) => s.importPastMonths);
+  const importFutureMonths = useCalendarIntegrationsStore(
+    (s) => s.importFutureMonths,
+  );
   const lastIcsImportAt = useCalendarIntegrationsStore((s) => s.lastIcsImportAt);
   const lastIcsImportCount = useCalendarIntegrationsStore(
     (s) => s.lastIcsImportCount,
   );
-  // const connectGoogle = useCalendarIntegrationsStore((s) => s.connectGoogle);
-  // const disconnectGoogle = useCalendarIntegrationsStore((s) => s.disconnectGoogle);
-  // const setCalendarEnabled = useCalendarIntegrationsStore(
-  //   (s) => s.setCalendarEnabled,
-  // );
-  // const setImportRange = useCalendarIntegrationsStore((s) => s.setImportRange);
-  // const markImportComplete = useCalendarIntegrationsStore(
-  //   (s) => s.markImportComplete,
-  // );
+  const connectGoogle = useCalendarIntegrationsStore((s) => s.connectGoogle);
+  const disconnectGoogle = useCalendarIntegrationsStore((s) => s.disconnectGoogle);
+  const refreshGoogleCalendars = useCalendarIntegrationsStore(
+    (s) => s.refreshGoogleCalendars,
+  );
+  const importGoogleEvents = useCalendarIntegrationsStore(
+    (s) => s.importGoogleEvents,
+  );
+  const setCalendarEnabled = useCalendarIntegrationsStore(
+    (s) => s.setCalendarEnabled,
+  );
+  const setImportRange = useCalendarIntegrationsStore((s) => s.setImportRange);
   const markIcsImportComplete = useCalendarIntegrationsStore(
     (s) => s.markIcsImportComplete,
   );
@@ -61,8 +67,9 @@ export function ConnectedCalendarsSection() {
   );
   const [isImportingIcs, setIsImportingIcs] = useState(false);
 
-  // const enabledCount = google.calendars.filter((c) => c.enabled).length;
-  // const lastImportLabel = formatLastImport(google.lastImportAt);
+  const enabledCount = google.calendars.filter((c) => c.enabled).length;
+  const lastImportLabel = formatLastImport(google.lastImportAt);
+  const isGoogleConnecting = googleStatus === "connecting";
   const lastIcsImportLabel = formatLastImport(lastIcsImportAt);
 
   const showStatus = (
@@ -73,34 +80,41 @@ export function ConnectedCalendarsSection() {
     setStatusMessage(message);
   };
 
-  // const onConnectGoogle = () => {
-  //   connectGoogle();
-  //   showStatus(
-  //     "Google Calendar connected (preview). OAuth will replace this mock connection.",
-  //     "success",
-  //   );
-  // };
+  // Pick up calendars added or renamed in Google since the last visit.
+  useEffect(() => {
+    if (GOOGLE_CALENDAR_ENABLED && google.connected) void refreshGoogleCalendars();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // const onDisconnectGoogle = () => {
-  //   disconnectGoogle();
-  //   showStatus("Google Calendar disconnected.");
-  // };
+  const onConnectGoogle = async () => {
+    setStatusMessage(null);
+    await connectGoogle();
+    if (useCalendarIntegrationsStore.getState().googleStatus === "connected") {
+      showStatus("Google Calendar connected and events imported.", "success");
+    }
+  };
 
-  // const onImport = () => {
-  //   if (!google.connected) {
-  //     showStatus("Connect Google Calendar before importing.");
-  //     return;
-  //   }
-  //   if (enabledCount === 0) {
-  //     showStatus("Select at least one calendar to import.");
-  //     return;
-  //   }
-  //   markImportComplete();
-  //   showStatus(
-  //     `Import queued for ${enabledCount} calendar${enabledCount === 1 ? "" : "s"}. Event fetching will run once Google OAuth is wired up.`,
-  //     "success",
-  //   );
-  // };
+  const onDisconnectGoogle = () => {
+    disconnectGoogle();
+    showStatus("Google Calendar disconnected.");
+  };
+
+  const onImport = async () => {
+    if (!google.connected) {
+      showStatus("Connect Google Calendar before importing.");
+      return;
+    }
+    if (enabledCount === 0) {
+      showStatus("Select at least one calendar to import.");
+      return;
+    }
+    const result = await importGoogleEvents();
+    if (!result) return;
+    showStatus(
+      `Imported ${result.imported} event${result.imported === 1 ? "" : "s"} from ${result.calendars} calendar${result.calendars === 1 ? "" : "s"}.${result.skipped > 0 ? ` Skipped ${result.skipped} already imported.` : ""}`,
+      "success",
+    );
+  };
 
   const onChooseIcsFile = () => {
     fileInputRef.current?.click();
@@ -159,8 +173,8 @@ export function ConnectedCalendarsSection() {
     );
   };
 
-  // const pastId = `${uid}-import-past`;
-  // const futureId = `${uid}-import-future`;
+  const pastId = `${uid}-import-past`;
+  const futureId = `${uid}-import-future`;
   const icsInputId = `${uid}-ics-file`;
 
   return (
@@ -257,143 +271,155 @@ export function ConnectedCalendarsSection() {
           </div>
         </div>
       </section>
-{/*
-      <section
-        aria-labelledby={`${uid}-google-heading`}
-        className="overflow-hidden rounded-2xl border border-line/80 bg-surface/70"
-      >
-        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-line px-4 py-4">
-          <div className="flex items-start gap-3">
-            <span className="inline-flex size-10 items-center justify-center rounded-xl bg-sunken text-muted">
-              <IoLogoGoogle className="size-5" aria-hidden />
-            </span>
-            <div>
-              <h3
-                id={`${uid}-google-heading`}
-                className="font-display text-lg font-semibold text-ink"
-              >
-                Google Calendar
-              </h3>
-              <p className="mt-0.5 text-sm text-muted">
-                {google.connected
-                  ? `Connected as ${google.accountEmail ?? "Google account"}`
-                  : "Not connected"}
-              </p>
-              {lastImportLabel ? (
-                <p className="mt-1 text-xs text-faint">
-                  Last import: {lastImportLabel}
+{GOOGLE_CALENDAR_ENABLED ? (
+        <section
+          aria-labelledby={`${uid}-google-heading`}
+          className="overflow-hidden rounded-2xl border border-line/80 bg-surface/70"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-4 border-b border-line px-4 py-4">
+            <div className="flex items-start gap-3">
+              <span className="inline-flex size-10 items-center justify-center rounded-xl bg-sunken text-muted">
+                <IoLogoGoogle className="size-5" aria-hidden />
+              </span>
+              <div>
+                <h3
+                  id={`${uid}-google-heading`}
+                  className="font-display text-lg font-semibold text-ink"
+                >
+                  Google Calendar
+                </h3>
+                <p className="mt-0.5 text-sm text-muted">
+                  {google.connected
+                    ? `Connected as ${google.accountEmail ?? "Google account"}`
+                    : "Not connected"}
                 </p>
-              ) : null}
+                {lastImportLabel ? (
+                  <p className="mt-1 text-xs text-faint">
+                    Last import: {lastImportLabel}
+                  </p>
+                ) : null}
+              </div>
             </div>
+
+            {google.connected ? (
+              <button
+                type="button"
+                onClick={onDisconnectGoogle}
+                className="rounded-lg border border-line bg-surface px-4 py-2 text-sm font-medium text-muted transition-colors hover:bg-sunken focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              >
+                Disconnect
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={onConnectGoogle}
+                disabled={isGoogleConnecting}
+                className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60"
+              >
+                {isGoogleConnecting ? "Waiting for Google…" : "Connect Google"}
+              </button>
+            )}
           </div>
 
           {google.connected ? (
-            <button
-              type="button"
-              onClick={onDisconnectGoogle}
-              className="rounded-lg border border-line bg-surface px-4 py-2 text-sm font-medium text-muted transition-colors hover:bg-sunken focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-            >
-              Disconnect
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={onConnectGoogle}
-              className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-            >
-              Connect Google
-            </button>
-          )}
-        </div>
+            <div className="space-y-5 px-4 py-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                  Calendars to import
+                </p>
+                <ul className="mt-3 space-y-2">
+                  {google.calendars.map((calendar) => (
+                    <li
+                      key={calendar.id}
+                      className="flex items-center gap-3 rounded-xl border border-line bg-sunken/80 px-3 py-2.5"
+                    >
+                      <CalendarColorDot color={calendar.color} />
+                      <Checkbox
+                        size="sm"
+                        isSelected={calendar.enabled}
+                        onChange={(enabled) =>
+                          setCalendarEnabled("google", calendar.id, enabled)
+                        }
+                        label={calendar.name}
+                        className="min-w-0 flex-1"
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
-        {google.connected ? (
-          <div className="space-y-5 px-4 py-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted">
-                Calendars to import
-              </p>
-              <ul className="mt-3 space-y-2">
-                {google.calendars.map((calendar) => (
-                  <li
-                    key={calendar.id}
-                    className="flex items-center gap-3 rounded-xl border border-line bg-sunken/80 px-3 py-2.5"
+              <fieldset className="grid gap-4 border-none p-0 sm:grid-cols-2">
+                <legend className="sr-only">Import date range</legend>
+                <div className="flex flex-col gap-1">
+                  <label
+                    htmlFor={pastId}
+                    className="text-sm font-medium text-muted"
                   >
-                    <CalendarColorDot color={calendar.color} />
-                    <Checkbox
-                      size="sm"
-                      isSelected={calendar.enabled}
-                      onChange={(enabled) =>
-                        setCalendarEnabled("google", calendar.id, enabled)
-                      }
-                      label={calendar.name}
-                      className="min-w-0 flex-1"
-                    />
-                  </li>
-                ))}
-              </ul>
-            </div>
+                    Past months
+                  </label>
+                  <input
+                    id={pastId}
+                    type="number"
+                    min={0}
+                    max={24}
+                    value={importPastMonths}
+                    onChange={(event) =>
+                      setImportRange(
+                        Number(event.target.value),
+                        importFutureMonths,
+                      )
+                    }
+                    className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label
+                    htmlFor={futureId}
+                    className="text-sm font-medium text-muted"
+                  >
+                    Future months
+                  </label>
+                  <input
+                    id={futureId}
+                    type="number"
+                    min={1}
+                    max={36}
+                    value={importFutureMonths}
+                    onChange={(event) =>
+                      setImportRange(
+                        importPastMonths,
+                        Number(event.target.value),
+                      )
+                    }
+                    className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  />
+                </div>
+              </fieldset>
 
-            <fieldset className="grid gap-4 border-none p-0 sm:grid-cols-2">
-              <legend className="sr-only">Import date range</legend>
-              <div className="flex flex-col gap-1">
-                <label
-                  htmlFor={pastId}
-                  className="text-sm font-medium text-muted"
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={onImport}
+                  disabled={isImportingGoogle}
+                  className="inline-flex items-center gap-2 rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60"
                 >
-                  Past months
-                </label>
-                <input
-                  id={pastId}
-                  type="number"
-                  min={0}
-                  max={24}
-                  value={importPastMonths}
-                  onChange={(event) =>
-                    setImportRange(
-                      Number(event.target.value),
-                      importFutureMonths,
-                    )
-                  }
-                  className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                />
+                  <IoCalendarOutline className="size-4" aria-hidden />
+                  {isImportingGoogle ? "Importing…" : "Import events"}
+                </button>
               </div>
-              <div className="flex flex-col gap-1">
-                <label
-                  htmlFor={futureId}
-                  className="text-sm font-medium text-muted"
-                >
-                  Future months
-                </label>
-                <input
-                  id={futureId}
-                  type="number"
-                  min={1}
-                  max={36}
-                  value={importFutureMonths}
-                  onChange={(event) =>
-                    setImportRange(
-                      importPastMonths,
-                      Number(event.target.value),
-                    )
-                  }
-                  className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                />
-              </div>
-            </fieldset>
-
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={onImport}
-                className="inline-flex items-center gap-2 rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-              >
-                <IoCalendarOutline className="size-4" aria-hidden />
-                Import events
-              </button>
             </div>
-          </div>
-        ) : null}
-      </section>*/}
+          ) : null}
+
+          {googleError ? (
+            <p
+              className="border-t border-line px-4 py-3 text-sm text-red-600 dark:text-red-400"
+              role="alert"
+            >
+              {googleError}
+            </p>
+          ) : null}
+        </section>
+      ) : null}
 
       <div aria-live="polite">
         {statusMessage ? (

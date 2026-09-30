@@ -160,6 +160,14 @@ export type ConnectedCalendar = {
   enabled: boolean;
 };
 
+export type GoogleTokens = {
+  accessToken: string;
+  refreshToken: string;
+  /** Epoch ms. */
+  expiresAt: number;
+  scope: string;
+};
+
 // ── Home ─────────────────────────────────────────────────────────────────
 
 export type DayFocusMode = "current-block" | "all-day";
