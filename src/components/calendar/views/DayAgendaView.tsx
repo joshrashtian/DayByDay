@@ -5,6 +5,7 @@ import type { Task } from "@/types";
 import { tasksByDueDateKeyInRange } from "../../../lib/calendarUtils";
 import { TaskDueList } from "./_shared";
 import { FaWeightScale } from "react-icons/fa6";
+import HevyWidget from "@/screens/integrations/HevyWidget";
 
 type DayViewProps = {
   day: DateTime;
@@ -71,7 +72,7 @@ export function DayAgendaView({
         </div>
         <div className="col-span-1 h-48 bg-zinc-200/50 flex flex-col justify-between p-5 rounded-2xl">
           <FaWeightScale className="text-6xl" />
-          <h3 className="text-2xl font-mono font-black">Leg day</h3>
+          <HevyWidget date={day.toJSDate()} />
         </div>
       </div>
       <div
