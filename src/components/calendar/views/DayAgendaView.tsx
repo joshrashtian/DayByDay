@@ -65,15 +65,8 @@ export function DayAgendaView({
           </motion.button>
         ) : null}
       </div>
-      <div className="grid grid-cols-5 gap-4 grid-rows-2">
-        <div className="col-span-1 h-48 bg-zinc-200/50 flex flex-col justify-between p-5 rounded-2xl">
-          <IoGitBranch className="text-6xl" />
-          <h3 className="text-4xl font-mono font-black">5 commits</h3>
-        </div>
-        <div className="col-span-1 h-48 bg-zinc-200/50 flex flex-col justify-between p-5 rounded-2xl">
-          <FaWeightScale className="text-6xl" />
-          <HevyWidget date={day.toJSDate()} />
-        </div>
+      <div className="grid grid-cols-5 h-48 gap-4 grid-rows-2">
+        <HevyWidget date={day.toJSDate()} />
       </div>
       <div
         className="mt-6 max-w-md"
