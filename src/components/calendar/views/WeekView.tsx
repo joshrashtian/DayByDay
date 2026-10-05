@@ -13,6 +13,7 @@ import {
   IoClose,
   IoDocument,
   IoEllipseOutline,
+  IoOpen,
   IoTimeOutline,
 } from "react-icons/io5";
 import type { CalendarTaskRow, CategoryConfig, Task } from "@/types";
@@ -744,9 +745,7 @@ function WeekDayTimeColumn({
   return (
     <div
       className={`relative min-h-0 border-r border-line/80 ${
-        dayIndex % 2 === 0
-          ? "bg-sunken/35"
-          : "bg-surface/55"
+        dayIndex % 2 === 0 ? "bg-sunken/35" : "bg-surface/55"
       }`}
       style={{
         gridRow: `3 / span ${SLOTS_PER_DAY}`,
@@ -939,9 +938,9 @@ export function WeekView({
   const [quickAddAnchor, setQuickAddAnchor] =
     useState<WeekQuickAddAnchor | null>(null);
   const [quickAddTitle, setQuickAddTitle] = useState("");
-  const [quickAddCategory, setQuickAddCategory] = useState<
-    string | undefined
-  >(undefined);
+  const [quickAddCategory, setQuickAddCategory] = useState<string | undefined>(
+    undefined,
+  );
   const editPreviewRange = resolvePreviewRange(editInteraction, editTarget);
   const createPreviewRange = resolveCreatePreviewRange(dragSelection);
   const previewRange = editPreviewRange ?? createPreviewRange;
@@ -1163,9 +1162,7 @@ export function WeekView({
                   ])
                 }
                 className={`sticky top-0 z-30 border-b border-r border-line/80 px-2 py-2 text-center flex flex-col items-center backdrop-blur transition-colors hover:bg-surface/80 ${
-                  dayIndex % 2 === 0
-                    ? "bg-sunken/95"
-                    : "bg-surface/95"
+                  dayIndex % 2 === 0 ? "bg-sunken/95" : "bg-surface/95"
                 }`}
               >
                 <p
@@ -1202,9 +1199,7 @@ export function WeekView({
                 data-calendar-drop="all-day"
                 data-calendar-day={key}
                 className={`border-r border-line/80 p-1.5 ${
-                  dayIndex % 2 === 0
-                    ? "bg-sunken/45"
-                    : "bg-surface/65"
+                  dayIndex % 2 === 0 ? "bg-sunken/45" : "bg-surface/65"
                 }`}
               >
                 <div className="flex min-h-11 flex-col gap-1">
@@ -1386,8 +1381,10 @@ export function WeekView({
         </div>
       </div>
       {quickAddDraft ? (
-        <div
-          className="fixed z-50 w-[min(92vw,420px)] origin-top-left rounded-2xl border border-line/80 bg-surface p-4 shadow-lg -translate-x-1/2 -translate-y-full"
+        <motion.div
+          drag
+          dragMomentum={false}
+          className="fixed z-50 w-[min(92vw,420px)] origin-top-left rounded-2xl border border-line/90 bg-surface/70 backdrop-blur-2xl p-4 shadow-lg -translate-x-1/2 -translate-y-full"
           style={{
             left: quickAddAnchor?.left ?? undefined,
             top: quickAddAnchor?.top ?? undefined,
@@ -1397,13 +1394,13 @@ export function WeekView({
             <p className="flex items-center gap-1.5 text-sm text-muted">
               <IoTimeOutline className="text-base" />
               {quickAddDraft.start.toFormat("EEE")} ·{" "}
-              {quickAddTimeRangeLabel(quickAddDraft.start, quickAddDraft.end)}{" "}
-              · {quickAddDurationLabel(quickAddDraft.start, quickAddDraft.end)}
+              {quickAddTimeRangeLabel(quickAddDraft.start, quickAddDraft.end)} ·{" "}
+              {quickAddDurationLabel(quickAddDraft.start, quickAddDraft.end)}
             </p>
             <button
               type="button"
               onClick={clearQuickAdd}
-              className="rounded-md p-1 text-faint hover:bg-zinc-500/10 hover:text-muted"
+              className="rounded-full p-1 text-faint hover:bg-red-500/10 hover:text-muted"
             >
               <IoClose />
             </button>
@@ -1414,7 +1411,7 @@ export function WeekView({
             value={quickAddTitle}
             onChange={(e) => setQuickAddTitle(e.target.value)}
             placeholder="Task title..."
-            className="mt-3 w-full rounded-lg border border-line-strong/80 bg-surface px-3 py-2.5 text-base font-semibold text-ink outline-none ring-sky-400/40 focus:ring-2"
+            className="mt-3 w-full rounded-xl border border-line-strong/80 bg-surface px-3 py-2.5 text-base font-black text-ink outline-none ring-sky-400/40 focus:ring-2"
           />
           {categoryConfigs.length > 0 ? (
             <div className="mt-3 flex flex-wrap items-center gap-2.5">
@@ -1465,7 +1462,7 @@ export function WeekView({
                 );
                 clearQuickAdd();
               }}
-              className="flex flex-1 flex-row items-center justify-center gap-2 rounded-lg bg-sky-600 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-500 disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex flex-1 flex-row items-center justify-center gap-2 rounded-lg bg-zinc-500 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-zinc-400 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <IoAdd /> Quick Add
             </button>
@@ -1481,10 +1478,11 @@ export function WeekView({
               }}
               className="flex flex-row items-center justify-center gap-2 rounded-lg border border-line-strong/80 bg-surface px-3 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-sunken"
             >
-              <IoDocument /> Editor
+              <IoOpen />
+              Open Editor
             </button>
           </div>
-        </div>
+        </motion.div>
       ) : null}
       <BottomSheet
         open={bottomSheetOpen}

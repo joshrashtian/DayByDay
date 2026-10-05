@@ -149,7 +149,7 @@ create table if not exists public.user_settings (
   -- { lat, lon } — null means "use the device's location"
   weather_coords                jsonb,
 
-  -- { soundEnabled, volume, taskClickSoundId }
+  -- { soundEnabled, volume, taskClickSoundId, taskUncheckSoundId?, taskCreateSoundId? }
   audio_prefs                   jsonb not null default
     '{"soundEnabled":true,"volume":80,"taskClickSoundId":"builtin:happy"}'::jsonb,
 

@@ -23,6 +23,52 @@ export type BuiltinTaskClickSoundId =
   (typeof BUILTIN_TASK_CLICK_SOUNDS)[number]["id"];
 
 export const DEFAULT_TASK_CLICK_SOUND_ID = "builtin:happy";
+export const DEFAULT_TASK_UNCHECK_SOUND_ID = "builtin:chew";
+export const DEFAULT_TASK_CREATE_SOUND_ID = "builtin:piano";
+
+/** Sound id meaning "stay silent for this event". */
+export const NO_SOUND_ID = "none";
+
+export type TaskSoundEvent = "complete" | "uncheck" | "create";
+
+type TaskSoundPrefKey =
+  | "taskClickSoundId"
+  | "taskUncheckSoundId"
+  | "taskCreateSoundId";
+
+export const TASK_SOUND_EVENTS: readonly {
+  event: TaskSoundEvent;
+  prefKey: TaskSoundPrefKey;
+  label: string;
+  description: string;
+  defaultSoundId: string;
+}[] = [
+  {
+    event: "complete",
+    prefKey: "taskClickSoundId",
+    label: "Complete task",
+    description: "Plays when you check off a task.",
+    defaultSoundId: DEFAULT_TASK_CLICK_SOUND_ID,
+  },
+  {
+    event: "uncheck",
+    prefKey: "taskUncheckSoundId",
+    label: "Uncheck task",
+    description: "Plays when you mark a completed task as not done.",
+    defaultSoundId: DEFAULT_TASK_UNCHECK_SOUND_ID,
+  },
+  {
+    event: "create",
+    prefKey: "taskCreateSoundId",
+    label: "Create task",
+    description: "Plays when a new task is added.",
+    defaultSoundId: DEFAULT_TASK_CREATE_SOUND_ID,
+  },
+];
+
+function soundPrefKey(event: TaskSoundEvent): TaskSoundPrefKey {
+  return TASK_SOUND_EVENTS.find((e) => e.event === event)!.prefKey;
+}
 
 export const MAX_CUSTOM_SOUND_BYTES = 512 * 1024;
 
@@ -49,6 +95,7 @@ export function isValidTaskClickSoundId(
   soundId: string,
   customSounds: CustomSound[],
 ): boolean {
+  if (soundId === NO_SOUND_ID) return true;
   if (soundId.startsWith("builtin:")) {
     const builtinId = soundId.slice("builtin:".length);
     return BUILTIN_TASK_CLICK_SOUNDS.some((sound) => sound.id === builtinId);
@@ -68,16 +115,23 @@ export function normalizeAudioPrefs(
     typeof prefs.volume === "number" && Number.isFinite(prefs.volume)
       ? Math.min(100, Math.max(0, Math.round(prefs.volume)))
       : 80;
-  const taskClickSoundId =
-    prefs.taskClickSoundId &&
-    isValidTaskClickSoundId(prefs.taskClickSoundId, customSounds)
-      ? prefs.taskClickSoundId
-      : DEFAULT_TASK_CLICK_SOUND_ID;
+  const pick = (soundId: string | undefined, fallback: string) =>
+    soundId && isValidTaskClickSoundId(soundId, customSounds)
+      ? soundId
+      : fallback;
 
   return {
     soundEnabled: prefs.soundEnabled ?? true,
     volume,
-    taskClickSoundId,
+    taskClickSoundId: pick(prefs.taskClickSoundId, DEFAULT_TASK_CLICK_SOUND_ID),
+    taskUncheckSoundId: pick(
+      prefs.taskUncheckSoundId,
+      DEFAULT_TASK_UNCHECK_SOUND_ID,
+    ),
+    taskCreateSoundId: pick(
+      prefs.taskCreateSoundId,
+      DEFAULT_TASK_CREATE_SOUND_ID,
+    ),
   };
 }
 
@@ -107,6 +161,7 @@ export function getTaskClickSoundLabel(
   soundId: string,
   customSounds: CustomSound[],
 ): string {
+  if (soundId === NO_SOUND_ID) return "None";
   if (soundId.startsWith("builtin:")) {
     const builtinId = soundId.slice("builtin:".length);
     return (
@@ -150,20 +205,9 @@ function playSoundAtVolume(soundId: string, src: string, volume: number): void {
   });
 }
 
-export function playTaskClickSound(
-  soundId = useSettingsStore.getState().audioPrefs.taskClickSoundId,
-): void {
-  const { soundEnabled, volume, customSounds } = {
-    ...useSettingsStore.getState().audioPrefs,
-    customSounds: useSettingsStore.getState().customSounds,
-  };
-
-  if (!soundEnabled) return;
-
-  const src = resolveTaskClickSoundSrc(soundId, customSounds);
-  if (!src) return;
-
-  playSoundAtVolume(soundId, src, volume);
+export function playTaskSound(event: TaskSoundEvent): void {
+  const { audioPrefs } = useSettingsStore.getState();
+  previewTaskClickSound(audioPrefs[soundPrefKey(event)]);
 }
 
 export function previewTaskClickSound(

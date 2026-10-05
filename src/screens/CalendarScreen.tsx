@@ -1,4 +1,11 @@
-import { useCallback, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { AnimatePresence, motion } from "motion/react";
 import {
   getLocalTimeZone,
@@ -15,7 +22,12 @@ import {
   useLocation,
   useSearchParams,
 } from "react-router-dom";
-import { IoGrid } from "react-icons/io5";
+import {
+  IoChevronBack,
+  IoChevronDown,
+  IoChevronForward,
+  IoGrid,
+} from "react-icons/io5";
 import {
   DayAgendaView,
   MonthGridView,
@@ -30,6 +42,7 @@ import {
 } from "../lib/taskDates";
 import { usePopup } from "../providers/PopupProvider";
 import { useCalendarTaskDrop } from "../hooks/useCalendarTaskDrop";
+import { useResizeObserver } from "../hooks/use-resize-observer";
 import { useTasksStore } from "../stores/tasksStore";
 import { useSettingsStore } from "../stores/settingsStore";
 import { DatePicker } from "../components/application/date-picker/date-picker";
@@ -38,13 +51,25 @@ import { CALENDAR_BLOCKS_PATH, CALENDAR_PATH } from "../lib/calendarRoutes";
 
 type CalendarMode = "month" | "week" | "day" | "three" | "custom";
 
-const modes: { id: CalendarMode; label: string }[] = [
+type ModeOption = { id: CalendarMode; label: string };
+
+const primaryModes: ModeOption[] = [
   { id: "month", label: "Grid" },
   { id: "week", label: "Week" },
   { id: "day", label: "Day" },
+];
+
+// Less common views live behind a dropdown so the switcher stays compact.
+const moreModes: ModeOption[] = [
   { id: "three", label: "3 days" },
   { id: "custom", label: "Custom" },
 ];
+
+const allModes = [...primaryModes, ...moreModes];
+
+// Below this header width the title, switcher and nav controls collide, so
+// the whole switcher collapses into a single dropdown.
+const COMPACT_HEADER_WIDTH = 960;
 
 export default function CalendarScreen() {
   return (
@@ -83,6 +108,14 @@ function CalendarMainPage() {
   const categoryConfigs = useSettingsStore((s) => s.categoryConfigs);
 
   const [mode, setMode] = useState<CalendarMode>("week");
+  const headerRef = useRef<HTMLDivElement>(null);
+  const [compactHeader, setCompactHeader] = useState(false);
+  const measureHeader = useCallback(() => {
+    const width = headerRef.current?.clientWidth;
+    if (width) setCompactHeader(width < COMPACT_HEADER_WIDTH);
+  }, []);
+  useLayoutEffect(measureHeader, [measureHeader]);
+  useResizeObserver({ ref: headerRef, onResize: measureHeader });
   const focus = useMemo(() => {
     const day = searchParams.get("day");
     const parsed = day
@@ -237,7 +270,10 @@ function CalendarMainPage() {
 
       <div className="relative z-10 flex h-full w-full min-h-0 flex-col">
         {/* Calendar header */}
-        <motion.div className="flex shrink-0 items-center justify-between gap-3 border-b border-line/60 px-4 py-2.5">
+        <motion.div
+          ref={headerRef}
+          className="relative z-40 flex shrink-0 items-center justify-between gap-3 border-b border-line/60 px-4 py-2.5"
+        >
           {/* Left: title */}
           <AnimatePresence mode="wait">
             <motion.p
@@ -269,22 +305,33 @@ function CalendarMainPage() {
               ))}
             </motion.p>
           </AnimatePresence>
-          {/* Center: mode switcher */}
-          <div className="flex absolute left-1/2 -translate-x-1/2 items-center gap-0.5 rounded-xl border border-line/80 bg-surface/60 p-1 backdrop-blur-sm">
-            {modes.map(({ id, label }) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setMode(id)}
-                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-                  mode === id
-                    ? "bg-ink text-white shadow-sm"
-                    : "text-muted hover:text-ink"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
+
+          <div className="flex absolute left-1/2 -translate-x-1/2 items-center gap-0.5 rounded-full  bg-surface/60 p-1 backdrop-blur-sm">
+            {!compactHeader &&
+              primaryModes.map(({ id, label }) => (
+                <motion.button
+                  key={id}
+                  type="button"
+                  whileHover={{ scale: 1.05 }}
+                  onClick={() => setMode(id)}
+                  className={`relative rounded-full px-3  py-1.5 text-xs font-black transition-colors ${
+                    mode === id ? "text-white" : "text-muted hover:text-ink"
+                  }`}
+                >
+                  {mode === id && <ModePill />}
+                  <span className="relative z-10">{label}</span>
+                </motion.button>
+              ))}
+            {compactHeader ? (
+              <ModesMenu options={allModes} mode={mode} onSelect={setMode} />
+            ) : (
+              <ModesMenu
+                options={moreModes}
+                mode={mode}
+                onSelect={setMode}
+                fallbackLabel="More"
+              />
+            )}
             {mode === "custom" && (
               <label className="ml-1 flex items-center gap-1.5 rounded-lg border border-line/80 bg-surface/60 px-2 py-1 text-xs font-semibold text-muted">
                 Days
@@ -334,7 +381,7 @@ function CalendarMainPage() {
                 className="rounded-full bg-sunken px-3 py-1.5 text-sm font-semibold text-muted transition-colors hover:bg-sunken"
                 aria-label="Previous"
               >
-                ←
+                <IoChevronBack />
               </motion.button>
               <motion.button
                 type="button"
@@ -351,7 +398,7 @@ function CalendarMainPage() {
                 className="rounded-full bg-sunken px-3 py-1.5 text-sm font-semibold text-muted transition-colors hover:bg-sunken"
                 aria-label="Next"
               >
-                →
+                <IoChevronForward />
               </motion.button>
             </div>
           </div>
@@ -456,5 +503,101 @@ function CalendarMainPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+function ModePill() {
+  return (
+    <motion.span
+      layoutId="mode-pill"
+      className="absolute inset-0 rounded-full bg-ink shadow-sm"
+      transition={{ type: "spring", stiffness: 500, damping: 35 }}
+    />
+  );
+}
+
+function ModesMenu({
+  options,
+  mode,
+  onSelect,
+  fallbackLabel,
+}: {
+  options: ModeOption[];
+  mode: CalendarMode;
+  onSelect: (mode: CalendarMode) => void;
+  fallbackLabel?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const active = options.find((m) => m.id === mode);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div ref={rootRef} className="relative">
+      <motion.button
+        type="button"
+        whileHover={{ scale: 1.05 }}
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className={`relative flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-black transition-colors ${
+          active ? "text-white" : "text-muted hover:text-ink"
+        }`}
+      >
+        {active && <ModePill />}
+        <span className="relative z-10">{active?.label ?? fallbackLabel}</span>
+        <IoChevronDown
+          className={`relative z-10 h-3 w-3 transition-transform ${open ? "rotate-180" : ""}`}
+          aria-hidden
+        />
+      </motion.button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            role="menu"
+            initial={{ opacity: 0, y: -4, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.97 }}
+            transition={{ duration: 0.12 }}
+            className="absolute right-0 top-full z-50 mt-2 min-w-32 origin-top-right rounded-xl border border-line/80 bg-surface p-1 shadow-lg"
+          >
+            {options.map(({ id, label }) => (
+              <button
+                key={id}
+                type="button"
+                role="menuitemradio"
+                aria-checked={mode === id}
+                onClick={() => {
+                  onSelect(id);
+                  setOpen(false);
+                }}
+                className={`flex w-full items-center rounded-lg px-3 py-1.5 text-left text-xs font-bold transition-colors ${
+                  mode === id
+                    ? "bg-sunken text-ink"
+                    : "text-muted hover:bg-sunken hover:text-ink"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }

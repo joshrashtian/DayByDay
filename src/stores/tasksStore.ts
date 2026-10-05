@@ -9,7 +9,7 @@ import {
 import { normalizeTaskBlock } from "../lib/taskBlocks";
 import { advanceRecurrenceDate } from "../lib/taskDates";
 import { isIcsTask } from "../lib/icsTasks";
-import { playTaskClickSound } from "../lib/taskClickSounds";
+import { playTaskSound } from "../lib/taskClickSounds";
 
 import { migrateLocalStorageKey } from "@/lib/storageMigration";
 
@@ -259,6 +259,7 @@ export const useTasksStore = create<TasksState>()(
       addTask: (payload) => {
         const trimmed = payload.title.trim();
         if (!trimmed) return;
+        playTaskSound("create");
         const now = new Date();
         const cat = payload.category?.trim() || undefined;
         const classLocation =
@@ -420,8 +421,8 @@ export const useTasksStore = create<TasksState>()(
 
       toggleTask: (id) => {
         const task = get().tasks.find((t) => t.id === id);
-        if (task && !isIcsTask(task) && !task.done) {
-          playTaskClickSound();
+        if (task && !isIcsTask(task)) {
+          playTaskSound(task.done ? "uncheck" : "complete");
         }
         set((s) => {
           const task = s.tasks.find((t) => t.id === id);

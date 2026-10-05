@@ -6,6 +6,7 @@ import { tasksByDueDateKeyInRange } from "../../../lib/calendarUtils";
 import { TaskDueList } from "./_shared";
 import { FaWeightScale } from "react-icons/fa6";
 import HevyWidget from "@/screens/integrations/HevyWidget";
+import DayWidgets from "./DayWidgets";
 
 type DayViewProps = {
   day: DateTime;
@@ -65,9 +66,7 @@ export function DayAgendaView({
           </motion.button>
         ) : null}
       </div>
-      <div className="grid grid-cols-5 h-48 gap-4 grid-rows-2">
-        <HevyWidget date={day.toJSDate()} />
-      </div>
+      <DayWidgets day={day} />
       <div
         className="mt-6 max-w-md"
         data-calendar-drop="all-day"

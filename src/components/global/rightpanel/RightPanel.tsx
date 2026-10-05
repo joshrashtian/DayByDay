@@ -195,7 +195,7 @@ export function RightPanel({ onWidthChange }: RightPanelProps) {
               key="right-panel"
               role="complementary"
               aria-label="Right panel"
-              className={`relative flex h-full flex-col overflow-hidden px-3 pt-9 pb-3 bg-zinc-200/80 dark:bg-zinc-950 ${sidebarTokens.surface} border-l border-line`}
+              className={`relative flex h-full flex-col overflow-hidden px-3 pt-9 pb-3 bg-zinc-200 dark:bg-zinc-950 ${sidebarTokens.surface} border-l border-line`}
               style={{ width: resolvedWidth }}
               initial={{ x: 24 }}
               animate={{ x: 0 }}

@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { getVersion } from "@tauri-apps/api/app";
-import { IoSettings, IoChevronBackOutline } from "react-icons/io5";
+import { IoSettings } from "react-icons/io5";
 import { WeatherSection } from "./settings/WeatherSection";
 import { CategoriesSection } from "./settings/CategoriesSection";
 import { ConnectedCalendarsSection } from "./settings/ConnectedCalendarsSection";
@@ -11,7 +11,11 @@ import { SpotifySection } from "./settings/SpotifySection";
 import { AppearanceSection } from "./settings/AppearanceSection";
 import HomeSection from "./settings/HomeSection";
 import { SettingsProvider, useSettings } from "@/providers/SettingsProvider";
-import { DEFAULT_SECTION, SECTIONS } from "./settings/sections";
+import {
+  DEFAULT_SECTION,
+  GROUPED_SECTIONS,
+  SECTIONS,
+} from "./settings/sections";
 import type { SettingsSection } from "./settings/sections";
 
 export const SettingsScreen = ({ modal = false }: { modal?: boolean }) => {
@@ -125,59 +129,67 @@ const SettingsScreenContent = ({ modal = false }: { modal?: boolean }) => {
       </nav>
 
       <div className="flex min-h-0 flex-1">
-        {/*  <nav
+        <nav
           aria-label="Settings sections"
-          className="hidden w-52 shrink-0 flex-col border-r border-line bg-sunken/50 p-3 md:flex"
+          className="hidden w-52 shrink-0 flex-col font-mono border-r border-line bg-sunken/50 p-3 md:flex"
         >
-          <div className="flex flex-col gap-0.5">
-            {SECTIONS.map((section) => {
-              const isActive = activeSection === section.id;
-              return (
-                <button
-                  key={section.id}
-                  type="button"
-                  onClick={() => navigate(section.id)}
-                  aria-current={isActive ? "true" : undefined}
-                  className={`group relative flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
-                    isActive
-                      ? "bg-surface text-ink shadow-sm"
-                      : "text-muted hover:bg-surface/60 hover:text-ink"
-                  }`}
-                >
-                  <span
-                    className={`absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r transition-all ${
-                      isActive ? "bg-accent opacity-100" : "opacity-0"
-                    }`}
-                    aria-hidden="true"
-                  />
-                  <span
-                    className={`text-lg transition-colors ${
-                      isActive
-                        ? "text-accent"
-                        : "text-faint group-hover:text-muted"
-                    }`}
-                  >
-                    {section.icon}
-                  </span>
-                  {section.label}
-                </button>
-              );
-            })}
+          <div className="flex flex-col gap-4">
+            {GROUPED_SECTIONS.map((group) => (
+              <div
+                key={group.id}
+                role="group"
+                aria-label={group.label ?? undefined}
+                className="flex flex-col gap-0.5"
+              >
+                {group.label && (
+                  <h2 className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-faint">
+                    {group.label}
+                  </h2>
+                )}
+                {group.sections.map((section) => {
+                  const isActive = activeSection === section.id;
+                  return (
+                    <button
+                      key={section.id}
+                      type="button"
+                      onClick={() => navigate(section.id)}
+                      aria-current={isActive ? "true" : undefined}
+                      className={`group relative flex items-center gap-2.5  px-4.5 py-2.5 text-left text-sm font-medium transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+                        isActive
+                          ? "bg-zinc-200/20 text-ink "
+                          : "text-muted hover:bg-surface/60 hover:text-ink"
+                      }`}
+                    >
+                      <motion.span
+                        className={`absolute left-2 top-1/2 h-0.75 w-0.75 -translate-y-1/2 rounded-full  ${
+                          isActive ? "bg-accent opacity-100" : "opacity-0"
+                          }`}
+                        key={Math.random() + section.id}
+                        aria-hidden="true"
+                        initial={{ opacity: 0, x: -100 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -100 }}
+                        transition={{ duration: 0.3, type: "spring" }}
+                      />
+                      <span
+                        className={`text-lg transition-colors ${
+                          isActive
+                            ? "text-accent"
+                            : "text-faint group-hover:text-muted"
+                        }`}
+                      >
+                        {section.icon}
+                      </span>
+                      {section.label}
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
           </div>
         </nav>
-*/}
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-2xl px-6 py-6">
-            {activeSection !== "home" && (
-              <button
-                type="button"
-                onClick={() => navigate("home")}
-                className="mb-4 inline-flex items-center gap-1 rounded-lg px-2 py-1 -ml-2 text-sm font-medium text-muted transition-colors hover:bg-sunken hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-              >
-                <IoChevronBackOutline aria-hidden="true" />
-                Back to Settings
-              </button>
-            )}
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeSection}

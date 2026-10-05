@@ -11,6 +11,8 @@ import type {
 } from "@/types";
 import {
   DEFAULT_TASK_CLICK_SOUND_ID,
+  DEFAULT_TASK_CREATE_SOUND_ID,
+  DEFAULT_TASK_UNCHECK_SOUND_ID,
   customSoundId,
   evictTaskClickSoundFromCache,
   normalizeAudioPrefs,
@@ -87,6 +89,8 @@ const DEFAULT_AUDIO_PREFS: AudioPrefs = {
   soundEnabled: true,
   volume: 80,
   taskClickSoundId: DEFAULT_TASK_CLICK_SOUND_ID,
+  taskUncheckSoundId: DEFAULT_TASK_UNCHECK_SOUND_ID,
+  taskCreateSoundId: DEFAULT_TASK_CREATE_SOUND_ID,
 };
 
 function clampAudioVolume(volume: number): number {

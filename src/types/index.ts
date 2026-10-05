@@ -175,7 +175,12 @@ export type DayFocusMode = "current-block" | "all-day";
 export type AudioPrefs = {
   soundEnabled: boolean;
   volume: number;
+  /** Sound for checking off a task. */
   taskClickSoundId: string;
+  /** Sound for un-checking a completed task. */
+  taskUncheckSoundId: string;
+  /** Sound for creating a task. */
+  taskCreateSoundId: string;
 };
 
 export type CustomSound = {

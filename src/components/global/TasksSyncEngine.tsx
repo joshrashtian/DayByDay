@@ -5,12 +5,6 @@ import { syncNow } from "@/lib/tasksSync";
 
 const SYNC_INTERVAL_MS = 30_000;
 
-/**
- * Background task sync — no UI. Runs syncNow() on sign-in, on an interval,
- * on window focus, when the browser comes back online, and as soon as a task
- * is created so it reaches the API without waiting for the interval. Mirrors the
- * always-on global pattern used by PomodoroTicker / PomodoroLinkedTaskSync.
- */
 export function TasksSyncEngine() {
   const authStatus = useAuthStore((s) => s.status);
 

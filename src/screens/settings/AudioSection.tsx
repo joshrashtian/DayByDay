@@ -8,6 +8,8 @@ import {
 import { Checkbox } from "@/components/base/checkbox/checkbox";
 import {
   BUILTIN_TASK_CLICK_SOUNDS,
+  NO_SOUND_ID,
+  TASK_SOUND_EVENTS,
   builtinSoundId,
   createCustomSoundFromFile,
   customSoundId,
@@ -30,13 +32,8 @@ export function AudioSection() {
   const [isImporting, setIsImporting] = useState(false);
 
   const volumeId = `${uid}-volume`;
-  const soundId = `${uid}-sound`;
   const fileInputId = `${uid}-sound-file`;
   const soundsDisabled = !audioPrefs.soundEnabled;
-  const selectedLabel = getTaskClickSoundLabel(
-    audioPrefs.taskClickSoundId,
-    customSounds,
-  );
 
   const onChooseSoundFile = () => {
     setImportError(null);
@@ -57,7 +54,9 @@ export function AudioSection() {
     try {
       const sound = await createCustomSoundFromFile(file);
       addCustomSound(sound);
-      setImportMessage(`Imported "${sound.name}" and selected it for task clicks.`);
+      setImportMessage(
+        `Imported "${sound.name}" and selected it for completing tasks.`,
+      );
     } catch (error) {
       setImportError(
         error instanceof Error ? error.message : "Could not import that file.",
@@ -69,12 +68,26 @@ export function AudioSection() {
 
   return (
     <div className="space-y-5">
+      <div className="flex items-start justify-between gap-4 rounded-xl border border-line bg-sunken/80 px-3 py-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium text-ink">Enable sound</p>
+          <p className="mt-0.5 text-sm text-muted">
+            Turn off to silence all task sounds.
+          </p>
+        </div>
+        <Checkbox
+          size="sm"
+          isSelected={audioPrefs.soundEnabled}
+          onChange={(enabled) =>
+            setAudioPrefs((prev) => ({ ...prev, soundEnabled: enabled }))
+          }
+          aria-label="Enable task sounds"
+        />
+      </div>
       <div>
-        <h2 className="font-display text-2xl font-semibold text-ink">
-          Audio
-        </h2>
+        <h2 className="font-display text-2xl font-semibold text-ink">Audio</h2>
         <p className="mt-1 text-sm text-muted">
-          Pick a click sound for tasks, or import your own.
+          Sounds for completing, unchecking, and creating tasks.
         </p>
       </div>
 
@@ -89,89 +102,75 @@ export function AudioSection() {
           </span>
           <div>
             <h3 className="font-display text-lg font-semibold text-ink">
-              Task click sound
+              Task Sounds
             </h3>
             <p className="mt-0.5 text-sm text-muted">
               {audioPrefs.soundEnabled
-                ? `${selectedLabel} · ${audioPrefs.volume}% volume`
+                ? `${audioPrefs.volume}% volume`
                 : "Muted"}
             </p>
           </div>
         </div>
 
         <div className="space-y-4 px-4 py-4">
-          <div className="flex items-start justify-between gap-4 rounded-xl border border-line bg-sunken/80 px-3 py-3">
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-ink">
-                Enable sound
-              </p>
-              <p className="mt-0.5 text-sm text-muted">
-                Turn off to silence task clicks.
-              </p>
-            </div>
-            <Checkbox
-              size="sm"
-              isSelected={audioPrefs.soundEnabled}
-              onChange={(enabled) =>
-                setAudioPrefs((prev) => ({ ...prev, soundEnabled: enabled }))
-              }
-              aria-label="Enable task click sound"
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label
-              htmlFor={soundId}
-              className="text-sm font-medium text-muted"
-            >
-              Sound
-            </label>
-            <div className="flex flex-wrap gap-2">
-              <select
-                id={soundId}
-                value={audioPrefs.taskClickSoundId}
-                disabled={soundsDisabled}
-                onChange={(event) =>
-                  setAudioPrefs((prev) => ({
-                    ...prev,
-                    taskClickSoundId: event.target.value,
-                  }))
-                }
-                className="min-w-0 flex-1 rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none transition-shadow focus:ring-2 focus:ring-accent disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <optgroup label="Built-in">
-                  {BUILTIN_TASK_CLICK_SOUNDS.map((sound) => (
-                    <option
-                      key={sound.id}
-                      value={builtinSoundId(sound.id)}
-                    >
-                      {sound.label}
-                    </option>
-                  ))}
-                </optgroup>
-                {customSounds.length > 0 ? (
-                  <optgroup label="Imported">
-                    {customSounds.map((sound) => (
-                      <option
-                        key={sound.id}
-                        value={customSoundId(sound.id)}
-                      >
-                        {sound.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                ) : null}
-              </select>
-              <button
-                type="button"
-                onClick={() => previewTaskClickSound()}
-                disabled={soundsDisabled}
-                className="rounded-lg border border-line bg-surface px-4 py-2 text-sm font-medium text-muted transition-colors hover:bg-sunken focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Preview
-              </button>
-            </div>
-          </div>
+          {TASK_SOUND_EVENTS.map(({ event, prefKey, label, description }) => {
+            const selectId = `${uid}-sound-${event}`;
+            const selected = audioPrefs[prefKey];
+            return (
+              <div key={event} className="flex flex-col gap-2">
+                <div>
+                  <label
+                    htmlFor={selectId}
+                    className="text-sm font-medium text-ink"
+                  >
+                    {label}
+                  </label>
+                  <p className="text-xs text-muted">{description}</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <select
+                    id={selectId}
+                    value={selected}
+                    disabled={soundsDisabled}
+                    onChange={(event) =>
+                      setAudioPrefs((prev) => ({
+                        ...prev,
+                        [prefKey]: event.target.value,
+                      }))
+                    }
+                    className="min-w-0 flex-1 rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none transition-shadow focus:ring-2 focus:ring-accent disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value={NO_SOUND_ID}>None</option>
+                    <optgroup label="Built-in">
+                      {BUILTIN_TASK_CLICK_SOUNDS.map((sound) => (
+                        <option key={sound.id} value={builtinSoundId(sound.id)}>
+                          {sound.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                    {customSounds.length > 0 ? (
+                      <optgroup label="Imported">
+                        {customSounds.map((sound) => (
+                          <option key={sound.id} value={customSoundId(sound.id)}>
+                            {sound.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ) : null}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => previewTaskClickSound(selected)}
+                    disabled={soundsDisabled || selected === NO_SOUND_ID}
+                    aria-label={`Preview ${getTaskClickSoundLabel(selected, customSounds)} for ${label.toLowerCase()}`}
+                    className="rounded-lg border border-line bg-surface px-4 py-2 text-sm font-medium text-muted transition-colors hover:bg-sunken focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Preview
+                  </button>
+                </div>
+              </div>
+            );
+          })}
 
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between gap-3">
@@ -250,7 +249,9 @@ export function AudioSection() {
             <ul className="space-y-2">
               {customSounds.map((sound) => {
                 const id = customSoundId(sound.id);
-                const isSelected = audioPrefs.taskClickSoundId === id;
+                const usedFor = TASK_SOUND_EVENTS.filter(
+                  ({ prefKey }) => audioPrefs[prefKey] === id,
+                ).map(({ label }) => label);
                 return (
                   <li
                     key={sound.id}
@@ -261,7 +262,9 @@ export function AudioSection() {
                         {sound.name}
                       </p>
                       <p className="text-xs text-muted">
-                        {isSelected ? "Selected for task clicks" : "Imported sound"}
+                        {usedFor.length > 0
+                          ? `Used for: ${usedFor.join(", ")}`
+                          : "Imported sound"}
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -273,20 +276,6 @@ export function AudioSection() {
                       >
                         Preview
                       </button>
-                      {!isSelected ? (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setAudioPrefs((prev) => ({
-                              ...prev,
-                              taskClickSoundId: id,
-                            }))
-                          }
-                          className="rounded-lg border border-line bg-surface px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:bg-sunken"
-                        >
-                          Use
-                        </button>
-                      ) : null}
                       <button
                         type="button"
                         onClick={() => removeCustomSound(sound.id)}
@@ -301,14 +290,15 @@ export function AudioSection() {
               })}
             </ul>
           ) : (
-            <p className="text-sm text-muted">
-              No imported sounds yet.
-            </p>
+            <p className="text-sm text-muted">No imported sounds yet.</p>
           )}
 
           <div aria-live="polite">
             {importError ? (
-              <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+              <p
+                className="text-sm text-red-600 dark:text-red-400"
+                role="alert"
+              >
                 {importError}
               </p>
             ) : null}
