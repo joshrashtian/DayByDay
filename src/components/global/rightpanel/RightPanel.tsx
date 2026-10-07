@@ -26,6 +26,7 @@ import { TasksPanel } from "./TasksPanel";
 import { SpotifyListeningHistory } from "./SpotifyListeningHistory";
 import { SPOTIFY_ENABLED } from "@/lib/featureFlags";
 import { ProfilePanel } from "@/components/global/rightpanel/ProfilePanel";
+import { TaskCreatorPanel } from "./TaskCreatorPanel";
 
 // ─── Panel tabs ───────────────────────────────────────────────────────────────
 // Add new tabs here. Each entry is an icon in the strip plus the body it shows.
@@ -77,6 +78,11 @@ const EDGE_SWIPE_ZONE_WIDTH = 28;
 type RightPanelProps = {
   /** Reports how much horizontal room the panel claims in the layout. */
   onWidthChange?: (width: number) => void;
+  /**
+   * Reports how much of the window's right edge the panel covers, in both
+   * modes, so fixed bottom-right chrome (Pomodoro dock, …) can sit beside it.
+   */
+  onCoverWidthChange?: (width: number) => void;
 };
 
 /**
@@ -84,8 +90,12 @@ type RightPanelProps = {
  * swipe mechanics, mirrored to the right edge. Content is a strip of tabs
  * (`PANEL_TABS`) with the active tab's body filling the rest.
  */
-export function RightPanel({ onWidthChange }: RightPanelProps) {
-  const { isOpen, openPanel, closePanel } = useRightPanel();
+export function RightPanel({
+  onWidthChange,
+  onCoverWidthChange,
+}: RightPanelProps) {
+  const { isOpen, openPanel, closePanel, taskCreator, closeTaskCreator } =
+    useRightPanel();
   const storedWidth = useSettingsStore((s) => s.rightPanel.width);
   const setRightPanel = useSettingsStore((s) => s.setRightPanel);
 
@@ -128,11 +138,16 @@ export function RightPanel({ onWidthChange }: RightPanelProps) {
   useEffect(() => {
     if (!isOpen) return;
     const onEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") closePanel();
+      if (event.key !== "Escape") return;
+      // A select popover inside the creator handles its own Escape.
+      if (event.defaultPrevented) return;
+      // Backs out of the creator first, then closes the panel.
+      if (taskCreator) closeTaskCreator();
+      else closePanel();
     };
     window.addEventListener("keydown", onEscape);
     return () => window.removeEventListener("keydown", onEscape);
-  }, [isOpen, closePanel]);
+  }, [isOpen, closePanel, taskCreator, closeTaskCreator]);
 
   useEffect(() => {
     if (!isResizing) return;
@@ -169,6 +184,11 @@ export function RightPanel({ onWidthChange }: RightPanelProps) {
     onWidthChange?.(layoutOffset);
   }, [layoutOffset, onWidthChange]);
 
+  const coverWidth = isOpen ? resolvedWidth : 0;
+  useEffect(() => {
+    onCoverWidthChange?.(coverWidth);
+  }, [coverWidth, onCoverWidthChange]);
+
   return (
     <>
       <AnimatePresence>
@@ -203,6 +223,12 @@ export function RightPanel({ onWidthChange }: RightPanelProps) {
               transition={{ duration: 0.16, ease: "easeOut" }}
               onPointerDown={(event) => {
                 if (isResizing) return;
+                // Drag-selecting text in a field must not swipe the panel shut.
+                if (
+                  event.target instanceof Element &&
+                  event.target.closest("input, textarea, select")
+                )
+                  return;
                 setSwipeStartX(event.clientX);
               }}
               onPointerMove={(event) => {
@@ -236,12 +262,15 @@ export function RightPanel({ onWidthChange }: RightPanelProps) {
                 className="flex shrink-0 items-center gap-1 px-1"
               >
                 {PANEL_TABS.map((tab) => {
-                  const isActive = tab.id === activeTab?.id;
+                  const isActive = !taskCreator && tab.id === activeTab?.id;
                   return (
                     <button
                       key={tab.id}
                       type="button"
-                      onClick={() => setActiveTabId(tab.id)}
+                      onClick={() => {
+                        closeTaskCreator();
+                        setActiveTabId(tab.id);
+                      }}
                       aria-label={tab.label}
                       aria-pressed={isActive}
                       title={tab.label}
@@ -269,9 +298,16 @@ export function RightPanel({ onWidthChange }: RightPanelProps) {
                 className={`my-2 mx-1 shrink-0 border-t ${sidebarTokens.divider}`}
               />
 
-              {/* Body — the active tab's content */}
+              {/* Body — the task creator when one is open, else the active tab */}
               <section className="flex min-h-0 flex-1 flex-col overflow-y-auto px-1">
-                {activeTab ? <activeTab.Component /> : null}
+                {taskCreator ? (
+                  <TaskCreatorPanel
+                    request={taskCreator}
+                    onClose={closeTaskCreator}
+                  />
+                ) : activeTab ? (
+                  <activeTab.Component />
+                ) : null}
               </section>
 
               {layoutMode === "docked" ? (

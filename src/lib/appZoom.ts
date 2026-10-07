@@ -112,7 +112,10 @@ export function applyAppZoomToDocument(zoom: number): void {
         html.setAttribute("data-app-zoom-active", "");
       }
     })
-    .catch(() => {
+    .catch((error) => {
+      // CSS zoom misplaces portaled popovers, so this fallback should be rare;
+      // a denied `core:webview:allow-set-webview-zoom` permission lands here.
+      console.warn("Native webview zoom failed; falling back to CSS zoom", error);
       applyCssZoom(z);
     });
 }

@@ -12,6 +12,7 @@ import {
   useCalendarIntegrationsStore,
 } from "@/stores/calendarIntegrationsStore";
 import { useTasksStore } from "@/stores/tasksStore";
+import Container from "@/components/settings/Container";
 
 function CalendarColorDot({ color }: { color?: string }) {
   return (
@@ -189,30 +190,11 @@ export function ConnectedCalendarsSection() {
         </p>
       </div>
 
-      <div
-        className="rounded-xl border border-accent bg-accent-soft p-3 text-sm text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200"
-        role="note"
-      >
-        One-way import only. ICS events stay locked so schedules match the
-        source file — re-import to refresh, or remove imports to clear them.
-      </div>
-
-      <section
-        aria-labelledby={`${uid}-ics-heading`}
-        className="overflow-hidden rounded-2xl border border-line/80 bg-surface/70"
-      >
-        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-line px-4 py-4">
-          <div className="flex items-start gap-3">
-            <span className="inline-flex size-10 items-center justify-center rounded-xl bg-teal-500/10 text-teal-700 dark:bg-teal-500/15 dark:text-teal-200">
-              <IoDocumentTextOutline className="size-5" aria-hidden />
-            </span>
+      <Container>
+        <Container.Header heading="ICS File Import" />
+        <Container.Body className="p-3">
             <div>
-              <h3
-                id={`${uid}-ics-heading`}
-                className="font-display text-lg font-semibold text-ink"
-              >
-                ICS file import
-              </h3>
+
               <p className="mt-0.5 text-sm text-muted">
                 {icsTaskCount > 0
                   ? `${icsTaskCount} read-only ICS event${icsTaskCount === 1 ? "" : "s"} in RiseByDay`
@@ -227,8 +209,8 @@ export function ConnectedCalendarsSection() {
                 </p>
               ) : null}
             </div>
-          </div>
-        </div>
+
+
 
         <div className="space-y-4 px-4 py-4">
           <p className="text-sm text-muted">
@@ -269,8 +251,9 @@ export function ConnectedCalendarsSection() {
               </button>
             ) : null}
           </div>
-        </div>
-      </section>
+          </div>
+        </Container.Body>
+    </Container>
 {GOOGLE_CALENDAR_ENABLED ? (
         <section
           aria-labelledby={`${uid}-google-heading`}

@@ -158,7 +158,19 @@ function getPillConfig(hint: TaskChatHint): PillConfig {
 
 type Mode = "task" | "calendar";
 
-export function TaskCalendarCommandBar() {
+type TaskCalendarCommandBarProps = {
+  /** Horizontal insets so the bar centers over the content, not the side panels. */
+  left?: number;
+  right?: number;
+  /** Drop beneath the overlay scrim while a floating side panel is open. */
+  belowOverlay?: boolean;
+};
+
+export function TaskCalendarCommandBar({
+  left = 0,
+  right = 0,
+  belowOverlay = false,
+}: TaskCalendarCommandBarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -431,8 +443,16 @@ export function TaskCalendarCommandBar() {
   );
 
   return (
-    <div className="pointer-events-none fixed bottom-3 left-1/2 z-50 w-[min(92vw,760px)] -translate-x-1/2">
-      <form onSubmit={onSubmit} className="pointer-events-auto relative">
+    <div
+      className={`pointer-events-none fixed bottom-3 flex justify-center ${
+        belowOverlay ? "z-30" : "z-50"
+      }`}
+      style={{ left, right }}
+    >
+      <form
+        onSubmit={onSubmit}
+        className="pointer-events-auto relative w-[min(92%,760px)]"
+      >
         {activeCategoryQuery !== null ? (
           <CategoryPicker
             categoryDraft={categoryDraft}

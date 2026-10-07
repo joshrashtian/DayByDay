@@ -5,14 +5,34 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
+  useState,
 } from "react";
 import { useSettingsStore } from "@/stores/settingsStore";
+import type { TaskKind } from "@/types";
+
+/** Prefill for the task creator; every field is optional. */
+export type TaskCreatorOptions = {
+  initialDueLocal?: string;
+  initialEndLocal?: string;
+  initialKind?: TaskKind;
+  initialBlock?: string;
+  initialCategory?: string;
+};
+
+/** An open creator. `key` changes on every open so the form remounts fresh. */
+export type TaskCreatorRequest = TaskCreatorOptions & { key: number };
 
 type RightPanelContextType = {
   isOpen: boolean;
   openPanel: () => void;
   closePanel: () => void;
   togglePanel: () => void;
+  /** Non-null while the panel body is showing the task creator. */
+  taskCreator: TaskCreatorRequest | null;
+  /** Opens the panel with the task creator in place of the active tab. */
+  openTaskCreator: (options?: TaskCreatorOptions) => void;
+  closeTaskCreator: () => void;
 };
 
 const RightPanelContext = createContext<RightPanelContextType | undefined>(
@@ -47,6 +67,28 @@ export function RightPanelProvider({
     [setRightPanel],
   );
 
+  const [taskCreator, setTaskCreator] = useState<TaskCreatorRequest | null>(
+    null,
+  );
+  const creatorKeyRef = useRef(0);
+  const openTaskCreator = useCallback(
+    (options: TaskCreatorOptions = {}) => {
+      creatorKeyRef.current += 1;
+      setTaskCreator({ ...options, key: creatorKeyRef.current });
+      setRightPanel({ open: true });
+    },
+    [setRightPanel],
+  );
+  const closeTaskCreator = useCallback(() => setTaskCreator(null), []);
+
+  // Closing the panel abandons an in-progress task, so it doesn't reappear
+  // the next time the panel opens for something else.
+  const wasOpenRef = useRef(isOpen);
+  useEffect(() => {
+    if (wasOpenRef.current && !isOpen) setTaskCreator(null);
+    wasOpenRef.current = isOpen;
+  }, [isOpen]);
+
   // Native menu: View → Toggle Right Panel
   useEffect(() => {
     const unlisten = listen("toggle-right-panel", () => togglePanel());
@@ -75,8 +117,24 @@ export function RightPanelProvider({
   }, [togglePanel]);
 
   const value = useMemo(
-    () => ({ isOpen, openPanel, closePanel, togglePanel }),
-    [isOpen, openPanel, closePanel, togglePanel],
+    () => ({
+      isOpen,
+      openPanel,
+      closePanel,
+      togglePanel,
+      taskCreator,
+      openTaskCreator,
+      closeTaskCreator,
+    }),
+    [
+      isOpen,
+      openPanel,
+      closePanel,
+      togglePanel,
+      taskCreator,
+      openTaskCreator,
+      closeTaskCreator,
+    ],
   );
 
   return (

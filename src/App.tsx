@@ -60,6 +60,8 @@ export default function App() {
   useTaskNotifications();
   const [sidebarOffset, setSidebarOffset] = useState(220);
   const [rightPanelOffset, setRightPanelOffset] = useState(0);
+  // Unlike the offset, this is non-zero in overlay mode too.
+  const [rightPanelCover, setRightPanelCover] = useState(0);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   useEffect(() => {
@@ -109,7 +111,10 @@ export default function App() {
         onOpenProfile={togglePanel}
         onOpenSettings={() => setShowSettingsModal(true)}
       />
-      <RightPanel onWidthChange={setRightPanelOffset} />
+      <RightPanel
+        onWidthChange={setRightPanelOffset}
+        onCoverWidthChange={setRightPanelCover}
+      />
       <motion.div
         className="relative flex h-full min-h-0 flex-col overflow-hidden transition-[padding] duration-200"
         style={{ paddingLeft: sidebarOffset, paddingRight: rightPanelOffset }}
@@ -239,13 +244,20 @@ export default function App() {
             </div>
           ) : null}
         </motion.div>
-        <CognitionBar />
+        <CognitionBar
+          left={sidebarOffset}
+          right={rightPanelOffset}
+          belowOverlay={rightPanelCover > 0 && rightPanelOffset === 0}
+        />
         <PomodoroTicker />
         <PomodoroLinkedTaskSync />
         <TasksSyncEngine />
-        <GlobalPomodoroDock />
+        <GlobalPomodoroDock rightInset={rightPanelCover} />
         <TaskDragGhost />
-        <code className="fixed bottom-12 font-mono right-4 z-999">
+        <code
+          className="fixed bottom-12 font-mono z-999"
+          style={{ right: rightPanelCover + 16 }}
+        >
           public alpha 2
         </code>
       </motion.div>

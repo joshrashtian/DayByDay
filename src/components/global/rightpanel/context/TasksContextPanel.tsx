@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { isIcsTask } from "@/lib/icsTasks";
+import { isSubtask } from "@/lib/subtasks";
 import { resolveCategoryVisual } from "@/lib/taskCategories";
 import { isTaskDueToday, isTaskOverdue } from "@/lib/taskDates";
 import { useSettingsStore } from "@/stores/settingsStore";
@@ -14,7 +15,7 @@ export function TasksContextPanel() {
   useSettingsStore((s) => s.categoryConfigs);
 
   const stats = useMemo(() => {
-    const own = tasks.filter((t) => !isIcsTask(t));
+    const own = tasks.filter((t) => !isIcsTask(t) && !isSubtask(t));
     const open = own.filter((t) => !t.done);
     const overdue = open
       .filter((t) => isTaskOverdue(t.dueDate))

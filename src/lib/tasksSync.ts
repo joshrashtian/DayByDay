@@ -4,12 +4,7 @@ import { api } from "@/api";
 import { supabase } from "@/utils/supabase";
 import { useAuthStore } from "@/stores/authStore";
 import { useTasksStore } from "@/stores/tasksStore";
-import {
-  buildParentIndex,
-  rowToTask,
-  taskToRow,
-  taskTombstoneRow,
-} from "@/lib/cloud/mappers";
+import { rowToTask, taskToRow, taskTombstoneRow } from "@/lib/cloud/mappers";
 import type { TaskRow } from "@/types/database";
 
 type SyncStatus = "idle" | "syncing" | "synced" | "offline" | "error";
@@ -46,11 +41,10 @@ function isAlreadyCreated(err: unknown) {
   return typeof detail === "string" && detail.includes("duplicate key");
 }
 
-/** POSTs each pending create; returns the ids that still aren't on the server. */
-async function pushPendingCreates(
-  userId: string,
-  parents: Map<string, string>,
-): Promise<Set<string>> {
+/** POSTs each pending create; returns the ids that still aren't on the server.
+ * Goes in creation order, so a parent always lands before its subtasks — the
+ * parent_id foreign key would reject them otherwise. */
+async function pushPendingCreates(userId: string): Promise<Set<string>> {
   const { tasks, pendingCreateIds } = useTasksStore.getState();
   const failed = new Set<string>();
   const done: string[] = [];
@@ -61,11 +55,12 @@ async function pushPendingCreates(
       done.push(id);
       continue;
     }
+    if (task.parentId && failed.has(task.parentId)) {
+      failed.add(id);
+      continue;
+    }
     try {
-      await api.post(
-        "/tasksapi/tasks/create",
-        taskToRow(task, userId, parents.get(id) ?? null),
-      );
+      await api.post("/tasksapi/tasks/create", taskToRow(task, userId));
       done.push(id);
     } catch (err) {
       if (isAlreadyCreated(err)) {
@@ -85,15 +80,11 @@ async function pushPendingCreates(
 async function pushLocalChanges(userId: string): Promise<boolean> {
   const state = useTasksStore.getState();
   const pushTime = Date.now();
-  // parent_id is derived from every task's children_tasks, so the index has
-  // to be built from the full set even though only dirty rows get pushed.
-  const parents = buildParentIndex(state.tasks);
-
   // New tasks go through the API; a create that failed stays pending and is
   // kept out of the upsert so it's retried as a create next sync.
   const pendingCreates = hasApi ? new Set(state.pendingCreateIds) : new Set<string>();
   const failedCreates = hasApi
-    ? await pushPendingCreates(userId, parents)
+    ? await pushPendingCreates(userId)
     : new Set<string>();
 
   const dirty = state.tasks.filter(
@@ -106,7 +97,7 @@ async function pushLocalChanges(userId: string): Promise<boolean> {
   if (dirty.length > 0) {
     const { error } = await supabase
       .from("tasks")
-      .upsert(dirty.map((t) => taskToRow(t, userId, parents.get(t.id) ?? null)));
+      .upsert(dirty.map((t) => taskToRow(t, userId)));
     if (error) throw error;
   }
 
@@ -145,8 +136,7 @@ async function pullRemoteChanges(userId: string) {
       continue;
     }
     const local = localTasks.find((t) => t.id === row.id);
-    // Keep the local children list: a delta row can't reconstruct it alone.
-    const remoteTask = rowToTask(row, local?.children_tasks ?? []);
+    const remoteTask = rowToTask(row);
     if (!local || remoteTask.updatedAt.getTime() > local.updatedAt.getTime()) {
       useTasksStore.getState().upsertFromRemote(remoteTask);
     }

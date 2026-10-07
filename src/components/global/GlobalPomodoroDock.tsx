@@ -28,7 +28,12 @@ const PHASE_DOT: Record<PomodoroPhase, string> = {
   longBreak: "bg-sky-500",
 };
 
-export function GlobalPomodoroDock() {
+type GlobalPomodoroDockProps = {
+  /** Width the right panel covers; the dock sits just left of it. */
+  rightInset?: number;
+};
+
+export function GlobalPomodoroDock({ rightInset = 0 }: GlobalPomodoroDockProps) {
   const location = useLocation();
   const phase = usePomodoroStore((s) => s.phase);
   const secondsLeft = usePomodoroStore((s) => s.secondsLeft);
@@ -64,6 +69,8 @@ export function GlobalPomodoroDock() {
     <motion.div
       layout
       className="fixed bottom-4 right-4 z-60 font-eudoxus sm:right-6"
+      // Inline `right` beats the classes only while the panel is open.
+      style={rightInset ? { right: rightInset + 16 } : undefined}
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
     >

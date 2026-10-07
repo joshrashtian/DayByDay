@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { IoClose, IoWarning } from "react-icons/io5";
+import { IoBuild, IoClose, IoWarning } from "react-icons/io5";
 import { Select, type SelectItemType } from "../base/select/select";
 import { taskPopupField } from "./taskPopupFieldStyles";
 import { parseDueLocalInput } from "../../lib/taskDates";
@@ -40,6 +40,8 @@ type Props = {
   onSave?: (payload: UpdateTaskPayload) => void;
   onDismiss?: () => void;
   mode?: "create" | "edit";
+  /** "popup" sits in the modal; "panel" sits in the narrow right panel. */
+  variant?: "popup" | "panel";
   headingText?: string;
   submitText?: string;
 
@@ -140,6 +142,7 @@ export function TaskCreatorPopupForm({
   onSave,
   onDismiss,
   mode = "create",
+  variant = "popup",
   headingText = "NEW TASK",
   submitText = "Create Task",
   initialDueLocal,
@@ -374,13 +377,20 @@ export function TaskCreatorPopupForm({
   const showRepeats = kind !== "class" && kind !== "reminder";
 
   return (
-    <form onSubmit={submit} className="task-popup-form flex flex-col gap-4">
+    <form
+      onSubmit={submit}
+      className="task-popup-form @container flex flex-col gap-4"
+    >
       <div className="flex items-start justify-between gap-3 border-b border-line/80 pb-4">
         <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase text-faint">
+          <p className="text-[10px] font-bold font-display uppercase text-faint">
             {isEditMode ? "How Can We Readjust?" : "What Needs Doing?"}
           </p>
-          <h2 className="font-display text-2xl font-bold tracking-tight text-ink">
+          <h2
+            className={` font-black tracking-tight text-ink ${
+              variant === "panel" ? "text-3xl" : "text-2xl"
+            }`}
+          >
             {headingText}
           </h2>
         </div>
@@ -398,7 +408,10 @@ export function TaskCreatorPopupForm({
 
       <div className="no-scrollbar -mx-1 space-y-4 overflow-visible px-1 pb-1">
         <section className={`${taskPopupField.panel} space-y-3`}>
-          <p className={sectionLabel}>Basics</p>
+          <p className={sectionLabel}>
+            <IoBuild aria-hidden />
+            Basics
+          </p>
           <div className="flex flex-col gap-1.5">
             <label htmlFor="popup-task-title" className={fieldLabel}>
               Title
@@ -441,7 +454,7 @@ export function TaskCreatorPopupForm({
 
         <section className={`${taskPopupField.panel} space-y-3`}>
           <p className={sectionLabel}>Schedule</p>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 @sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <label htmlFor="popup-task-due" className={fieldLabel}>
                 {dueLabel}
@@ -472,7 +485,7 @@ export function TaskCreatorPopupForm({
           </div>
 
           {isClassKind || showRepeats ? (
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 @sm:grid-cols-2">
               {showRepeats ? (
                 <Select
                   label="Repeats"
@@ -571,7 +584,7 @@ export function TaskCreatorPopupForm({
 
         <section className={`${taskPopupField.panel} space-y-3`}>
           <p className={sectionLabel}>Options</p>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 @sm:grid-cols-2">
             <Select
               label="Priority"
               size="sm"
@@ -616,14 +629,14 @@ export function TaskCreatorPopupForm({
           <button
             type="button"
             onClick={() => setShowAdvanced((v) => !v)}
-            className="self-start rounded-full border border-line/90 bg-surface/70 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted shadow-sm transition-colors hover:bg-surface"
+            className="self-start rounded-full w-full  bg-surface/70 px-3.5 py-1.5 text-[11px] font-semibold tracking-wide text-muted  transition-colors hover:bg-surface"
           >
             {showAdvanced ? "Hide details" : "More details"}
           </button>
 
           {showAdvanced ? (
             <div className={`${taskPopupField.panel} space-y-3`}>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-3 @sm:grid-cols-2">
                 <Select.ComboBox
                   label="Block"
                   size="sm"
@@ -707,7 +720,13 @@ export function TaskCreatorPopupForm({
         </section>
       </div>
 
-      <div className="sticky bottom-0 -mx-5 flex flex-wrap items-center gap-2.5 border-t border-line/80 bg-surface/90 px-5 py-4 backdrop-blur-md sm:-mx-6 sm:px-6">
+      <div
+        className={`sticky bottom-0 flex flex-wrap items-center gap-2.5 border-t border-line/80 py-4 backdrop-blur-md ${
+          variant === "panel"
+            ? "-mx-1 gap-2 bg-zinc-200/90 px-1 dark:bg-zinc-950/90 [&>button]:min-w-0 [&>button]:px-3"
+            : "-mx-5 bg-surface/90 px-5 sm:-mx-6 sm:px-6"
+        }`}
+      >
         {classValidationMessage ? (
           <p className="w-full text-xs font-medium text-amber-700 dark:text-amber-300">
             {classValidationMessage}

@@ -78,26 +78,7 @@ export function recurrenceFromJson(
 
 // ── Tasks ─────────────────────────────────────────────────────────────────
 
-/**
- * childId → parentId, inverted from every task's `children_tasks`.
- * `tasks.parent_id` is the relational form of that list, so a push needs this
- * to fill the column.
- */
-export function buildParentIndex(tasks: Task[]): Map<string, string> {
-  const index = new Map<string, string>();
-  for (const task of tasks) {
-    for (const childId of task.children_tasks ?? []) {
-      index.set(childId, task.id);
-    }
-  }
-  return index;
-}
-
-export function taskToRow(
-  task: Task,
-  userId: string,
-  parentId: string | null = null,
-): TaskRow {
+export function taskToRow(task: Task, userId: string): TaskRow {
   return {
     id: task.id,
     user_id: userId,
@@ -120,20 +101,13 @@ export function taskToRow(
     last_completed_at: toIso(task.lastCompletedAt),
     recurring_source_id: task.recurringSourceId ?? null,
     ics_uid: task.icsUid ?? null,
-    parent_id: parentId,
+    parent_id: task.parentId ?? null,
     deleted_at: null,
   };
 }
 
-/** Maps a whole set at once, deriving `parent_id` from `children_tasks`. */
-export function tasksToRows(
-  tasks: Task[],
-  userId: string,
-  parentIndex: Map<string, string> = buildParentIndex(tasks),
-): TaskRow[] {
-  return tasks.map((task) =>
-    taskToRow(task, userId, parentIndex.get(task.id) ?? null),
-  );
+export function tasksToRows(tasks: Task[], userId: string): TaskRow[] {
+  return tasks.map((task) => taskToRow(task, userId));
 }
 
 /**
@@ -159,12 +133,7 @@ export function taskTombstoneRow(
   };
 }
 
-/**
- * `children_tasks` cannot be recovered from a single row, so pass the ids in
- * when you have them (from `rowsToTasks`, or from the task already in the
- * local store) to avoid clearing the list on every pull.
- */
-export function rowToTask(row: TaskRow, children: string[] = []): Task {
+export function rowToTask(row: TaskRow): Task {
   const recurrence = recurrenceFromJson(row.recurrence);
   const dueDate = fromIso(row.due_date);
   const endDate = fromIso(row.end_date);
@@ -193,22 +162,13 @@ export function rowToTask(row: TaskRow, children: string[] = []): Task {
       ? { recurringSourceId: row.recurring_source_id }
       : {}),
     ...(row.ics_uid ? { icsUid: row.ics_uid } : {}),
-    children_tasks: children,
+    ...(row.parent_id ? { parentId: row.parent_id } : {}),
   };
 }
 
-/** Maps a full result set, rebuilding `children_tasks` from `parent_id`. */
+/** Maps a full result set, skipping tombstones. */
 export function rowsToTasks(rows: TaskRow[]): Task[] {
-  const childrenByParent = new Map<string, string[]>();
-  for (const row of rows) {
-    if (!row.parent_id || row.deleted_at) continue;
-    const siblings = childrenByParent.get(row.parent_id);
-    if (siblings) siblings.push(row.id);
-    else childrenByParent.set(row.parent_id, [row.id]);
-  }
-  return rows
-    .filter((row) => !row.deleted_at)
-    .map((row) => rowToTask(row, childrenByParent.get(row.id) ?? []));
+  return rows.filter((row) => !row.deleted_at).map(rowToTask);
 }
 
 // ── Blocks ────────────────────────────────────────────────────────────────

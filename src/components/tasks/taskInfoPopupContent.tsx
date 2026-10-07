@@ -7,6 +7,8 @@ import { recurrenceLabel } from "../../lib/taskRecurrenceLabel";
 import type { Task } from "@/types";
 import { usePopup } from "@/providers/PopupProvider";
 import { TaskJSONPopup } from "./TaskJSONPopup";
+import { SubtaskChecklist } from "./SubtaskChecklist";
+import { isIcsTask } from "../../lib/icsTasks";
 
 type Args = {
   task: Task;
@@ -132,6 +134,13 @@ function TaskInfoPopup({
                 className="w-full rounded-lg border border-line bg-surface/60 px-3 py-2 text-sm text-ink outline-none focus:ring-2 focus:ring-line-strong/50"
                 rows={3}
               />
+            </Field>
+          </div>
+        ) : null}
+        {!task.parentId && !isIcsTask(task) ? (
+          <div className="sm:col-span-2">
+            <Field label="Subtasks">
+              <SubtaskChecklist parentId={task.id} />
             </Field>
           </div>
         ) : null}

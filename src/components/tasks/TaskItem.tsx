@@ -1,5 +1,9 @@
+import { useState } from "react";
+import { useShallow } from "zustand/react/shallow";
 import {
+  IoAdd,
   IoCheckmark,
+  IoChevronDown,
   IoClose,
   IoCodeDownloadOutline,
   IoCopy,
@@ -17,6 +21,10 @@ import { usePopup } from "../../providers/PopupProvider";
 import { taskInfoPopupContent } from "./taskInfoPopupContent";
 import type { Task, TaskPriority } from "@/types";
 import { normalizeTaskTags } from "../../types/task";
+import { isIcsTask } from "../../lib/icsTasks";
+import { getSubtasks, subtaskProgress } from "../../lib/subtasks";
+import { useTasksStore } from "../../stores/tasksStore";
+import { SubtaskChecklist } from "./SubtaskChecklist";
 
 type Props = {
   task: Task;
@@ -50,6 +58,19 @@ export function TaskItem({
   const tags = task.tags ?? [];
   const categoryVisual = resolveCategoryVisual(task.category);
   const isDone = task.done;
+  // One level of nesting: subtasks and imported events can't hold subtasks.
+  const canHaveSubtasks = !task.parentId && !isIcsTask(task);
+  const subtasks = useTasksStore(
+    useShallow((s) => (canHaveSubtasks ? getSubtasks(s.tasks, task.id) : [])),
+  );
+  const progress = subtaskProgress(subtasks);
+  const [subtasksOpen, setSubtasksOpen] = useState(false);
+  const [focusSubtaskInput, setFocusSubtaskInput] = useState(false);
+
+  const startAddingSubtask = () => {
+    setFocusSubtaskInput(true);
+    setSubtasksOpen(true);
+  };
 
   const openInfo = () => {
     openPopup(
@@ -115,6 +136,16 @@ export function TaskItem({
                       label: "Edit task…",
                       onSelect: onEditTask,
                       icon: <IoPencil />,
+                    } as const,
+                  ]
+                : []),
+              ...(canHaveSubtasks
+                ? [
+                    {
+                      id: "add-subtask",
+                      label: "Add subtask…",
+                      onSelect: startAddingSubtask,
+                      icon: <IoAdd />,
                     } as const,
                   ]
                 : []),
@@ -231,6 +262,30 @@ export function TaskItem({
                 {formatTaskDue(task.dueDate)}
               </time>
             ) : null}
+            {progress.total > 0 ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setFocusSubtaskInput(false);
+                  setSubtasksOpen((open) => !open);
+                }}
+                className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 ring-1 transition-colors ${
+                  progress.done === progress.total
+                    ? "bg-emerald-500/12 text-emerald-800 ring-emerald-500/25 dark:text-emerald-200"
+                    : "bg-surface/50 ring-line/80 hover:bg-sunken/50"
+                }`}
+                aria-expanded={subtasksOpen}
+                aria-label={`${progress.done} of ${progress.total} subtasks done`}
+              >
+                <span className="font-mono">
+                  {progress.done}/{progress.total}
+                </span>
+                <IoChevronDown
+                  className={`h-3 w-3 transition-transform ${subtasksOpen ? "rotate-180" : ""}`}
+                  aria-hidden
+                />
+              </button>
+            ) : null}
             {task.priority ? (
               <span
                 className={`rounded-md px-2 py-0.5 ring-1 ${priorityChipClass(task.priority)}`}
@@ -291,6 +346,15 @@ export function TaskItem({
               ) : null}
             </div>
           </div>
+          {subtasksOpen ? (
+            <div className="pl-6">
+              <SubtaskChecklist
+                parentId={task.id}
+                autoFocusAdd={focusSubtaskInput}
+                compact
+              />
+            </div>
+          ) : null}
         </div>
       </div>
     </li>

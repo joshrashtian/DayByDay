@@ -34,13 +34,13 @@ import {
   ThreeDayView,
   WeekView,
 } from "../components/calendar/calendarViews";
-import { taskCreatorPopupContent } from "../components/tasks/taskCreatorPopupContent";
 import { taskEditorPopupContent } from "../components/tasks/taskEditorPopupContent";
 import {
   dueLocalInputForCalendarDayEnd,
   localInputForDateTime,
 } from "../lib/taskDates";
 import { usePopup } from "../providers/PopupProvider";
+import { useRightPanel } from "../providers/RightPanelProvider";
 import { useCalendarTaskDrop } from "../hooks/useCalendarTaskDrop";
 import { useResizeObserver } from "../hooks/use-resize-observer";
 import { useTasksStore } from "../stores/tasksStore";
@@ -92,6 +92,7 @@ function CalendarMainPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   useCalendarTaskDrop();
   const { open: openPopup, close: closePopup } = usePopup();
+  const { openTaskCreator } = useRightPanel();
   const {
     tasks,
     toggleTask,
@@ -153,31 +154,23 @@ function CalendarMainPage() {
 
   const openAddTaskForDay = useCallback(
     (day: DateTime) => {
-      openPopup(
-        taskCreatorPopupContent({
-          addTask,
-          closePopup,
-          initialDueLocal: dueLocalInputForCalendarDayEnd(day),
-        }),
-      );
+      openTaskCreator({
+        initialDueLocal: dueLocalInputForCalendarDayEnd(day),
+      });
     },
-    [openPopup, closePopup, addTask],
+    [openTaskCreator],
   );
 
   const openAddTaskForRange = useCallback(
     (start: DateTime, end: DateTime, category?: string) => {
-      openPopup(
-        taskCreatorPopupContent({
-          addTask,
-          closePopup,
-          initialDueLocal: localInputForDateTime(start),
-          initialEndLocal: localInputForDateTime(end),
-          initialKind: "event",
-          initialCategory: category,
-        }),
-      );
+      openTaskCreator({
+        initialDueLocal: localInputForDateTime(start),
+        initialEndLocal: localInputForDateTime(end),
+        initialKind: "event",
+        initialCategory: category,
+      });
     },
-    [openPopup, closePopup, addTask],
+    [openTaskCreator],
   );
 
   const quickAddTaskForRange = useCallback(
@@ -271,15 +264,6 @@ function CalendarMainPage() {
 
   return (
     <main className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-sunken">
-      <div
-        className="pointer-events-none absolute -right-24 top-1/4 h-80 w-80 rounded-full bg-sky-200/35 blur-3xl dark:bg-sky-900/25"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute -left-16 bottom-1/4 h-72 w-72 rounded-full bg-violet-200/30 blur-3xl dark:bg-violet-950/30"
-        aria-hidden
-      />
-
       <div className="relative z-10 flex h-full w-full min-h-0 flex-col">
         {/* Calendar header */}
         <motion.div
@@ -530,7 +514,7 @@ function ModePill() {
   return (
     <motion.span
       layoutId="mode-pill"
-      className="absolute inset-0 rounded-full bg-ink shadow-sm"
+      className="absolute inset-0 rounded-full dark:bg-zinc-950/90 bg-ink shadow-sm"
       transition={{ type: "spring", stiffness: 500, damping: 35 }}
     />
   );

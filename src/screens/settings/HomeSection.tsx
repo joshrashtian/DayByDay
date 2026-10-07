@@ -1,19 +1,19 @@
 import { useSettings } from "@/providers/SettingsProvider";
 import { NON_HOME_SECTIONS } from "./sections";
+import Container from "@/components/settings/Container";
+import SettingsHeader from "@/components/settings/Header";
 
 export default function HomeSection() {
   const { navigate } = useSettings();
 
   return (
     <div className="space-y-5">
-      <div>
-        <h2 className="font-display text-2xl font-semibold text-ink">
-          Settings
+      <SettingsHeader>
+        <h2 className="font-display text-4xl font-semibold text-ink">
+          Config
         </h2>
-        <p className="mt-1 text-sm text-muted">
-          Choose a section to configure RiseByDay.
-        </p>
-      </div>
+
+      </SettingsHeader>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {NON_HOME_SECTIONS.map((section) => (

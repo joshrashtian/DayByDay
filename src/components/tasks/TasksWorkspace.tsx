@@ -6,10 +6,10 @@ import {
   isTaskDueToday,
 } from "../../lib/taskDates";
 import { isIcsTask } from "../../lib/icsTasks";
+import { isSubtask } from "../../lib/subtasks";
 import { collectTaskBlocks } from "../../lib/taskBlocks";
 import { collectAvailableCategories } from "../../lib/taskCategories";
 import { TaskCreator } from "./TaskCreator";
-import { taskCreatorPopupContent } from "./taskCreatorPopupContent";
 import { taskEditorPopupContent } from "./taskEditorPopupContent";
 import { TaskEntriesList } from "./TaskEntriesList";
 import { TasksHeader } from "./TasksHeader";
@@ -28,6 +28,7 @@ import {
 import { TasksSideRail } from "./TasksSideRail";
 import { useContextMenu } from "../../providers/ContextMenuProvider";
 import { usePopup } from "../../providers/PopupProvider";
+import { useRightPanel } from "../../providers/RightPanelProvider";
 import { useTasksStore } from "../../stores/tasksStore";
 import type { Task } from "@/types";
 import { IoAdd } from "react-icons/io5";
@@ -113,9 +114,11 @@ export function TasksWorkspace({
   const { openMenu } = useContextMenu();
   const { open: openPopup, close: closePopup } = usePopup();
 
-  const openTaskFormPopup = useCallback(() => {
-    openPopup(taskCreatorPopupContent({ addTask, closePopup }));
-  }, [openPopup, closePopup, addTask]);
+  const { openTaskCreator } = useRightPanel();
+  const openTaskFormPopup = useCallback(
+    () => openTaskCreator(),
+    [openTaskCreator],
+  );
 
   const openTaskEditorPopup = useCallback(
     (task: Task) => {
@@ -142,8 +145,9 @@ export function TasksWorkspace({
   const [groupSort, setGroupSort] =
     useState<GroupSortConfig>(DEFAULT_GROUP_SORT);
 
+  // Subtasks render inside their parent's row, not as rows of their own.
   const userTasks = useMemo(
-    () => tasks.filter((task) => !isIcsTask(task)),
+    () => tasks.filter((task) => !isIcsTask(task) && !isSubtask(task)),
     [tasks],
   );
 

@@ -120,9 +120,11 @@ Things the schema assumes that aren't obvious from the DDL:
 - **Blocks and categories are referenced by name.** `tasks.block` and
   `tasks.category` hold the name, matching the app model. Renaming a config
   rewrites the matching tasks via trigger (`0400`).
-- **`children_tasks` is stored as `tasks.parent_id`.** The FK is
+- **Subtasks are `tasks.parent_id`** (`Task.parentId` in the app). The FK is
   `deferrable initially deferred`, so a parent and its children can land in the
-  same upsert batch in any order. `rowsToTasks()` rebuilds the child lists.
+  same upsert batch in any order. Its `on delete cascade` only fires on the
+  tombstone purge — a soft delete doesn't cascade, so the client tombstones
+  each subtask itself.
 - **RLS is owner-only everywhere** (`auth.uid() = user_id`), except `profiles`,
   which any signed-in user can read so the social screen can show names.
   `calendar_credentials` has RLS on and *no* policies — only the service role

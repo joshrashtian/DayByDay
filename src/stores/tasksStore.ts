@@ -10,6 +10,7 @@ import { normalizeTaskBlock } from "../lib/taskBlocks";
 import { advanceRecurrenceDate } from "../lib/taskDates";
 import { isIcsTask } from "../lib/icsTasks";
 import { playTaskSound } from "../lib/taskClickSounds";
+import { collectDescendantIds } from "../lib/subtasks";
 
 import { migrateLocalStorageKey } from "@/lib/storageMigration";
 
@@ -28,6 +29,9 @@ type TasksState = {
   /** ISO timestamp of the last successful Supabase pull. */
   lastPulledAt: string | null;
   addTask: (payload: AddTaskPayload) => void;
+  /** Nests a new task under `parentId`. Returns the new id, or undefined when
+   * the title is empty or the parent can't take subtasks. */
+  addSubtask: (parentId: string, title: string) => string | undefined;
   updateTask: (taskId: string, payload: UpdateTaskPayload) => void;
   setTaskSchedule: (taskId: string, dueDate: Date, endDate?: Date) => void;
   toggleTask: (id: string) => void;
@@ -37,6 +41,7 @@ type TasksState = {
   removeCategoryFromAllTasks: (categoryName: string) => void;
   setTaskBlock: (taskId: string, block: string | undefined) => void;
   setTaskTags: (taskId: string, tags: string[] | undefined) => void;
+  setTaskTitle: (taskId: string, title: string) => void;
   importIcsTasks: (
     payloads: ImportIcsTaskPayload[],
   ) => { imported: number; skipped: number };
@@ -63,6 +68,10 @@ function reviveTask(raw: Record<string, unknown>): Task {
     metadata: rawMetadata,
     classLocation: rawClassLocation,
     classGrade: rawClassGrade,
+    // Pre-parentId builds stored subtasks as a list on the parent; nothing
+    // ever wrote to it, so it is dropped rather than migrated.
+    children_tasks: _legacyChildren,
+    parentId: _rawParentId,
     ...rest
   } = raw as Record<string, unknown>;
 
@@ -119,10 +128,9 @@ function reviveTask(raw: Record<string, unknown>): Task {
         }
       : undefined;
 
-  const childrenTasksRaw = (raw as Record<string, unknown>).children_tasks;
-  const children_tasks = Array.isArray(childrenTasksRaw)
-    ? childrenTasksRaw.filter((id): id is string => typeof id === "string")
-    : [];
+  const parentIdRaw = (raw as Record<string, unknown>).parentId;
+  const parentId =
+    typeof parentIdRaw === "string" && parentIdRaw ? parentIdRaw : undefined;
 
   const task: Task = {
     ...(rest as Omit<
@@ -157,7 +165,7 @@ function reviveTask(raw: Record<string, unknown>): Task {
     ...(tags ? { tags } : {}),
     ...(recurrence ? { recurrence } : {}),
     ...(icsUid ? { icsUid } : {}),
-    children_tasks,
+    ...(parentId ? { parentId } : {}),
   };
   return task;
 }
@@ -256,6 +264,20 @@ export const useTasksStore = create<TasksState>()(
         };
         }),
 
+      setTaskTitle: (taskId, title) =>
+        set((s) => {
+          const trimmed = title.trim();
+          const existing = s.tasks.find((t) => t.id === taskId);
+          if (!trimmed || !existing || isIcsTask(existing)) return s;
+          return {
+            tasks: s.tasks.map((t) =>
+              t.id === taskId
+                ? { ...t, title: trimmed, updatedAt: new Date() }
+                : t,
+            ),
+          };
+        }),
+
       addTask: (payload) => {
         const trimmed = payload.title.trim();
         if (!trimmed) return;
@@ -308,7 +330,6 @@ export const useTasksStore = create<TasksState>()(
               done: false,
               createdAt: now,
               updatedAt: now,
-              children_tasks: [],
               ...(payload.dueDate ? { dueDate: payload.dueDate } : {}),
               ...(payload.endDate ? { endDate: payload.endDate } : {}),
               ...(payload.priority ? { priority: payload.priority } : {}),
@@ -325,6 +346,33 @@ export const useTasksStore = create<TasksState>()(
             },
           ],
         }));
+      },
+
+      addSubtask: (parentId, title) => {
+        const trimmed = title.trim();
+        if (!trimmed) return undefined;
+        const parent = get().tasks.find((t) => t.id === parentId);
+        // One level deep for now: a subtask can't have its own subtasks.
+        if (!parent || isIcsTask(parent) || parent.parentId) return undefined;
+        playTaskSound("create");
+        const now = new Date();
+        const id = crypto.randomUUID();
+        set((s) => ({
+          pendingCreateIds: [...s.pendingCreateIds, id],
+          tasks: [
+            ...s.tasks,
+            {
+              id,
+              kind: "task",
+              title: trimmed,
+              done: false,
+              createdAt: now,
+              updatedAt: now,
+              parentId,
+            },
+          ],
+        }));
+        return id;
       },
 
       updateTask: (taskId, payload) =>
@@ -453,6 +501,8 @@ export const useTasksStore = create<TasksState>()(
             }
 
             const sourceId = task.recurringSourceId ?? task.id;
+            // The next occurrence starts with a fresh checklist.
+            const subtaskIds = new Set(collectDescendantIds(s.tasks, id));
             const completedOccurrence: Task = {
               ...task,
               id: crypto.randomUUID(),
@@ -465,40 +515,61 @@ export const useTasksStore = create<TasksState>()(
 
             return {
               tasks: [
-                ...s.tasks.map((t) =>
-                  t.id === id
-                    ? {
-                        ...t,
-                        done: false,
-                        dueDate: nextDue,
-                        ...(durationMs != null
-                          ? { endDate: new Date(nextDue.getTime() + durationMs) }
-                          : {}),
-                        recurringSourceId: sourceId,
-                        updatedAt: now,
-                      }
-                    : t,
-                ),
+                ...s.tasks.map((t) => {
+                  if (t.id === id) {
+                    return {
+                      ...t,
+                      done: false,
+                      dueDate: nextDue,
+                      ...(durationMs != null
+                        ? { endDate: new Date(nextDue.getTime() + durationMs) }
+                        : {}),
+                      recurringSourceId: sourceId,
+                      updatedAt: now,
+                    };
+                  }
+                  if (subtaskIds.has(t.id) && t.done) {
+                    return { ...t, done: false, updatedAt: now };
+                  }
+                  return t;
+                }),
                 completedOccurrence,
               ],
             };
           }
+          // Checking off a parent checks off whatever is left under it;
+          // un-checking it leaves the subtasks as they were.
+          const completing = !task.done;
+          const subtaskIds = completing
+            ? new Set(collectDescendantIds(s.tasks, id))
+            : new Set<string>();
           return {
-            tasks: s.tasks.map((t) =>
-              t.id === id ? { ...t, done: !t.done, updatedAt: now } : t,
-            ),
+            tasks: s.tasks.map((t) => {
+              if (t.id === id) return { ...t, done: !t.done, updatedAt: now };
+              if (subtaskIds.has(t.id) && !t.done) {
+                return { ...t, done: true, updatedAt: now };
+              }
+              return t;
+            }),
           };
         });
       },
 
       removeTask: (id) =>
-        set((s) => ({
-          tasks: s.tasks.filter((t) => t.id !== id),
-          pendingCreateIds: s.pendingCreateIds.filter((pid) => pid !== id),
-          pendingDeletedIds: s.pendingDeletedIds.includes(id)
-            ? s.pendingDeletedIds
-            : [...s.pendingDeletedIds, id],
-        })),
+        set((s) => {
+          // Deletes are soft, so the parent_id FK's ON DELETE CASCADE never
+          // fires; subtasks need their own tombstones.
+          const removed = new Set([id, ...collectDescendantIds(s.tasks, id)]);
+          const pendingDeletedIds = new Set(s.pendingDeletedIds);
+          for (const removedId of removed) pendingDeletedIds.add(removedId);
+          return {
+            tasks: s.tasks.filter((t) => !removed.has(t.id)),
+            pendingCreateIds: s.pendingCreateIds.filter(
+              (pid) => !removed.has(pid),
+            ),
+            pendingDeletedIds: [...pendingDeletedIds],
+          };
+        }),
 
       duplicateTask: (id) =>
         set((s) => {
@@ -517,9 +588,29 @@ export const useTasksStore = create<TasksState>()(
             updatedAt: now,
             lastCompletedAt: undefined,
           };
-          const tasks = [...s.tasks];
+          // Subtasks come along, unchecked, under the copy. Created after the
+          // clone so pending creates reach the server parent-first.
+          const subtaskClones: Task[] = s.tasks
+            .filter((t) => t.parentId === id)
+            .map((t) => ({
+              ...t,
+              id: crypto.randomUUID(),
+              parentId: clone.id,
+              done: false,
+              createdAt: new Date(t.createdAt.getTime()),
+              updatedAt: now,
+              lastCompletedAt: undefined,
+            }));
+          const tasks = [...s.tasks, ...subtaskClones];
           tasks.splice(index + 1, 0, clone);
-          return { tasks, pendingCreateIds: [...s.pendingCreateIds, clone.id] };
+          return {
+            tasks,
+            pendingCreateIds: [
+              ...s.pendingCreateIds,
+              clone.id,
+              ...subtaskClones.map((t) => t.id),
+            ],
+          };
         }),
 
       importIcsTasks: (payloads) => {
@@ -556,7 +647,6 @@ export const useTasksStore = create<TasksState>()(
             done: false,
             createdAt: now,
             updatedAt: now,
-            children_tasks: [],
             dueDate: payload.dueDate,
             ...(payload.endDate ? { endDate: payload.endDate } : {}),
             ...(category ? { category } : {}),
@@ -619,7 +709,12 @@ export const useTasksStore = create<TasksState>()(
         }),
 
       removeFromRemote: (id) =>
-        set((s) => ({ tasks: s.tasks.filter((t) => t.id !== id) })),
+        set((s) => {
+          // The other device tombstones subtasks too, but drop them now so a
+          // pull that lands mid-way never leaves orphans on screen.
+          const removed = new Set([id, ...collectDescendantIds(s.tasks, id)]);
+          return { tasks: s.tasks.filter((t) => !removed.has(t.id)) };
+        }),
     }),
     {
       name: STORAGE_KEY,

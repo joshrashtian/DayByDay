@@ -51,8 +51,12 @@ export type Task = {
   recurringSourceId?: string;
   /** Stable UID from an imported `.ics` event — used for dedup on re-import. */
   icsUid?: string;
-  //sub tasks
-  children_tasks: string[];
+  /**
+   * Set on subtasks: the id of the task this one is nested under. The pointer
+   * lives on the child (not as a list on the parent) so attaching a subtask is
+   * a write to one row, matching `tasks.parent_id` column-for-column.
+   */
+  parentId?: string;
 };
 
 export type ImportIcsTaskPayload = {

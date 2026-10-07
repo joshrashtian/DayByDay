@@ -71,7 +71,7 @@ create table if not exists public.tasks (
   -- Stable UID from an imported .ics event; unique per user for dedup.
   ics_uid             text,
 
-  -- Relational form of Task.children_tasks. DEFERRABLE so a parent and its
+  -- Task.parentId: set on subtasks. DEFERRABLE so a parent and its
   -- children can arrive in the same upsert batch in any order.
   parent_id           uuid references public.tasks (id) on delete cascade
                         deferrable initially deferred,

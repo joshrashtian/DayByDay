@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import BottomSheet from "../../ui/BottomSheet";
 import { getTaskKindVisual } from "../../lib/taskKinds";
 import { formatTaskDue } from "../../lib/taskDates";
+import { isIcsTask } from "../../lib/icsTasks";
 import type { Task } from "@/types";
+import { SubtaskChecklist } from "./SubtaskChecklist";
 
 type Props = {
   task: Task | null;
@@ -61,6 +63,14 @@ export function TaskPreviewBottomSheet({
               <p>Tags: {preview.tags.join(", ")}</p>
             ) : null}
           </div>
+          {!preview.parentId && !isIcsTask(preview) ? (
+            <div className="flex flex-col gap-1">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                Subtasks
+              </p>
+              <SubtaskChecklist parentId={preview.id} compact />
+            </div>
+          ) : null}
           <button
             type="button"
             onClick={() => onToggle(preview.id)}

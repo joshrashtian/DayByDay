@@ -1,5 +1,6 @@
 import type { Task } from "@/types";
 import { isIcsTask } from "./icsTasks";
+import { isSubtask } from "./subtasks";
 import {
   isCompletedTaskFromPreviousDay,
   isTaskDueToday,
@@ -24,7 +25,7 @@ export function getBlockScopedSidebarTasks(
   blockName?: string,
 ): Task[] {
   return tasks
-    .filter((task) => !isIcsTask(task))
+    .filter((task) => !isIcsTask(task) && !isSubtask(task))
     .filter((task) => taskMatchesBlock(task, blockName))
     .filter((task) => {
       if (isCompletedTaskFromPreviousDay(task)) return false;
@@ -37,7 +38,7 @@ export function getBlockScopedSidebarTasks(
 /** Tasks shown in the sidebar on non-home routes (today-centric). */
 export function getTodaySidebarTasks(tasks: Task[]): Task[] {
   return tasks
-    .filter((task) => !isIcsTask(task))
+    .filter((task) => !isIcsTask(task) && !isSubtask(task))
     .filter((task) => {
       if (isCompletedTaskFromPreviousDay(task)) return false;
       if (task.done) return isTaskDueToday(task.dueDate);

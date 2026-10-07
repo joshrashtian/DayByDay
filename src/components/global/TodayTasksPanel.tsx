@@ -14,9 +14,9 @@ import { IoAdd, IoPencil, IoTrash } from "react-icons/io5";
 import type { Task } from "@/types";
 import { useContextMenu } from "../../providers/ContextMenuProvider";
 import { usePopup } from "../../providers/PopupProvider";
+import { useRightPanel } from "../../providers/RightPanelProvider";
 import { isCalendarGridPath } from "../../lib/calendarRoutes";
 import { TaskPreviewBottomSheet } from "../tasks/TaskPreviewBottomSheet";
-import { taskCreatorPopupContent } from "../tasks/taskCreatorPopupContent";
 import { taskEditorPopupContent } from "../tasks/taskEditorPopupContent";
 
 export function useTodayTasksScope() {
@@ -59,10 +59,9 @@ export function TodayTasksPanel({ compact = false }: TodayTasksPanelProps) {
   const canDragTask = onHome || onCalendar;
   const displayedBlockName = useDisplayedBlockName();
   const { panelTasks } = useTodayTasksScope();
-  const { tasks, addTask, updateTask, toggleTask, removeTask } = useTasksStore(
+  const { tasks, updateTask, toggleTask, removeTask } = useTasksStore(
     useShallow((s) => ({
       tasks: s.tasks,
-      addTask: s.addTask,
       updateTask: s.updateTask,
       toggleTask: s.toggleTask,
       removeTask: s.removeTask,
@@ -128,16 +127,13 @@ export function TodayTasksPanel({ compact = false }: TodayTasksPanelProps) {
     [onHome, setFocusedTaskId, openTaskPreview],
   );
 
+  const { openTaskCreator } = useRightPanel();
   const openTaskFormPopup = useCallback(() => {
-    openPopup(
-      taskCreatorPopupContent({
-        addTask,
-        closePopup,
-        initialBlock:
-          onHome && displayedBlockName ? displayedBlockName : undefined,
-      }),
-    );
-  }, [openPopup, addTask, closePopup, onHome, displayedBlockName]);
+    openTaskCreator({
+      initialBlock:
+        onHome && displayedBlockName ? displayedBlockName : undefined,
+    });
+  }, [openTaskCreator, onHome, displayedBlockName]);
   return (
     <>
       {panelTasks.map((task) => (

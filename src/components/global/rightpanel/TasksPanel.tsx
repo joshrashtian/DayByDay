@@ -8,8 +8,8 @@ import { useSettingsStore } from "../../../stores/settingsStore";
 import { useHomeFocusStore } from "../../../stores/homeFocusStore";
 import { useTasksStore } from "../../../stores/tasksStore";
 import { usePopup } from "../../../providers/PopupProvider";
+import { useRightPanel } from "../../../providers/RightPanelProvider";
 import { useContextMenu } from "../../../providers/ContextMenuProvider";
-import { taskCreatorPopupContent } from "../../tasks/taskCreatorPopupContent";
 import { taskEditorPopupContent } from "../../tasks/taskEditorPopupContent";
 import { isIcsTask } from "../../../lib/icsTasks";
 import { isCalendarGridPath } from "../../../lib/calendarRoutes";
@@ -42,10 +42,9 @@ export function TasksPanel() {
   const focusedTaskId = useHomeFocusStore((s) => s.focusedTaskId);
   const setFocusedTaskId = useHomeFocusStore((s) => s.setFocusedTaskId);
   const startTaskDrag = useHomeFocusStore((s) => s.startTaskDrag);
-  const { tasks, addTask, updateTask, removeTask } = useTasksStore(
+  const { tasks, updateTask, removeTask } = useTasksStore(
     useShallow((s) => ({
       tasks: s.tasks,
-      addTask: s.addTask,
       updateTask: s.updateTask,
       removeTask: s.removeTask,
     })),
@@ -64,16 +63,13 @@ export function TasksPanel() {
     [tasks, openPopup, updateTask, removeTask, closePopup],
   );
 
+  const { openTaskCreator } = useRightPanel();
   const openTaskFormPopup = useCallback(() => {
-    openPopup(
-      taskCreatorPopupContent({
-        addTask,
-        closePopup,
-        initialBlock:
-          onHome && displayedBlockName ? displayedBlockName : undefined,
-      }),
-    );
-  }, [openPopup, addTask, closePopup, onHome, displayedBlockName]);
+    openTaskCreator({
+      initialBlock:
+        onHome && displayedBlockName ? displayedBlockName : undefined,
+    });
+  }, [openTaskCreator, onHome, displayedBlockName]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-1.5">
