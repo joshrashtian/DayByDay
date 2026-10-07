@@ -77,6 +77,23 @@ function formatClock(minute: number): string {
   return `${h12}:${String(m).padStart(2, "0")} ${period}`;
 }
 
+function formatRemaining(minutes: number): string {
+  if (minutes < 1) return "<1m left";
+  const h = Math.floor(minutes / 60);
+  const m = Math.round(minutes % 60);
+  if (h === 0) return `${m}m left`;
+  return m === 0 ? `${h}h left` : `${h}h ${m}m left`;
+}
+
+/** Bottom arc concentric with the dial, drawn left → right so textPath glyphs stay upright. */
+function underArcPath(cx: number, cy: number, r: number, halfSpanDeg: number) {
+  const a0 = ((90 + halfSpanDeg) * Math.PI) / 180;
+  const a1 = ((90 - halfSpanDeg) * Math.PI) / 180;
+  const [x0, y0] = polar(cx, cy, r, a0);
+  const [x1, y1] = polar(cx, cy, r, a1);
+  return `M ${x0} ${y0} A ${r} ${r} 0 0 0 ${x1} ${y1}`;
+}
+
 function formatHourLabel(hour24: number): string {
   const period = hour24 >= 12 ? "p" : "a";
   const h12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
@@ -99,6 +116,22 @@ const RING_RADIUS = 120;
 const TRACK_WIDTH = 16;
 const ACTIVE_WIDTH = 24;
 const TICK_HOURS = [0, 6, 12, 18];
+const UNDERLINE_RADIUS = 144;
+const UNDERLINE_LABEL_RADIUS = 162;
+const UNDERLINE_HALF_SPAN = 42;
+const VIEW_HEIGHT = CENTER + UNDERLINE_LABEL_RADIUS + 6;
+const UNDERLINE_PATH = underArcPath(
+  CENTER,
+  CENTER,
+  UNDERLINE_RADIUS,
+  UNDERLINE_HALF_SPAN,
+);
+const UNDERLINE_LABEL_PATH = underArcPath(
+  CENTER,
+  CENTER,
+  UNDERLINE_LABEL_RADIUS,
+  UNDERLINE_HALF_SPAN,
+);
 
 const BlockDial = ({
   blocks,
@@ -142,11 +175,22 @@ const BlockDial = ({
       )
     : "#71717a";
 
+  // Minutes left in the active block (handles blocks that wrap past midnight).
+  const remaining = activeBlock
+    ? (activeBlock.endMinutes - nowMinute + MINUTES_IN_DAY) % MINUTES_IN_DAY
+    : null;
+  const blockLength = activeBlock
+    ? (activeBlock.endMinutes - activeBlock.startMinutes + MINUTES_IN_DAY) %
+        MINUTES_IN_DAY || MINUTES_IN_DAY
+    : 0;
+  const remainingFraction =
+    remaining !== null ? Math.min(1, remaining / blockLength) : 0;
+
   return (
     <div className="block-dial">
       <div className="block-dial__chart">
         <svg
-          viewBox={`0 0 ${SIZE} ${SIZE}`}
+          viewBox={`0 0 ${SIZE} ${remaining !== null ? VIEW_HEIGHT : SIZE}`}
           className="block-dial__svg"
           role="img"
           aria-label="24-hour day dial"
@@ -207,6 +251,39 @@ const BlockDial = ({
             stroke={activeColor}
             strokeWidth={3}
           />
+          {/* Time-left underline */}
+          {remaining !== null ? (
+            <g className="block-dial__underline">
+              <defs>
+                <path id="block-dial-underline-label" d={UNDERLINE_LABEL_PATH} />
+              </defs>
+              <path
+                d={UNDERLINE_PATH}
+                fill="none"
+                stroke="var(--block-dial-track)"
+                strokeWidth={4}
+                strokeLinecap="round"
+              />
+              <path
+                d={UNDERLINE_PATH}
+                pathLength={1}
+                fill="none"
+                stroke={activeColor}
+                strokeWidth={4}
+                strokeLinecap="round"
+                strokeDasharray={`${remainingFraction} 1`}
+              />
+              <text className="block-dial__underline-label" fill={activeColor}>
+                <textPath
+                  href="#block-dial-underline-label"
+                  startOffset="50%"
+                  textAnchor="middle"
+                >
+                  {formatRemaining(remaining)}
+                </textPath>
+              </text>
+            </g>
+          ) : null}
         </svg>
         <div className="block-dial__center">
           {activeBlockName ? (

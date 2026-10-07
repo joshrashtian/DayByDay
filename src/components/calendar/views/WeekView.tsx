@@ -1421,11 +1421,11 @@ export function WeekView({
                   <button
                     key={config.name}
                     type="button"
-                    title={config.name}
+                    aria-label={config.name}
                     onClick={() =>
                       setQuickAddCategory(isSelected ? undefined : config.name)
                     }
-                    className={`relative flex h-7 w-7 items-center justify-center rounded-full transition-transform hover:scale-105 ${
+                    className={`group relative flex h-7 w-7 items-center justify-center rounded-full transition-transform hover:scale-105 ${
                       isSelected
                         ? "ring-2 ring-offset-2 ring-offset-canvas"
                         : ""
@@ -1442,6 +1442,9 @@ export function WeekView({
                     {isSelected ? (
                       <span className="h-2 w-2 rounded-full bg-surface" />
                     ) : null}
+                    <span className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 -translate-x-1/2 -translate-y-1 whitespace-nowrap rounded-lg border border-line bg-surface px-2 py-1 text-xs font-semibold text-ink opacity-0 shadow-md transition duration-150 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100">
+                      {config.name}
+                    </span>
                   </button>
                 );
               })}

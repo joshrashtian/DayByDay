@@ -17,6 +17,8 @@
     "@supabase/supabase-js": "^2.112.3",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-opener": "^2",
+    "@tauri-apps/plugin-process": "^2.4.0",
+    "@tauri-apps/plugin-updater": "^2.13.1",
     "@tauri-store/zustand": "^1.2.1",
     "@uiw/react-codemirror": "^4.25.11",
     "@untitledui/icons": "^0.0.22",

@@ -42,6 +42,8 @@ import { useTaskNotifications } from "./hooks/useTaskNotifications";
 import { useRightPanel } from "./providers/RightPanelProvider";
 import SocialScreen from "./screens/social/SocialScreen";
 import { HevyProvider } from "hevy-javascript";
+import { check } from '@tauri-apps/plugin-updater';
+import { relaunch } from '@tauri-apps/plugin-process';
 
 const isSignInWindow = isTauri() && getCurrentWindow().label === "sign-in";
 
@@ -73,6 +75,21 @@ export default function App() {
     setShowSettingsModal(true);
     navigate("/", { replace: true });
   }, [location.pathname, navigate]);
+
+  useEffect(() => {
+    if (!import.meta.env.PROD) return; // skip in dev
+    (async () => {
+      try {
+        const update = await check();
+        if (update) {
+          await update.downloadAndInstall();
+          await relaunch();
+        }
+      } catch (e) {
+        console.error('Update check failed', e);
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     if (!showSettingsModal) return;
