@@ -72,8 +72,14 @@ export const ProfileProvider = ({
   const authUser = useAuthStore((s) => s.user);
 
   useEffect(() => {
- setProfile({email: authUser?.email, id: authUser?.id})
-  }, [authUser])
+    if (!authUser) return;
+    setProfile((prev) => ({
+      ...prev,
+      id: authUser.id,
+      email: authUser.email ?? prev?.email ?? "",
+      name: authUser.user_metadata?.full_name ?? authUser.email ?? prev?.name ?? "",
+    }));
+  }, [authUser]);
 
   return (
     <ProfileContext.Provider value={value}>

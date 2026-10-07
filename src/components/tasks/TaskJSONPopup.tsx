@@ -1,8 +1,6 @@
 import { useMemo, useState } from "react";
 import ReactCodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { json } from "@codemirror/lang-json";
-import { resolveTheme } from "@/lib/appTheme";
-import { useSettingsStore } from "@/stores/settingsStore";
 import type { Task } from "@/types";
 
 /**

@@ -41,7 +41,6 @@ import { useGoogleCalendarSync } from "./hooks/useGoogleCalendarSync";
 import { useTaskNotifications } from "./hooks/useTaskNotifications";
 import { useRightPanel } from "./providers/RightPanelProvider";
 import SocialScreen from "./screens/social/SocialScreen";
-import { HevyProvider } from "hevy-javascript";
 import { check } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
 

@@ -1,11 +1,9 @@
 import { motion } from "motion/react";
 import { DateTime } from "luxon";
-import { IoAdd, IoGitBranch, IoGitCommit } from "react-icons/io5";
+import { IoAdd } from "react-icons/io5";
 import type { Task } from "@/types";
 import { tasksByDueDateKeyInRange } from "../../../lib/calendarUtils";
 import { TaskDueList } from "./_shared";
-import { FaWeightScale } from "react-icons/fa6";
-import HevyWidget from "@/screens/integrations/HevyWidget";
 import DayWidgets from "./DayWidgets";
 
 type DayViewProps = {

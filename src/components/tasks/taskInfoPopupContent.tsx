@@ -7,7 +7,6 @@ import { recurrenceLabel } from "../../lib/taskRecurrenceLabel";
 import type { Task } from "@/types";
 import { usePopup } from "@/providers/PopupProvider";
 import { TaskJSONPopup } from "./TaskJSONPopup";
-import { domMax } from "framer-motion";
 
 type Args = {
   task: Task;

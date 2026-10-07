@@ -11,7 +11,6 @@ import {
 import {
   IoAdd,
   IoClose,
-  IoDocument,
   IoEllipseOutline,
   IoOpen,
   IoTimeOutline,

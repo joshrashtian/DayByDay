@@ -1,4 +1,3 @@
-import React from 'react'
 import HevyWidget from '@/screens/integrations/HevyWidget'
 const DayWidgets = ({ day }: { day: any }) => {
   return (

@@ -104,7 +104,7 @@ export default function PomodoroScreen() {
 
   const digits = formatPomodoroTime(secondsLeft).split("");
 
-  const [showNowPlaying, setShowNowPlaying] = useState<boolean>(true);
+  const [showNowPlaying] = useState<boolean>(true);
 
   return (
     <main className={twMerge(style.container, style.phase.background[phase])}>
