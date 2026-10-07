@@ -1,0 +1,355 @@
+/*
+ * Blocks screen — base layout and themes in plain CSS.
+ *
+ * Colors come from the semantic tokens in App.css, so this file needs no
+ * dark-mode branch of its own. Structure hooks:
+ *
+ *   #block-screen              — root wrapper (use for scoping: #block-screen .foo)
+ *   .block-screen              — same node as #block-screen
+ *   .block-screen__title       — page heading
+ *   .block-screen__list        — list container
+ *   .block-screen__row         — one block row
+ *   .block-screen__row--early-morning — sample variant row
+ *   .block-screen__row--afternoon     — sample variant row
+ */
+
+ .name {
+     font-size: 100px;
+     color: red;
+
+ }
+
+
+.block-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 1rem;
+    width: 100%;
+    padding: 1rem;
+}
+
+.block-screen__header {
+    display: flex;
+    width: 100%;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.block-screen__heading-group {
+    display: flex;
+    min-width: min(34rem, 100%);
+    flex: 1 1 28rem;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.block-screen__title {
+    margin: 0;
+    text-align: left;
+    font-family: var(--font-display);
+    font-size: 2.25rem;
+    line-height: 1.1;
+    font-weight: 900;
+    letter-spacing: 0.025em;
+    color: var(--ink);
+}
+
+@media (min-width: 640px) {
+    .block-screen__title {
+        font-size: 3rem;
+    }
+}
+
+.block-screen__subtitle {
+    margin: 0;
+    max-width: 70ch;
+    font-size: 0.9rem;
+    line-height: 1.45;
+    color: var(--muted);
+}
+
+
+.block-screen__add-button {
+    display: inline-flex;
+    height: 3.5rem;
+    width: 3.5rem;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 9999px;
+    background: var(--sunken);
+    color: var(--ink);
+    font-size: 2rem;
+    line-height: 1;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.block-screen__add-button:hover {
+    background: var(--line);
+}
+
+
+/* ── Day dial ───────────────────────────────────────────────────────────── */
+
+.block-dial {
+    --block-dial-track: var(--line);
+    --block-dial-hand: var(--ink);
+    display: flex;
+    width: 100%;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem 2rem;
+}
+
+.block-dial__chart {
+    position: relative;
+    width: 260px;
+    max-width: 100%;
+    flex: 0 0 auto;
+}
+
+.block-dial__svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.block-dial__tick {
+    fill: var(--faint);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.block-dial__center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    pointer-events: none;
+    text-align: center;
+}
+
+.block-dial__center-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+}
+
+.block-dial__center-name {
+    font-family: var(--font-quantify);
+    font-size: 1.5rem;
+    font-weight: 900;
+    line-height: 1.1;
+    color: var(--ink);
+}
+
+.block-dial__center-range {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--muted);
+}
+
+.block-dial__legend {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    min-width: 9rem;
+}
+
+.block-dial__legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+    opacity: 0.7;
+}
+
+.block-dial__legend-item--active {
+    opacity: 1;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.block-dial__legend-dot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.05rem;
+    height: 1.05rem;
+    border-radius: 9999px;
+    flex: 0 0 auto;
+    color: #fff;
+}
+
+.block-dial__legend-name {
+    flex: 1 1 auto;
+}
+
+.block-dial__legend-count {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--faint);
+    font-variant-numeric: tabular-nums;
+}
+
+
+.block-screen__list {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 0.75rem;
+}
+
+.block-screen__row {
+    display: flex;
+    min-height: 9rem;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 0.65rem;
+    position: relative;
+    isolation: isolate;
+    border-radius: 0.85rem;
+    background: var(--surface);
+    padding: 0.8rem 0.9rem;
+    box-shadow: inset 0 0 0 1px var(--line);
+}
+
+
+.block-screen__card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.block-screen__title-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.block-screen__icon-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 0.55rem;
+    flex: 0 0 auto;
+    color: #fff;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+
+.block-screen__count-pill {
+    border-radius: 9999px;
+    background: var(--sunken);
+    padding: 0.15rem 0.5rem;
+    font-size: 0.7rem;
+    line-height: 1.25;
+    font-weight: 700;
+    color: var(--muted);
+}
+
+
+.block-screen__row--title {
+    margin: 0;
+    font-family: var(--font-quantify);
+    font-size: 1.5rem;
+    line-height: 1.1;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+}
+
+
+.block-screen__row--description {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.35;
+    color: var(--muted);
+}
+
+
+.block-screen__card-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.block-screen__time-range {
+    margin: 0;
+    font-size: 0.72rem;
+    line-height: 1.2;
+    font-weight: 700;
+    color: var(--muted);
+}
+
+
+.block-screen__edit-button {
+    border: none;
+    border-radius: 0.5rem;
+    background: var(--ink);
+    padding: 0.3rem 0.55rem;
+    font-size: 0.72rem;
+    line-height: 1.2;
+    font-weight: 700;
+    color: var(--surface);
+    cursor: pointer;
+}
+
+.block-screen__edit-button:hover {
+    background: var(--muted);
+}
+
+
+.block-screen__empty {
+    grid-column: 1 / -1;
+    min-height: 7rem;
+}
+
+.block-screen__row--early-morning {
+    padding: 0.8rem 0.9rem;
+}
+
+.block-screen__row--early-morning::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: var(--block-tint-morning);
+    pointer-events: none;
+}
+
+
+.block-screen__row--afternoon {
+    padding: 0.8rem 0.9rem;
+}
+
+.block-screen__row--afternoon::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: var(--block-tint-afternoon);
+    pointer-events: none;
+}
