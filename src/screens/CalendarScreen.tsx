@@ -47,6 +47,12 @@ import { useTasksStore } from "../stores/tasksStore";
 import { useSettingsStore } from "../stores/settingsStore";
 import { DatePicker } from "../components/application/date-picker/date-picker";
 import { CalendarBlocksPage } from "../components/calendar/CalendarBlocksPage";
+import { CalendarFilterMenu } from "../components/calendar/CalendarFilterMenu";
+import {
+  applyCalendarFilter,
+  EMPTY_CALENDAR_FILTER,
+  type CalendarFilter,
+} from "../lib/calendarFilters";
 import { CALENDAR_BLOCKS_PATH, CALENDAR_PATH } from "../lib/calendarRoutes";
 
 type CalendarMode = "month" | "week" | "day" | "three" | "custom";
@@ -108,6 +114,12 @@ function CalendarMainPage() {
   const categoryConfigs = useSettingsStore((s) => s.categoryConfigs);
 
   const [mode, setMode] = useState<CalendarMode>("week");
+  const [calendarFilter, setCalendarFilter] =
+    useState<CalendarFilter>(EMPTY_CALENDAR_FILTER);
+  const filteredTasks = useMemo(
+    () => applyCalendarFilter(tasks, calendarFilter),
+    [tasks, calendarFilter],
+  );
   const headerRef = useRef<HTMLDivElement>(null);
   const [compactHeader, setCompactHeader] = useState(false);
   const measureHeader = useCallback(() => {
@@ -355,6 +367,14 @@ function CalendarMainPage() {
 
           {/* Right: date picker + nav */}
           <div className="flex items-center gap-2">
+            {(mode === "month" || mode === "week") && (
+              <CalendarFilterMenu
+                tasks={tasks}
+                filter={calendarFilter}
+                onChange={setCalendarFilter}
+                compact={compactHeader}
+              />
+            )}
             <Link
               to={{ pathname: CALENDAR_BLOCKS_PATH, search: location.search }}
               className="flex items-center gap-1.5 rounded-full border border-line/80 bg-surface/60 px-3 py-1.5 text-xs font-semibold text-muted transition-colors hover:text-ink"
@@ -418,7 +438,7 @@ function CalendarMainPage() {
                 <div className="h-full overflow-auto">
                   <MonthGridView
                     month={monthRef}
-                    tasks={tasks}
+                    tasks={filteredTasks}
                     onToggleTask={toggleTask}
                     onEditTask={openTaskEditor}
                     onDeleteTask={removeTask}
@@ -442,7 +462,7 @@ function CalendarMainPage() {
                 <div className="h-full min-h-0">
                   <WeekView
                     startDay={focus}
-                    tasks={tasks}
+                    tasks={filteredTasks}
                     onToggleTask={toggleTask}
                     onDeleteTask={removeTask}
                     onDuplicateTask={duplicateTask}

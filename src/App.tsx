@@ -38,6 +38,7 @@ import { useAppTheme } from "./hooks/useAppTheme";
 import { useMenuNavigation } from "./hooks/useMenuNavigation";
 import { useCreateTaskAction } from "./hooks/useCreateTaskAction";
 import { useGoogleCalendarSync } from "./hooks/useGoogleCalendarSync";
+import { useTaskNotifications } from "./hooks/useTaskNotifications";
 import { useRightPanel } from "./providers/RightPanelProvider";
 import SocialScreen from "./screens/social/SocialScreen";
 import { HevyProvider } from "hevy-javascript";
@@ -55,6 +56,7 @@ export default function App() {
   useAppTheme();
   useCreateTaskAction();
   useGoogleCalendarSync();
+  useTaskNotifications();
   const [sidebarOffset, setSidebarOffset] = useState(220);
   const [rightPanelOffset, setRightPanelOffset] = useState(0);
   const [showSettingsModal, setShowSettingsModal] = useState(false);

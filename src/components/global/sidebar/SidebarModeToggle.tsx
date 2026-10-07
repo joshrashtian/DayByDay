@@ -40,7 +40,7 @@ export function SidebarModeToggle({
   }
 
   return (
-    <div className="grid grid-cols-2 gap-1">
+    <div className="grid grid-cols-4 gap-1">
       {MODES.map(({ id, icon }) => (
         <button
           key={id}

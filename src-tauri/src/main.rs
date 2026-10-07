@@ -1,5 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 mod google_calendar_oauth;
+mod notis;
 mod oauth_loopback;
 mod spotify_oauth;
 
@@ -11,11 +12,19 @@ use tauri::{
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_notification::init())
+        .manage(notis::Queue::default())
         .invoke_handler(tauri::generate_handler![
             spotify_oauth::spotify_oauth_listen,
-            google_calendar_oauth::google_oauth_listen
+            google_calendar_oauth::google_oauth_listen,
+            notis::schedule_notification,
+            notis::cancel_notification,
+            notis::send_notification,
+            notis::sync_notifications
         ])
         .setup(|app| {
+            notis::start_scheduler(app.handle().clone());
+
             let about_metadata = AboutMetadataBuilder::new()
                 .version(Some("0.1.0 Beta"))
                 .authors(Some(vec!["Joshua Rashtian".to_string()]))
