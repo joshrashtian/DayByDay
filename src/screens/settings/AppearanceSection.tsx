@@ -1,4 +1,6 @@
 import { IoContrast, IoMoon, IoSunny } from "react-icons/io5";
+import Container from "@/ui/settings/Container";
+import SettingsHeader from "@/ui/settings/Header";
 import { useSettingsStore } from "@/stores/settingsStore";
 import type { ThemePreference } from "@/lib/appTheme";
 
@@ -33,21 +35,22 @@ export function AppearanceSection() {
   const setTheme = useSettingsStore((s) => s.setTheme);
 
   return (
-    <div className="space-y-8">
-      <div>
+    <div className="space-y-5">
+      <SettingsHeader>
+        <div>
         <h2 className="font-display text-2xl font-semibold text-ink">
           Appearance
         </h2>
         <p className="mt-1 text-sm text-muted">
           Choose how RiseByDay looks.
         </p>
-      </div>
+        </div>
+      </SettingsHeader>
 
-      <section>
-        <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
-          Theme
-        </h3>
-        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <Container>
+        <Container.Header icon={<IoContrast />} heading="Theme" />
+        <Container.Body className="px-4 py-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {OPTIONS.map((option) => {
             const selected = theme === option.id;
             return (
@@ -78,7 +81,8 @@ export function AppearanceSection() {
             );
           })}
         </div>
-      </section>
+        </Container.Body>
+      </Container>
     </div>
   );
 }

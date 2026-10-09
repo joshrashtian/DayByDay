@@ -6,7 +6,7 @@ import { useProfile } from "@/providers/ProfileProvider";
 import { useAuthStore } from "@/stores/authStore";
 import { useSyncStatus } from "@/lib/tasksSync";
 import { AVATAR_ACCEPT, uploadAvatar } from "@/lib/cloud/avatars";
-import Container from "@/components/settings/Container";
+import Container from "@/ui/settings/Container";
 import { IoSync } from "react-icons/io5";
 
 function AccountForm() {

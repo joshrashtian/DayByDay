@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { getVersion } from "@tauri-apps/api/app";
 import { IoSettings } from "react-icons/io5";
 import { WeatherSection } from "./settings/WeatherSection";
@@ -8,6 +8,7 @@ import { ConnectedCalendarsSection } from "./settings/ConnectedCalendarsSection"
 import { ProfileSection } from "./settings/ProfileSection";
 import { AudioSection } from "./settings/AudioSection";
 import { SpotifySection } from "./settings/SpotifySection";
+import { HevySection } from "./settings/HevySection";
 import { AppearanceSection } from "./settings/AppearanceSection";
 import HomeSection from "./settings/HomeSection";
 import { SettingsProvider, useSettings } from "@/providers/SettingsProvider";
@@ -45,6 +46,7 @@ const SettingsScreenContent = ({ modal = false }: { modal?: boolean }) => {
     profile: () => <ProfileSection />,
     "connected-calendars": () => <ConnectedCalendarsSection />,
     spotify: () => <SpotifySection />,
+    hevy: () => <HevySection />,
     audio: () => <AudioSection />,
   };
 
@@ -146,11 +148,19 @@ const SettingsScreenContent = ({ modal = false }: { modal?: boolean }) => {
                     {group.label}
                   </h2>
                 )}
-                {group.sections.map((section) => {
+                {group.sections.map((section, i) => {
                   const isActive = activeSection === section.id;
+                  const showSubgroup =
+                    section.subgroup &&
+                    section.subgroup !== group.sections[i - 1]?.subgroup;
                   return (
+                    <Fragment key={section.id}>
+                    {showSubgroup && (
+                      <h3 className="px-3 pb-0.5 pt-2 text-[10px] font-medium uppercase tracking-wider text-faint/80">
+                        {section.subgroup}
+                      </h3>
+                    )}
                     <button
-                      key={section.id}
                       type="button"
                       onClick={() => navigate(section.id)}
                       aria-current={isActive ? "true" : undefined}
@@ -182,6 +192,7 @@ const SettingsScreenContent = ({ modal = false }: { modal?: boolean }) => {
                       </span>
                       {section.label}
                     </button>
+                    </Fragment>
                   );
                 })}
               </div>

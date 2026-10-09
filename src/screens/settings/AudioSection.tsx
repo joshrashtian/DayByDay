@@ -17,6 +17,8 @@ import {
   previewTaskClickSound,
 } from "@/lib/taskClickSounds";
 import { useSettingsStore } from "@/stores/settingsStore";
+import Container from "@/ui/settings/Container";
+import SettingsHeader from "@/ui/settings/Header";
 
 export function AudioSection() {
   const uid = useId();
@@ -68,6 +70,28 @@ export function AudioSection() {
 
   return (
     <div className="space-y-5">
+      <SettingsHeader>
+        <div>
+        <h2 className="font-display text-2xl font-semibold text-ink">Audio</h2>
+        <p className="mt-1 text-sm text-muted">
+          Sounds for completing, unchecking, and creating tasks.
+        </p>
+        </div>
+      </SettingsHeader>
+
+      <Container>
+        <Container.Header
+          icon={
+            audioPrefs.soundEnabled ? (
+              <IoVolumeHighOutline aria-hidden />
+            ) : (
+              <IoVolumeMuteOutline aria-hidden />
+            )
+          }
+          heading="Task Sounds"
+        />
+
+        <Container.Body className="space-y-4 px-4 py-4">
       <div className="flex items-start justify-between gap-4 rounded-xl border border-line bg-sunken/80 px-3 py-3">
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-ink">Enable sound</p>
@@ -84,35 +108,7 @@ export function AudioSection() {
           aria-label="Enable task sounds"
         />
       </div>
-      <div>
-        <h2 className="font-display text-2xl font-semibold text-ink">Audio</h2>
-        <p className="mt-1 text-sm text-muted">
-          Sounds for completing, unchecking, and creating tasks.
-        </p>
-      </div>
 
-      <section className="overflow-hidden rounded-2xl border border-line/80 bg-surface/70">
-        <div className="flex items-start gap-3 border-b border-line px-4 py-4">
-          <span className="inline-flex size-10 items-center justify-center rounded-xl bg-violet-500/10 text-violet-700 dark:bg-violet-500/15 dark:text-violet-200">
-            {audioPrefs.soundEnabled ? (
-              <IoVolumeHighOutline className="size-5" aria-hidden />
-            ) : (
-              <IoVolumeMuteOutline className="size-5" aria-hidden />
-            )}
-          </span>
-          <div>
-            <h3 className="font-display text-lg font-semibold text-ink">
-              Task Sounds
-            </h3>
-            <p className="mt-0.5 text-sm text-muted">
-              {audioPrefs.soundEnabled
-                ? `${audioPrefs.volume}% volume`
-                : "Muted"}
-            </p>
-          </div>
-        </div>
-
-        <div className="space-y-4 px-4 py-4">
           {TASK_SOUND_EVENTS.map(({ event, prefKey, label, description }) => {
             const selectId = `${uid}-sound-${event}`;
             const selected = audioPrefs[prefKey];
@@ -201,25 +197,19 @@ export function AudioSection() {
               className="h-2 w-full cursor-pointer appearance-none rounded-full bg-sunken accent-violet-600 disabled:cursor-not-allowed disabled:opacity-50 dark:accent-violet-400"
             />
           </div>
-        </div>
-      </section>
+        </Container.Body>
+      </Container>
 
-      <section className="overflow-hidden rounded-2xl border border-line/80 bg-surface/70">
-        <div className="flex items-start gap-3 border-b border-line px-4 py-4">
-          <span className="inline-flex size-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200">
-            <IoMusicalNoteOutline className="size-5" aria-hidden />
-          </span>
-          <div>
-            <h3 className="font-display text-lg font-semibold text-ink">
-              Import your own
-            </h3>
-            <p className="mt-0.5 text-sm text-muted">
-              Upload a short audio clip from your device. Saved locally.
-            </p>
-          </div>
-        </div>
+      <Container>
+        <Container.Header
+          icon={<IoMusicalNoteOutline aria-hidden />}
+          heading="Import your own"
+        />
 
-        <div className="space-y-4 px-4 py-4">
+        <Container.Body className="space-y-4 px-4 py-4">
+          <p className="text-sm text-muted">
+            Upload a short audio clip from your device. Saved locally.
+          </p>
           <div
             className="rounded-xl border border-accent bg-accent-soft p-3 text-sm text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200"
             role="note"
@@ -311,8 +301,8 @@ export function AudioSection() {
               </p>
             ) : null}
           </div>
-        </div>
-      </section>
+        </Container.Body>
+      </Container>
     </div>
   );
 }

@@ -6,8 +6,9 @@ import {
   IoCalendarOutline,
   IoVolumeHighOutline,
   IoLayersOutline,
-  IoMusicalNotesOutline,
 } from "react-icons/io5";
+import spotifyIcon from "@/assets/spotifysvg.svg";
+import { HevyLogo } from "@/components/foundations/logos/HevyLogo";
 import { SPOTIFY_ENABLED } from "@/lib/featureFlags";
 
 export type SettingsSection =
@@ -18,6 +19,7 @@ export type SettingsSection =
   | "profile"
   | "connected-calendars"
   | "spotify"
+  | "hevy"
   | "audio";
 
 export const DEFAULT_SECTION: SettingsSection = "home";
@@ -38,7 +40,11 @@ export interface SectionMeta {
   description: string;
   icon: React.ReactNode;
   group: SettingsGroup;
+  /** Optional subheading within the group; consecutive sections sharing one render under it. */
+  subgroup?: string;
 }
+
+export const LOCAL_INTEGRATIONS = "Local Integrations";
 
 const ALL_SECTIONS: SectionMeta[] = [
   {
@@ -87,8 +93,17 @@ const ALL_SECTIONS: SectionMeta[] = [
     id: "spotify",
     label: "Spotify",
     description: "Log listening history onto your calendar",
-    icon: <IoMusicalNotesOutline />,
+    icon: <img src={spotifyIcon} alt="" className="size-[1em]" aria-hidden />,
     group: "integrations",
+    subgroup: LOCAL_INTEGRATIONS,
+  },
+  {
+    id: "hevy",
+    label: "Hevy",
+    description: "Show your workouts on the calendar",
+    icon: <HevyLogo />,
+    group: "integrations",
+    subgroup: LOCAL_INTEGRATIONS,
   },
   {
     id: "audio",

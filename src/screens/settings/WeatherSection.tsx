@@ -4,6 +4,9 @@ import {
   getManualWeatherCoords,
   setManualWeatherCoords,
 } from "../../lib/weatherCoords";
+import { IoLocationOutline } from "react-icons/io5";
+import Container from "@/ui/settings/Container";
+import SettingsHeader from "@/ui/settings/Header";
 
 export function WeatherSection() {
   const uid = useId();
@@ -54,15 +57,20 @@ export function WeatherSection() {
 
   return (
     <div className="space-y-5">
-      <div>
+      <SettingsHeader>
+        <div>
         <h2 className="font-display text-2xl font-semibold text-ink">
           Weather
         </h2>
         <p className="mt-1 text-sm text-muted">
           Use a fixed location for consistent forecast data across sessions.
         </p>
-      </div>
+        </div>
+      </SettingsHeader>
 
+      <Container>
+        <Container.Header icon={<IoLocationOutline />} heading="Location" />
+        <Container.Body className="space-y-4 px-4 py-4">
       <div
         id={weatherHintId}
         className="rounded-xl border border-accent bg-accent-soft p-3 text-sm text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200"
@@ -136,8 +144,9 @@ export function WeatherSection() {
           </p>
         ) : null}
       </div>
+        </Container.Body>
 
-      <div className="flex flex-wrap gap-2">
+      <Container.Footer className="justify-start px-4">
         <button
           type="button"
           onClick={onSaveWeatherLocation}
@@ -152,7 +161,8 @@ export function WeatherSection() {
         >
           Use device location
         </button>
-      </div>
+      </Container.Footer>
+      </Container>
     </div>
   );
 }

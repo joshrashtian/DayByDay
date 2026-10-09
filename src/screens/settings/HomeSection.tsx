@@ -1,7 +1,7 @@
 import { useSettings } from "@/providers/SettingsProvider";
 import { NON_HOME_SECTIONS } from "./sections";
-import Container from "@/components/settings/Container";
-import SettingsHeader from "@/components/settings/Header";
+import Container from "@/ui/settings/Container";
+import SettingsHeader from "@/ui/settings/Header";
 
 export default function HomeSection() {
   const { navigate } = useSettings();

@@ -1,4 +1,7 @@
 import { useEffect, useId, useState } from "react";
+import { IoColorPaletteOutline } from "react-icons/io5";
+import Container from "@/ui/settings/Container";
+import SettingsHeader from "@/ui/settings/Header";
 import { ColorPicker } from "../../components/base/input/color-picker";
 import { IconPicker } from "../../components/base/input/icon-picker";
 import { renderCategoryIcon } from "../../lib/categoryIcons";
@@ -124,7 +127,8 @@ export function CategoriesSection() {
 
   return (
     <div className="space-y-5">
-      <div>
+      <SettingsHeader>
+        <div>
         <h2 className="font-display text-2xl font-semibold text-ink">
           Categories
         </h2>
@@ -132,8 +136,12 @@ export function CategoriesSection() {
           Give each category a color and an icon. Tasks in that category show as
           a full-color card.
         </p>
-      </div>
+        </div>
+      </SettingsHeader>
 
+      <Container>
+        <Container.Header icon={<IoColorPaletteOutline />} heading="Edit category" />
+        <Container.Body className="space-y-5 px-4 py-4">
       <div className="flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1">
           <label
@@ -269,8 +277,9 @@ export function CategoriesSection() {
           </p>
         ) : null}
       </div>
+        </Container.Body>
 
-      <div className="flex flex-wrap gap-2">
+      <Container.Footer className="justify-start px-4">
         <button
           type="button"
           onClick={onSave}
@@ -285,7 +294,8 @@ export function CategoriesSection() {
         >
           {pendingDelete ? "Confirm delete" : "Delete category"}
         </button>
-      </div>
+      </Container.Footer>
+      </Container>
     </div>
   );
 }

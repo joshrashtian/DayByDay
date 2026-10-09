@@ -15,7 +15,7 @@ import {
   useCalendarIntegrationsStore,
 } from "@/stores/calendarIntegrationsStore";
 import { useTasksStore } from "@/stores/tasksStore";
-import Container from "@/components/settings/Container";
+import Container from "@/ui/settings/Container";
 
 function CalendarColorDot({ color }: { color?: string }) {
   return (
