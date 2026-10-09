@@ -4,7 +4,7 @@ type Project = { id: string; name: string }
 
 const ProjectScreen = ({ projects = [] as Project[] }) => {
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col justify-start items-start gap-6 p-6">
       <motion.h1
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}

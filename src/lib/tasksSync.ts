@@ -6,6 +6,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { useTasksStore } from "@/stores/tasksStore";
 import { rowToTask, taskToRow, taskTombstoneRow } from "@/lib/cloud/mappers";
 import { syncCategories } from "@/lib/categoriesSync";
+import { syncBlocks } from "@/lib/blocksSync";
 import type { TaskRow } from "@/types/database";
 import type { Task } from "@/types";
 
@@ -191,9 +192,9 @@ async function pullRemoteChanges(userId: string) {
   useTasksStore.getState().setLastPulledAt(pullTime);
 }
 
-/** Syncs categories, then pushes local task changes to Supabase and pulls
- * remote changes down. Categories go first so tasks pulled from another device
- * arrive with the categories they reference.
+/** Syncs categories and blocks, then pushes local task changes to Supabase and pulls
+ * remote changes down. Configs go first so tasks pulled from another device
+ * arrive with the categories and blocks they reference.
  * No-ops when signed out or offline; only one sync runs at a time. */
 export async function syncNow() {
   if (useAuthStore.getState().status !== "signedIn") return;
@@ -211,17 +212,22 @@ export async function syncNow() {
   isSyncing = true;
   setStatus("syncing");
   try {
-    // A category failure shouldn't hold up tasks; it's retried next sync.
-    let categoriesSynced = true;
-    try {
-      await syncCategories(userId);
-    } catch (err) {
-      console.error("Category sync failed", err);
-      categoriesSynced = false;
+    // A config failure shouldn't hold up tasks; it's retried next sync.
+    let configsSynced = true;
+    for (const [label, syncConfig] of [
+      ["Category", syncCategories],
+      ["Block", syncBlocks],
+    ] as const) {
+      try {
+        await syncConfig(userId);
+      } catch (err) {
+        console.error(`${label} sync failed`, err);
+        configsSynced = false;
+      }
     }
     const createsPushed = await pushLocalChanges(userId);
     await pullRemoteChanges(userId);
-    setStatus(createsPushed && categoriesSynced ? "synced" : "error");
+    setStatus(createsPushed && configsSynced ? "synced" : "error");
   } catch (err) {
     console.error("Task sync failed", err);
     setStatus("error");

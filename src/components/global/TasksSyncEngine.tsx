@@ -3,7 +3,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { useTasksStore } from "@/stores/tasksStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { syncNow } from "@/lib/tasksSync";
-import { isApplyingRemoteCategories } from "@/lib/categoriesSync";
+import { isApplyingRemoteConfigs } from "@/lib/namedConfigSync";
 
 const SYNC_INTERVAL_MS = 30_000;
 
@@ -24,10 +24,11 @@ export function TasksSyncEngine() {
       }
     });
 
-    const unsubscribeCategories = useSettingsStore.subscribe((state, prev) => {
+    const unsubscribeConfigs = useSettingsStore.subscribe((state, prev) => {
       if (
-        state.categoryConfigs !== prev.categoryConfigs &&
-        !isApplyingRemoteCategories()
+        (state.categoryConfigs !== prev.categoryConfigs ||
+          state.blockConfigs !== prev.blockConfigs) &&
+        !isApplyingRemoteConfigs()
       ) {
         void syncNow();
       }
@@ -38,7 +39,7 @@ export function TasksSyncEngine() {
     return () => {
       clearInterval(interval);
       unsubscribe();
-      unsubscribeCategories();
+      unsubscribeConfigs();
       window.removeEventListener("focus", onFocus);
       window.removeEventListener("online", onOnline);
     };
