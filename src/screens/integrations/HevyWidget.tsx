@@ -15,7 +15,7 @@ const isSameDay = (iso: string | undefined, date: Date) => {
   );
 };
 
-const HevyWidget = ({ date }: { date: Date }) => {
+const HevyWidget = ({ date, onActiveChange }: { date: Date, onActiveChange: (e: boolean) => void }) => {
   const hevy = useMemo(
     () => (HEVY_API_KEY ? createHevyClient({ apiKey: HEVY_API_KEY }) : null),
     [],
@@ -28,6 +28,7 @@ const HevyWidget = ({ date }: { date: Date }) => {
   useEffect(() => {
     if (!hevy) return;
     let cancelled = false;
+
 
     async function getWorkouts() {
       if (!hevy) return;
@@ -54,6 +55,10 @@ const HevyWidget = ({ date }: { date: Date }) => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hevy, dayKey]);
+
+  useEffect(() => {
+      if (workouts !== null) onActiveChange?.(workouts.length > 0)
+    }, [workouts, onActiveChange])
 
   if (isLoading) return;
   if (!hevy) return <p>Set VITE_HEVY_API in .env to show workouts.</p>;

@@ -6,7 +6,7 @@ type DivProps = React.HTMLAttributes<HTMLDivElement>
 const ContainerRoot = ({ className, ...props }: DivProps) => (
   <div
     className={twMerge(
-      'flex flex-col overflow-hidden rounded-2xl border border-line bg-zinc-100 dark:bg-zinc-900/90',
+      'flex flex-col overflow-hidden rounded-2xl border border-line/30  bg-zinc-100/40 dark:bg-zinc-900/90',
       className
     )}
     {...props}
@@ -27,22 +27,23 @@ const ContainerBody = ({ className, ...props }: DivProps) => (
 
 type ContainerHeaderType = DivProps & {
   icon?: React.ReactNode
+  id?: string
   heading: string
 }
 
-const ContainerHeader = ({ className, icon, heading, ...props }: ContainerHeaderType) => {
+const ContainerHeader = ({ className, id, icon, heading, ...props }: ContainerHeaderType) => {
   return (
-  <div className="flex flex-wrap items-start justify-between gap-4 border-b border-line px-4 py-4">
-      <div className="flex items-start gap-3">
+  <div className="flex  items-center justify-between gap-4 border-b border-line px-4 py-4">
+      <div className="flex items-center gap-3">
         { icon &&
-      <span className="inline-flex size-10 items-center justify-center rounded-xl bg-teal-500/10 text-teal-700 dark:bg-teal-500/15 dark:text-teal-200">
+      <span className="inline-flex size-10 items-center justify-center border-b text-xl ">
        {icon}
       </span>
         }
       <div>
         <h3
           id={`${heading}-heading`}
-          className="font-display text-lg font-semibold text-ink"
+          className="font-black text-lg font-semibold text-ink"
         >
           {heading}
           </h3>

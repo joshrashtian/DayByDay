@@ -701,9 +701,13 @@ export const useTasksStore = create<TasksState>()(
 
       upsertFromRemote: (task) =>
         set((s) => {
-          const index = s.tasks.findIndex((t) => t.id === task.id);
-          if (index === -1) return { tasks: [...s.tasks, task] };
-          const tasks = [...s.tasks];
+          // An event imported on two devices (or before the first pull) gets a
+          // different id on each; the server's copy wins so only one survives.
+          const tasks = task.icsUid
+            ? s.tasks.filter((t) => t.id === task.id || t.icsUid !== task.icsUid)
+            : [...s.tasks];
+          const index = tasks.findIndex((t) => t.id === task.id);
+          if (index === -1) return { tasks: [...tasks, task] };
           tasks[index] = task;
           return { tasks };
         }),

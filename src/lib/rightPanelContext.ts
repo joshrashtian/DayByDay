@@ -29,6 +29,7 @@ type RouteRule = {
 const ROUTE_RULES: RouteRule[] = [
   { path: "/", exact: true, descriptor: { id: "home", label: "Home" } },
   { path: "/tasks", descriptor: { id: "tasks", label: "Tasks" } },
+  { path: "/projects", descriptor: { id: "generic", label: "Projects" } },
   // Before "/calendar": rules are matched in order, first hit wins.
   { path: "/calendar/blocks", descriptor: { id: "blocks", label: "Blocks" } },
   { path: "/calendar", descriptor: { id: "calendar", label: "Calendar" } },

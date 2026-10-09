@@ -5,7 +5,9 @@ import { supabase } from "@/utils/supabase";
 import { useAuthStore } from "@/stores/authStore";
 import { useTasksStore } from "@/stores/tasksStore";
 import { rowToTask, taskToRow, taskTombstoneRow } from "@/lib/cloud/mappers";
+import { syncCategories } from "@/lib/categoriesSync";
 import type { TaskRow } from "@/types/database";
+import type { Task } from "@/types";
 
 type SyncStatus = "idle" | "syncing" | "synced" | "offline" | "error";
 
@@ -76,6 +78,42 @@ async function pushPendingCreates(userId: string): Promise<Set<string>> {
   return failed;
 }
 
+/** Keeps `.in()` filters well under PostgREST's URL length limit. */
+const ICS_LOOKUP_CHUNK = 100;
+
+/** ICS imports dedupe against local tasks only, so an event already on the
+ * server under another id (imported on another device, or before this one's
+ * first pull) would be inserted again and hit the unique index — failing the
+ * whole batch on every sync. Swaps those local copies for the server's row and
+ * returns the local ids that must not be pushed. */
+async function adoptRemoteIcsDuplicates(
+  userId: string,
+  icsTasks: Task[],
+): Promise<Set<string>> {
+  const superseded = new Set<string>();
+  const byUid = new Map(icsTasks.map((t) => [t.icsUid!, t]));
+  const uids = [...byUid.keys()];
+
+  for (let i = 0; i < uids.length; i += ICS_LOOKUP_CHUNK) {
+    const { data, error } = await supabase
+      .from("tasks")
+      .select("*")
+      .eq("user_id", userId)
+      .is("deleted_at", null)
+      .in("ics_uid", uids.slice(i, i + ICS_LOOKUP_CHUNK));
+    if (error) throw error;
+
+    for (const row of (data ?? []) as TaskRow[]) {
+      const local = row.ics_uid ? byUid.get(row.ics_uid) : undefined;
+      if (!local || local.id === row.id) continue;
+      superseded.add(local.id);
+      useTasksStore.getState().upsertFromRemote(rowToTask(row));
+    }
+  }
+
+  return superseded;
+}
+
 /** Returns true when every pending create reached the API. */
 async function pushLocalChanges(userId: string): Promise<boolean> {
   const state = useTasksStore.getState();
@@ -87,20 +125,9 @@ async function pushLocalChanges(userId: string): Promise<boolean> {
     ? await pushPendingCreates(userId)
     : new Set<string>();
 
-  const dirty = state.tasks.filter(
-    (t) =>
-      t.updatedAt.getTime() > lastPushedAt &&
-      !pendingCreates.has(t.id) &&
-      !failedCreates.has(t.id),
-  );
-
-  if (dirty.length > 0) {
-    const { error } = await supabase
-      .from("tasks")
-      .upsert(dirty.map((t) => taskToRow(t, userId)));
-    if (error) throw error;
-  }
-
+  // Tombstones first: removing ICS events and re-importing them before the
+  // next sync would otherwise insert the new rows while the old ones are still
+  // live, tripping the (user_id, ics_uid) unique index.
   const pendingDeletedIds = state.pendingDeletedIds;
   if (pendingDeletedIds.length > 0) {
     const deletedAt = new Date();
@@ -109,6 +136,25 @@ async function pushLocalChanges(userId: string): Promise<boolean> {
       .upsert(pendingDeletedIds.map((id) => taskTombstoneRow(id, userId, deletedAt)));
     if (error) throw error;
     useTasksStore.getState().clearPendingDeletedIds(pendingDeletedIds);
+  }
+
+  const dirty = state.tasks.filter(
+    (t) =>
+      t.updatedAt.getTime() > lastPushedAt &&
+      !pendingCreates.has(t.id) &&
+      !failedCreates.has(t.id),
+  );
+  const superseded = await adoptRemoteIcsDuplicates(
+    userId,
+    dirty.filter((t) => t.icsUid),
+  );
+  const toUpsert = dirty.filter((t) => !superseded.has(t.id));
+
+  if (toUpsert.length > 0) {
+    const { error } = await supabase
+      .from("tasks")
+      .upsert(toUpsert.map((t) => taskToRow(t, userId)));
+    if (error) throw error;
   }
   if (!hasApi) {
     useTasksStore.getState().clearPendingCreateIds(state.pendingCreateIds);
@@ -145,7 +191,9 @@ async function pullRemoteChanges(userId: string) {
   useTasksStore.getState().setLastPulledAt(pullTime);
 }
 
-/** Pushes local task changes to Supabase, then pulls remote changes down.
+/** Syncs categories, then pushes local task changes to Supabase and pulls
+ * remote changes down. Categories go first so tasks pulled from another device
+ * arrive with the categories they reference.
  * No-ops when signed out or offline; only one sync runs at a time. */
 export async function syncNow() {
   if (useAuthStore.getState().status !== "signedIn") return;
@@ -163,9 +211,17 @@ export async function syncNow() {
   isSyncing = true;
   setStatus("syncing");
   try {
+    // A category failure shouldn't hold up tasks; it's retried next sync.
+    let categoriesSynced = true;
+    try {
+      await syncCategories(userId);
+    } catch (err) {
+      console.error("Category sync failed", err);
+      categoriesSynced = false;
+    }
     const createsPushed = await pushLocalChanges(userId);
     await pullRemoteChanges(userId);
-    setStatus(createsPushed ? "synced" : "error");
+    setStatus(createsPushed && categoriesSynced ? "synced" : "error");
   } catch (err) {
     console.error("Task sync failed", err);
     setStatus("error");

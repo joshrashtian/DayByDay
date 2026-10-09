@@ -1,11 +1,15 @@
 import { useTasksStore } from "@/stores/tasksStore";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useAuthStore } from "@/stores/authStore";
+import { supabase } from "@/utils/supabase";
+import { resolveAvatarUrl } from "@/lib/cloud/avatars";
 
 export type Profile = {
   id: string;
   name: string;
   email: string;
+  /** `profiles.full_name`; null when signed out or not set. */
+  fullName?: string | null;
   avatarUrl?: string | null;
 };
 
@@ -78,7 +82,31 @@ export const ProfileProvider = ({
       id: authUser.id,
       email: authUser.email ?? prev?.email ?? "",
       name: authUser.user_metadata?.full_name ?? authUser.email ?? prev?.name ?? "",
+      avatarUrl: resolveAvatarUrl(authUser.user_metadata?.avatar_url),
     }));
+
+    let cancelled = false;
+    supabase
+      .from("profiles")
+      .select("full_name, avatar_url")
+      .eq("id", authUser.id)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (cancelled || error || !data) return;
+        setProfile((prev) =>
+          prev
+            ? {
+                ...prev,
+                fullName: data.full_name,
+                // Keep the auth-metadata avatar when the row has none.
+                avatarUrl: resolveAvatarUrl(data.avatar_url) ?? prev.avatarUrl,
+              }
+            : prev,
+        );
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [authUser]);
 
   return (

@@ -1,8 +1,11 @@
 import { useEffect, useId, useRef, useState } from "react";
 import {
+    IoCalendarClear,
   IoCalendarOutline,
   IoDocumentTextOutline,
+  IoFileTray,
   IoLogoGoogle,
+  IoText,
 } from "react-icons/io5";
 import { Checkbox } from "@/components/base/checkbox/checkbox";
 import { GOOGLE_CALENDAR_ENABLED } from "@/lib/featureFlags";
@@ -184,14 +187,11 @@ export function ConnectedCalendarsSection() {
         <h2 className="font-display text-2xl font-semibold text-ink">
           Connected Calendars
         </h2>
-        <p className="mt-1 text-sm text-muted">
-          Import events from external calendars into RiseByDay as read-only ICS
-          items.
-        </p>
+
       </div>
 
       <Container>
-        <Container.Header heading="ICS File Import" />
+        <Container.Header icon={<IoDocumentTextOutline />} heading="ICS File Import" />
         <Container.Body className="p-3">
             <div>
 
@@ -255,22 +255,13 @@ export function ConnectedCalendarsSection() {
         </Container.Body>
     </Container>
 {GOOGLE_CALENDAR_ENABLED ? (
-        <section
+        <Container
           aria-labelledby={`${uid}-google-heading`}
-          className="overflow-hidden rounded-2xl border border-line/80 bg-surface/70"
         >
-          <div className="flex flex-wrap items-start justify-between gap-4 border-b border-line px-4 py-4">
-            <div className="flex items-start gap-3">
-              <span className="inline-flex size-10 items-center justify-center rounded-xl bg-sunken text-muted">
-                <IoLogoGoogle className="size-5" aria-hidden />
-              </span>
+          <Container.Body className="flex flex-col items-start justify-between gap-4 border-b border-line ">
+           <Container.Header heading="Google Calendar" icon={<IoLogoGoogle />} />
+            <div className="flex items-center gap-3">
               <div>
-                <h3
-                  id={`${uid}-google-heading`}
-                  className="font-display text-lg font-semibold text-ink"
-                >
-                  Google Calendar
-                </h3>
                 <p className="mt-0.5 text-sm text-muted">
                   {google.connected
                     ? `Connected as ${google.accountEmail ?? "Google account"}`
@@ -302,7 +293,7 @@ export function ConnectedCalendarsSection() {
                 {isGoogleConnecting ? "Waiting for Google…" : "Connect Google"}
               </button>
             )}
-          </div>
+          </Container.Body>
 
           {google.connected ? (
             <div className="space-y-5 px-4 py-4">
@@ -401,7 +392,7 @@ export function ConnectedCalendarsSection() {
               {googleError}
             </p>
           ) : null}
-        </section>
+        </Container>
       ) : null}
 
       <div aria-live="polite">

@@ -1,7 +1,13 @@
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
+import { Camera01 } from "@untitledui/icons";
+import { twMerge } from "tailwind-merge";
+import { AvatarProfilePhoto } from "@/components/base/avatar/avatar-profile-photo";
 import { useProfile } from "@/providers/ProfileProvider";
 import { useAuthStore } from "@/stores/authStore";
 import { useSyncStatus } from "@/lib/tasksSync";
+import { AVATAR_ACCEPT, uploadAvatar } from "@/lib/cloud/avatars";
+import Container from "@/components/settings/Container";
+import { IoSync } from "react-icons/io5";
 
 function AccountForm() {
   const uid = useId();
@@ -147,6 +153,100 @@ function SyncStatusLine() {
   );
 }
 
+function initialsOf(name: string | null | undefined) {
+  const initials = name
+    ?.split(" ")
+    .map((word) => word[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+  return initials || "DB";
+}
+
+/** The avatar; when signed in, hovering it reveals an upload overlay. */
+function ProfileAvatar() {
+  const { profile, setProfile } = useProfile();
+  const authUser = useAuthStore((s) => s.user);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const name = profile?.fullName || profile?.name;
+  const photo = (
+    <AvatarProfilePhoto
+      // Remount on a new URL so a previous load failure doesn't stick.
+      key={profile?.avatarUrl ?? "none"}
+      size="sm"
+      src={profile?.avatarUrl ?? undefined}
+      initials={initialsOf(name)}
+      alt={name || "Profile avatar"}
+    />
+  );
+
+  if (!authUser) return photo;
+
+  const onChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    // Reset so picking the same file again still fires onChange.
+    event.target.value = "";
+    if (!file) return;
+
+    setError(null);
+    setIsUploading(true);
+    try {
+      const { url, error } = await uploadAvatar(authUser.id, file);
+      if (error) {
+        setError(error);
+        return;
+      }
+      if (profile) setProfile({ ...profile, avatarUrl: url });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <input
+        ref={inputRef}
+        type="file"
+        accept={AVATAR_ACCEPT}
+        onChange={onChange}
+        className="hidden"
+      />
+      <button
+        type="button"
+        disabled={isUploading}
+        onClick={() => inputRef.current?.click()}
+        aria-label={profile?.avatarUrl ? "Change photo" : "Upload photo"}
+        className="group relative self-start rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      >
+        {photo}
+        <span
+          className={twMerge(
+            "absolute inset-0.75 flex flex-col items-center justify-center gap-0.5 rounded-full bg-black/55 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100",
+            isUploading && "opacity-100",
+          )}
+        >
+          {isUploading ? (
+            "Uploading…"
+          ) : (
+            <>
+              <Camera01 className="size-5" aria-hidden="true" />
+              {profile?.avatarUrl ? "Change" : "Upload"}
+            </>
+          )}
+        </span>
+      </button>
+      {error ? (
+        <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 export function ProfileSection() {
   const { profile } = useProfile();
   const authStatus = useAuthStore((s) => s.status);
@@ -165,12 +265,19 @@ export function ProfileSection() {
       </div>
 
       <dl className="rounded-2xl border border-line/80 bg-surface/70 p-4">
-        <div className="grid gap-1">
+        <div className="mb-4">
+          <dt className="sr-only">Avatar</dt>
+          <dd>
+            <ProfileAvatar />
+          </dd>
+        </div>
+
+        <div className="mt-4 grid gap-1">
           <dt className="text-xs font-semibold uppercase tracking-wide text-muted">
-            Name
+            Full name
           </dt>
-          <dd className="text-base text-ink">
-            {profile?.name ?? "RiseByDay User"}
+          <dd className={profile?.fullName ? "text-base text-ink" : "text-base text-muted"}>
+            {profile?.fullName || "Not set"}
           </dd>
         </div>
         <div className="mt-4 grid gap-1">
@@ -183,16 +290,8 @@ export function ProfileSection() {
         </div>
       </dl>
 
-      <section className="overflow-hidden rounded-2xl border border-line/80 bg-surface/70">
-        <div className="border-b border-line px-4 py-4">
-          <h3 className="font-display text-lg font-semibold text-ink">
-            Account & sync
-          </h3>
-          <p className="mt-0.5 text-sm text-muted">
-            Sign in to sync your tasks across devices. Everything keeps working
-            offline whether you're signed in or not.
-          </p>
-        </div>
+      <Container>
+        <Container.Header heading="RiseSync" icon={<IoSync className={`${authStatus === "loading" && "animate-spin"} `} />} />
 
         <div className="space-y-4 px-4 py-4">
           {authStatus === "loading" ? (
@@ -216,7 +315,7 @@ export function ProfileSection() {
             <AccountForm />
           )}
         </div>
-      </section>
+      </Container>
     </div>
   );
 }

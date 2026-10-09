@@ -16,6 +16,7 @@ export function ProfilePanel() {
     <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-5">
       <div className="flex items-center -skew-3 gap-4 border border-line bg-sunken p-4">
         <AvatarProfilePhoto
+          key={profile?.avatarUrl ?? "none"}
           size="sm"
           className="skew-3"
           src={profile?.avatarUrl ?? undefined}

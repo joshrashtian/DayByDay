@@ -75,6 +75,7 @@ export type ProfileRow = {
   id: string;
   email: string | null;
   display_name: string | null;
+  full_name: string | null;
   avatar_url: string | null;
   username: string | null;
   created_at: IsoTimestamp;
@@ -201,7 +202,13 @@ type Defaulted<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
 export type ProfileInsert = Defaulted<
   ProfileRow,
-  "email" | "display_name" | "avatar_url" | "username" | "created_at" | "updated_at"
+  | "email"
+  | "display_name"
+  | "full_name"
+  | "avatar_url"
+  | "username"
+  | "created_at"
+  | "updated_at"
 >;
 
 export type TaskInsert = Defaulted<

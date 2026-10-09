@@ -1,7 +1,9 @@
 import { useEffect } from "react";
 import { useAuthStore } from "@/stores/authStore";
 import { useTasksStore } from "@/stores/tasksStore";
+import { useSettingsStore } from "@/stores/settingsStore";
 import { syncNow } from "@/lib/tasksSync";
+import { isApplyingRemoteCategories } from "@/lib/categoriesSync";
 
 const SYNC_INTERVAL_MS = 30_000;
 
@@ -22,11 +24,21 @@ export function TasksSyncEngine() {
       }
     });
 
+    const unsubscribeCategories = useSettingsStore.subscribe((state, prev) => {
+      if (
+        state.categoryConfigs !== prev.categoryConfigs &&
+        !isApplyingRemoteCategories()
+      ) {
+        void syncNow();
+      }
+    });
+
     window.addEventListener("focus", onFocus);
     window.addEventListener("online", onOnline);
     return () => {
       clearInterval(interval);
       unsubscribe();
+      unsubscribeCategories();
       window.removeEventListener("focus", onFocus);
       window.removeEventListener("online", onOnline);
     };

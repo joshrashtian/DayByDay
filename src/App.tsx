@@ -26,6 +26,7 @@ import { SPOTIFY_ENABLED } from "./lib/featureFlags";
 import ToolkitScreen from "./screens/ToolkitScreen";
 import ToolkitWindowScreen from "./screens/ToolkitWindowScreen";
 import PomodoroScreen from "./screens/pomodoro/PomodoroScreen";
+import ProjectsScreen from "./screens/ProjectsScreen";
 import CognitionBar from "./ui/CognitionBar";
 import { GlobalPomodoroDock } from "./components/global/GlobalPomodoroDock";
 import { TaskDragGhost } from "./components/global/TaskDragGhost";
@@ -152,6 +153,14 @@ export default function App() {
               element={
                 <AnimatedPage>
                   <TasksScreen />
+                </AnimatedPage>
+              }
+            />
+            <Route
+              path="/projects/*"
+              element={
+                <AnimatedPage>
+                  <ProjectsScreen />
                 </AnimatedPage>
               }
             />

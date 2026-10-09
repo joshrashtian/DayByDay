@@ -69,6 +69,7 @@ project. `supabase/README.md` covers the dev/prod split and the sync contract.
 | Typed client | `src/utils/supabase.ts` (`createClient<Database>`) |
 | Auth | `src/stores/authStore.ts` |
 | Task sync | `src/lib/tasksSync.ts` — `syncNow()` pushes dirty rows, then pulls a delta |
+| Category sync | `src/lib/categoriesSync.ts` — three-way merge against a persisted last-synced snapshot; runs at the start of `syncNow()` |
 | Row types | `src/types/database.ts` — hand-maintained mirror of the SQL |
 | Row ⇄ domain | `src/lib/cloud/mappers.ts` — pure, no React |
 
