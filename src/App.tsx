@@ -12,6 +12,7 @@ import { IoClose } from "react-icons/io5";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { isTauri } from "./lib/tauriEnv";
 import SignInScreen from "./screens/SignInScreen";
+import CognitionWindowScreen from "./screens/CognitionWindowScreen";
 import { AnimatedPage } from "./components/layout/AnimatedPage";
 import SideBar from "./components/global/sidebar";
 import { RightPanel } from "./components/global/rightpanel/RightPanel";
@@ -46,9 +47,14 @@ import { check } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
 
 const isSignInWindow = isTauri() && getCurrentWindow().label === "sign-in";
+const isCognitionWindow =
+  isTauri() && getCurrentWindow().label === "cognition";
+// Lets App.css drop the opaque page background so the window can be see-through.
+if (isCognitionWindow) document.documentElement.dataset.window = "cognition";
 
 export default function App() {
   if (isSignInWindow) return <SignInScreen />;
+  if (isCognitionWindow) return <CognitionWindowScreen />;
 
   const location = useLocation();
   const navigate = useNavigate();

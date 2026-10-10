@@ -129,13 +129,13 @@ export function CategoriesSection() {
     <div className="space-y-5">
       <SettingsHeader>
         <div>
-        <h2 className="font-display text-2xl font-semibold text-ink">
+        <SettingsHeader.Title>
           Categories
-        </h2>
-        <p className="mt-1 text-sm text-muted">
+        </SettingsHeader.Title>
+        <SettingsHeader.Subtitle>
           Give each category a color and an icon. Tasks in that category show as
           a full-color card.
-        </p>
+        </SettingsHeader.Subtitle>
         </div>
       </SettingsHeader>
 

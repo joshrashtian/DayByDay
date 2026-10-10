@@ -9,9 +9,7 @@ export default function HomeSection() {
   return (
     <div className="space-y-5">
       <SettingsHeader>
-        <h2 className="font-display text-4xl font-semibold text-ink">
-          Config
-        </h2>
+        <SettingsHeader.Title className="text-4xl">Config</SettingsHeader.Title>
 
       </SettingsHeader>
 

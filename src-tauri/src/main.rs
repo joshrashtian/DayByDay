@@ -2,6 +2,7 @@
 mod google_calendar_oauth;
 mod notis;
 mod oauth_loopback;
+mod open_cognition_macro;
 mod spotify_oauth;
 
 use tauri::{
@@ -24,6 +25,8 @@ fn main() {
         .plugin(tauri_plugin_notification::init())
         .manage(notis::Queue::default())
         .invoke_handler(tauri::generate_handler![
+            open_cognition_macro::open_cognition_bar,
+            open_cognition_macro::hide_cognition_bar,
             spotify_oauth::spotify_oauth_listen,
             google_calendar_oauth::google_oauth_listen,
             notis::schedule_notification,
@@ -33,6 +36,8 @@ fn main() {
         ])
         .setup(|app| {
             notis::start_scheduler(app.handle().clone());
+            #[cfg(desktop)]
+            open_cognition_macro::register_shortcut(app.handle())?;
 
             let about_metadata = AboutMetadataBuilder::new()
                 .version(Some("0.1.0 Beta"))

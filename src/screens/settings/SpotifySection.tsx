@@ -115,7 +115,7 @@ export function SpotifySection() {
         <div className="flex items-start gap-3">
           <img src={spotifyIcon} alt="" className="mt-1 size-6" aria-hidden />
           <div>
-            <SettingsHeader.Title className="text-2xl font-semibold text-ink">
+            <SettingsHeader.Title>
               Spotify
             </SettingsHeader.Title>
             <SettingsHeader.Subtitle>

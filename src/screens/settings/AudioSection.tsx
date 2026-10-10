@@ -72,10 +72,10 @@ export function AudioSection() {
     <div className="space-y-5">
       <SettingsHeader>
         <div>
-        <h2 className="font-display text-2xl font-semibold text-ink">Audio</h2>
-        <p className="mt-1 text-sm text-muted">
+        <SettingsHeader.Title>Audio</SettingsHeader.Title>
+        <SettingsHeader.Subtitle>
           Sounds for completing, unchecking, and creating tasks.
-        </p>
+        </SettingsHeader.Subtitle>
         </div>
       </SettingsHeader>
 

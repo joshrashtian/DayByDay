@@ -14,14 +14,18 @@ const SettingsHRoot = ({ children, className = '', ...props }: HeaderProps) => {
   )
 }
 
-const SettingsTitle = ({ children, ...props }: { children: React.ReactNode, props: any }) => {
+// Unlayered `h1 { text-align: center }` in App.css beats layered utilities, so `!` is needed.
+const SettingsTitle = ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => {
   return (
-    <h1 className={twMerge("font-black font-mono" , props?.className)}>{children}</h1>
+    <h1
+      className={twMerge("text-left! text-2xl font-black font-mono text-ink", className)}
+      {...props}
+    />
   )
 }
-const SettingsSubtitle = ({ children } : { children: React.ReactNode}) => {
+const SettingsSubtitle = ({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) => {
     return (
-        <p className="text-slate-500 font-mono">{children}</p>
+        <p className={twMerge("mt-1 text-sm text-slate-500 font-mono", className)} {...props} />
     )
 }
 

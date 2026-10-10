@@ -7,6 +7,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { useSyncStatus } from "@/lib/tasksSync";
 import { AVATAR_ACCEPT, uploadAvatar } from "@/lib/cloud/avatars";
 import Container from "@/ui/settings/Container";
+import SettingsHeader from "@/ui/settings/Header";
 import { IoSync } from "react-icons/io5";
 
 function AccountForm() {
@@ -255,14 +256,14 @@ export function ProfileSection() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h2 className="font-display text-2xl font-semibold text-ink">
-          Profile
-        </h2>
-        <p className="mt-1 text-sm text-muted">
-          Your local RiseByDay profile.
-        </p>
-      </div>
+      <SettingsHeader>
+        <div>
+          <SettingsHeader.Title>Profile</SettingsHeader.Title>
+          <SettingsHeader.Subtitle>
+            Your local RiseByDay profile.
+          </SettingsHeader.Subtitle>
+        </div>
+      </SettingsHeader>
 
       <dl className="rounded-2xl border border-line/80 bg-surface/70 p-4">
         <div className="mb-4">

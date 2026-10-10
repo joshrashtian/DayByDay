@@ -59,12 +59,12 @@ export function WeatherSection() {
     <div className="space-y-5">
       <SettingsHeader>
         <div>
-        <h2 className="font-display text-2xl font-semibold text-ink">
+        <SettingsHeader.Title>
           Weather
-        </h2>
-        <p className="mt-1 text-sm text-muted">
+        </SettingsHeader.Title>
+        <SettingsHeader.Subtitle>
           Use a fixed location for consistent forecast data across sessions.
-        </p>
+        </SettingsHeader.Subtitle>
         </div>
       </SettingsHeader>
 

@@ -38,12 +38,12 @@ export function AppearanceSection() {
     <div className="space-y-5">
       <SettingsHeader>
         <div>
-        <h2 className="font-display text-2xl font-semibold text-ink">
+        <SettingsHeader.Title>
           Appearance
-        </h2>
-        <p className="mt-1 text-sm text-muted">
+        </SettingsHeader.Title>
+        <SettingsHeader.Subtitle>
           Choose how RiseByDay looks.
-        </p>
+        </SettingsHeader.Subtitle>
         </div>
       </SettingsHeader>
 

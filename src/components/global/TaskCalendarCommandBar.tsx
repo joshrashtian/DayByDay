@@ -164,12 +164,15 @@ type TaskCalendarCommandBarProps = {
   right?: number;
   /** Drop beneath the overlay scrim while a floating side panel is open. */
   belowOverlay?: boolean;
+  /** Called after a task is added (the cognition window uses it to hide itself). */
+  onTaskAdded?: () => void;
 };
 
 export function TaskCalendarCommandBar({
   left = 0,
   right = 0,
   belowOverlay = false,
+  onTaskAdded,
 }: TaskCalendarCommandBarProps) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -353,6 +356,7 @@ export function TaskCalendarCommandBar({
           : "Task added.",
     });
     setRaw("");
+    onTaskAdded?.();
   };
 
   const onSubmit = (e: FormEvent) => {

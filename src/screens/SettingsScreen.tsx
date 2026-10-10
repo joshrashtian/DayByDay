@@ -107,7 +107,7 @@ const SettingsScreenContent = ({ modal = false }: { modal?: boolean }) => {
         aria-label="Settings sections"
         className="shrink-0 overflow-x-auto border-b border-line px-4 py-2 md:hidden"
       >
-        <div className="flex min-w-max gap-1.5">
+        <div className="flex min-w-max overflow-y-scroll gap-1.5">
           {SECTIONS.map((section) => {
             const isActive = activeSection === section.id;
             return (
@@ -133,7 +133,7 @@ const SettingsScreenContent = ({ modal = false }: { modal?: boolean }) => {
       <div className="flex min-h-0 flex-1">
         <nav
           aria-label="Settings sections"
-          className="hidden w-52 shrink-0 flex-col font-mono border-r border-line bg-sunken/50 p-3 md:flex"
+          className="hidden w-52 shrink-0 overflow-y-scroll no-scrollbar flex-col font-mono border-r border-line bg-sunken/50 p-3 md:flex"
         >
           <div className="flex flex-col gap-4">
             {GROUPED_SECTIONS.map((group) => (

@@ -16,6 +16,7 @@ import {
 } from "@/stores/calendarIntegrationsStore";
 import { useTasksStore } from "@/stores/tasksStore";
 import Container from "@/ui/settings/Container";
+import SettingsHeader from "@/ui/settings/Header";
 
 function CalendarColorDot({ color }: { color?: string }) {
   return (
@@ -183,12 +184,14 @@ export function ConnectedCalendarsSection() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="font-display text-2xl font-semibold text-ink">
-          Connected Calendars
-        </h2>
-
-      </div>
+      <SettingsHeader>
+        <div>
+          <SettingsHeader.Title>Connected Calendars</SettingsHeader.Title>
+          <SettingsHeader.Subtitle>
+            Bring events from other calendars into RiseByDay.
+          </SettingsHeader.Subtitle>
+        </div>
+      </SettingsHeader>
 
       <Container>
         <Container.Header icon={<IoDocumentTextOutline />} heading="ICS File Import" />

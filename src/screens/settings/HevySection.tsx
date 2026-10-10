@@ -12,9 +12,9 @@ export function HevySection() {
         <div className="flex items-start gap-3">
           <HevyLogo className="mt-1 size-6 shrink-0 text-ink" />
           <div>
-            <h2 className="font-display text-2xl font-semibold text-ink">
+            <SettingsHeader.Title>
               Hevy
-            </h2>
+            </SettingsHeader.Title>
             <SettingsHeader.Subtitle>
               Connect your Hevy Account to sync your workouts onto your calendar (Hevy Pro Required)
             </SettingsHeader.Subtitle>

@@ -550,6 +550,12 @@ body,
   background-color: var(--canvas);
 }
 
+html[data-window="cognition"],
+html[data-window="cognition"] body,
+html[data-window="cognition"] #root {
+  background-color: transparent;
+}
+
 #app-zoom-root {
   position: relative;
   display: flex;
